@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-ink: #050505;
+  --color-charcoal: #101014;
+  --color-surface: #16161c;
+  --color-surface2: #1d1d25;
+  --color-line: #2a2a33;
+  --color-gold: #c9a84c;
+  --color-goldbright: #e6c36a;
+  --color-paper: #ece8dd;
+  --color-dim: #8b8b96;
+
+  --color-st-available: #2fbf71;
+  --color-st-class: #3b82f6;
+  --color-st-meeting: #f5a623;
+  --color-st-audio: #e5484d;
+  --color-st-video: #d93036;
+  --color-st-emergency: #7c3aed;
+}
+
+html,
+body {
+  background: #050505;
+  color: var(--color-paper);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+/* ── Living background ─────────────────────────────── */
+.living-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: background-color 1.4s ease;
+}
+.living-bg::before,
+.living-bg::after {
+  content: "";
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(110px);
+  opacity: 0.34;
+  transition: background-color 1.4s ease;
+  will-change: transform;
+}
+.living-bg::before {
+  width: 78vmax;
+  height: 78vmax;
+  top: -32vmax;
+  left: -18vmax;
+  background-color: rgb(var(--state-rgb));
+  animation: drift-a 26s ease-in-out infinite alternate;
+}
+.living-bg::after {
+  width: 62vmax;
+  height: 62vmax;
+  bottom: -28vmax;
+  right: -16vmax;
+  background-color: rgb(var(--state-rgb));
+  opacity: 0.22;
+  animation: drift-b 34s ease-in-out infinite alternate;
+}
+@keyframes drift-a {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(9vmax, 7vmax) scale(1.12); }
+}
+@keyframes drift-b {
+  from { transform: translate(0, 0) scale(1.05); }
+  to { transform: translate(-8vmax, -6vmax) scale(0.94); }
+}
+
+.emergency-flash {
+  animation: em-flash 1.1s ease-in-out infinite;
+}
+@keyframes em-flash {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 0.35; }
+}
+
+/* ── Commit ripple on the dial ─────────────────────── */
+@keyframes commit-ripple {
+  from { transform: scale(0.55); opacity: 0.8; }
+  to { transform: scale(1.65); opacity: 0; }
+}
+.commit-ripple {
+  animation: commit-ripple 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.55; }
+}
+.pulse-dot { animation: pulse-dot 2.2s ease-in-out infinite; }
+
+@keyframes breathe {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.18); }
+}
+
+@keyframes listening {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 168, 76, 0.45); }
+  70% { box-shadow: 0 0 0 16px rgba(201, 168, 76, 0); }
+}
+.listening { animation: listening 1.4s ease-out infinite; }
+
+@keyframes rise-in {
+  from { transform: translateY(14px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.rise-in { animation: rise-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+.safe-bottom { padding-bottom: calc(env(safe-area-inset-bottom, 0px)); }
+.safe-top { padding-top: calc(env(safe-area-inset-top, 0px)); }
