@@ -1,50 +1,157 @@
 # Studio Command
 
-The master control surface for the Nathaniel School of Music studio & home in Bangalore —
-the mobile/iPad face of the Home Assistant setup on the Raspberry Pi 5.
+Studio Command is the mobile and iPad control surface for Jason Zac’s Nathaniel School of Music studio and home in Bangalore. One calm, musical dial conducts the whole apartment:
 
-One dial sets the whole house: **Available · Class · Meeting · Audio Rec · Video Rec · Emergency**.
-Every WS2812B room sign recolors, the family is notified, and the pre-flight rules arm.
+**Available · Class · Meeting · Audio Rec · Video Rec · Emergency**
 
-## Pages
+Every state recolors the five room signs, changes the house behavior, protects teaching or recording, and leaves a clear activity trail. The app is a dark, installable PWA built with React 18, TypeScript, Tailwind v4, and Vite.
 
-- **Command** — the state dial (drag or tap; Rec/Emergency need a hold-to-confirm), living state-colored background, quick scenes.
-- **Home** — 5 zones live: doors, presence, temperature, sign color, music-room dB meter.
-- **Pre-flight** — go/no-go before recording; blocks Start Recording until doors are shut and the room is quiet, and says exactly what's wrong.
-- **Safety** — gas + leak sensors, state-aware doorbell snapshot, guarded hold-for-Emergency.
-- **Settings** — dB threshold, family notification toggles, scene editor. Persisted in IndexedDB.
+## What is in the app
 
-## Mock → Live (one line)
+- **Command** — the accessible rotary state dial, state-by-state house preview, signature chords, editable house scenes, A440 reference tone, and recent activity history.
+- **Home** — entrance, music room, bedroom, kitchen, and bathroom sensors plus the new **House Pulse** for water tanks/pump, mains and inverter, LPG level, and music-room air quality.
+- **Pre-flight** — an exact go/no-go verdict. “Silence the room” mutes the doorbell, switches off AC and fan, watches the dB meter fall, and restores those devices after the studio returns to Available.
+- **Safety** — gas/leak status, live doorbell image, device notifications, guarded emergency trigger, and a full-screen emergency takeover with an optional repeating siren.
+- **Settings** — dB threshold, family notifications, chimes/siren, device-alert permission, and a scene editor that can add, remove, rename, recolor, and re-icon scenes.
 
-The app currently runs on a full simulation so it works anywhere.
-When the Pi wrapper is ready, flip one flag in [src/config.ts](src/config.ts):
+The mock house persists the studio state in IndexedDB, so a wall panel comes back in the same state after a reload. Settings and custom scenes persist too.
+
+## Mock → live is still one switch
+
+Every page talks only to the `ApiAdapter` selected in [src/api/api.ts](src/api/api.ts). Both the simulation and Pi client implement the same complete interface.
+
+When the Pi wrapper is ready, change only this line in [src/config.ts](src/config.ts):
 
 ```ts
-export const USE_MOCK = false; // ← that's it
+export const USE_MOCK = false;
 ```
 
-It then talks to `http://studio.local:8123` per the wrapper contract documented in
-[src/api/liveAdapter.ts](src/api/liveAdapter.ts) (REST + SSE `/api/stream`, with an
-automatic 3-second polling fallback if the stream drops).
+No page or component changes are required. The live base URL remains `http://studio.local:8123` unless the wrapper is deliberately hosted elsewhere.
 
-> Note: live mode must be served from inside the home network (ideally from the Pi
-> itself) — a phone on the same WiFi opening the HTTPS Vercel URL cannot reach
-> `http://studio.local` due to browser mixed-content rules.
+> The public HTTPS Vercel app cannot normally call a plain-HTTP Pi URL because browsers block mixed content. For live house control, serve this same built app from the Pi/HTTPS home hostname, or expose the Pi wrapper through a trusted HTTPS home-network endpoint.
 
-## The delightful touch
+## Raspberry Pi wrapper contract
 
-Every state answers with its own **signature chord** (Web Audio): Available is C major,
-Class is D major, Meeting is a B♭maj7, recording states are a bare low fifth, Emergency
-is a tritone. The dial ticks like a real rotary as you cross detents. Toggle in Settings.
+The TypeScript shapes in [src/api/types.ts](src/api/types.ts) and the comments in [src/api/liveAdapter.ts](src/api/liveAdapter.ts) are authoritative. JSON enum names must match exactly. Every timestamp is Unix epoch milliseconds. Responses use `Content-Type: application/json` and the wrapper must allow the Studio Command origin with CORS.
 
-## Tech
+### REST endpoints
 
-React 18 + TypeScript + Tailwind v4 (Vite). No backend, no external DB.
-Installable PWA: manifest + offline-shell service worker + Add to Home Screen.
-Fraunces / Inter / IBM Plex Mono, gold-on-dark NSM design language.
+| Method | Path | Request | Response |
+|---|---|---|---|
+| GET | `/api/state` | — | `StudioStateInfo` |
+| POST | `/api/state` | `{ "state": StudioState }` | `StudioStateInfo` |
+| GET | `/api/rooms` | — | `Room[]` |
+| GET | `/api/preflight` | — | `Preflight` |
+| GET | `/api/preflight/status` | — | `PreflightPrep` |
+| POST | `/api/preflight/prepare` | — | `PreflightPrep` |
+| POST | `/api/preflight/restore` | — | `PreflightPrep` |
+| POST | `/api/settings/db-threshold` | `{ "value": 45 }` | `{ "ok": true }` |
+| GET | `/api/safety` | — | `Safety` |
+| GET | `/api/doorbell` | — | `Doorbell` |
+| GET | `/api/history` | — | `ActivityEvent[]`, newest first, maximum 40 |
+| POST | `/api/panic` | — | `{ "ok": true }` |
+| POST | `/api/scene` | `{ "name": string, "state": StudioState }` | `StudioStateInfo` |
+| GET | `/api/utilities` | — | `Utilities` |
+| POST | `/api/utilities/action` | `{ "action": "water_pump_toggle" \| "purifier_toggle" }` | `Utilities` |
+| POST | `/api/tone` | `{ "hz": 440 }` | `{ "ok": true }` |
+| POST | `/api/safety/demo` | `{ "kind": "gas" \| "leakKitchen" \| "leakBath" \| "clear" }` | `Safety` |
+
+`/api/safety/demo` is for installation/commissioning only. Disable or protect it on the production Pi. Studio Command exposes that gesture only while `USE_MOCK=true`.
+
+### Core response shapes
+
+```ts
+type StudioState =
+  | "available" | "class" | "meeting"
+  | "audio_rec" | "video_rec" | "emergency";
+
+interface StudioStateInfo {
+  state: StudioState;
+  setBy: string;
+  since: number;
+}
+
+interface PreflightPrep {
+  active: boolean;
+  status: "idle" | "preparing" | "ready" | "restoring";
+  mutedDoorbell: boolean;
+  acOff: boolean;
+  fanOff: boolean;
+  startedAt?: number;
+}
+```
+
+`GET /api/utilities` returns this complete shape:
+
+```json
+{
+  "water": {
+    "sumpPct": 74,
+    "overheadPct": 61,
+    "pumpRunning": false,
+    "dryRunProtected": true,
+    "lastFillTs": 1783700000000
+  },
+  "power": {
+    "mainsOnline": true,
+    "voltage": 231,
+    "inverterPct": 86,
+    "estimatedMinutes": 128,
+    "surgeProtected": true
+  },
+  "lpg": { "remainingPct": 38, "estimatedDays": 12 },
+  "air": {
+    "aqi": 62,
+    "pm25": 21,
+    "tempC": 24.3,
+    "humidityPct": 58,
+    "purifierOn": false
+  }
+}
+```
+
+### Live SSE stream
+
+`GET /api/stream` returns `text/event-stream`. Use named SSE events and put one JSON payload in each `data:` frame.
+
+| Event name | JSON payload |
+|---|---|
+| `state` | `StudioStateInfo` |
+| `rooms` | `Room[]` |
+| `safety` | `Safety` |
+| `doorbell` | `Doorbell` |
+| `history` | one `ActivityEvent` |
+| `utilities` | `Utilities` |
+| `preflight` | `{ "preflight": Preflight, "prep": PreflightPrep }` |
+
+Send an initial `safety`, `utilities`, and `preflight` frame as soon as a client subscribes. Heartbeat comments such as `: keepalive` are welcome. If SSE drops, Studio Command polls the state, rooms, safety, pre-flight, and utilities every three seconds while retrying SSE every ten seconds.
+
+### Expected Home Assistant behavior
+
+- `prepare` snapshots the current doorbell/AC/fan state, mutes or switches them off, then reports each completed flag. It must not claim `ready` until Home Assistant has confirmed the device states.
+- `restore` returns those devices to the saved pre-preflight state; returning the studio to Available calls this automatically.
+- `scene` may run a richer Home Assistant scene by `name`; `state` is the required fallback and final studio state.
+- `water_pump_toggle` must honor physical dry-run and high-level cutoffs on the electrical side, not only in software.
+- Safety events are never inferred from the UI. The Pi/ESP32 sensors are the source of truth.
+- History should include state changes, sensor alerts/clears, doorbell rings, pre-flight actions, mains events, and guarded utility actions.
+
+## PWA behavior
+
+- The current HTML shell and its hashed JS/CSS are cached together under a build-specific cache.
+- An update installs beside the running version and shows **“New Studio Command ready — Tap to refresh.”** It never reloads a panel during a take.
+- The user-confirmed refresh sends `SKIP_WAITING`; the new worker claims the page and reloads once.
+- The last complete shell continues to load offline. Old hashed assets are kept until the new worker activates, preventing the stale-shell blank-screen failure.
+- The browser theme color follows the active studio state. Reduced-motion users get a calm, nearly static version of the background, meters, and pulses.
+
+## Local checks
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # production build in dist/
+npm run dev
+npx tsc --noEmit
+npm run build
 ```
+
+The production build is written to `dist/`. `npm run build` stamps the service worker with a unique build ID so every Vercel release can be detected cleanly.
+
+For the non-technical delivery summary and the prioritized hardware plan, see [REPORT.md](REPORT.md).

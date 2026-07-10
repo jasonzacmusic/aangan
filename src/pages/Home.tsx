@@ -3,6 +3,7 @@ import { useStore } from "../state/store";
 import RoomCard from "../components/RoomCard";
 import DbMeter, { Sparkline } from "../components/DbMeter";
 import { Room } from "../api/types";
+import UtilitiesPanel from "../components/UtilitiesPanel";
 
 export default function Home() {
   const { rooms, settings, dbHistory } = useStore();
@@ -20,9 +21,11 @@ export default function Home() {
         ))}
       </div>
 
+      <UtilitiesPanel />
+
       {/* Room detail sheet */}
       {live && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center lg:items-center" onClick={() => setOpenRoom(null)}>
+        <div className="fixed inset-0 z-40 flex items-end justify-center lg:items-center" onClick={() => setOpenRoom(null)} role="dialog" aria-modal="true" aria-label={`${live.name} sensor details`}>
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
           <div
             className="rise-in relative z-10 w-full max-w-md rounded-t-3xl border border-line bg-surface p-6 pb-10 safe-bottom lg:rounded-3xl lg:pb-6"

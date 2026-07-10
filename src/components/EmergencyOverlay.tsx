@@ -5,7 +5,7 @@ import HoldButton from "./HoldButton";
  * When the house is in Emergency, nothing else matters.
  * Full-screen violet takeover; standing down needs a deliberate hold.
  */
-export default function EmergencyOverlay({ onStandDown }: { onStandDown: () => void }) {
+export default function EmergencyOverlay({ onStandDown, cause }: { onStandDown: () => void; cause?: string }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-ink px-8 text-center">
       <div className="emergency-flash absolute inset-0" style={{ background: "radial-gradient(circle at 50% 35%, #7c3aed55, #7c3aed11 60%, transparent)" }} />
@@ -20,7 +20,7 @@ export default function EmergencyOverlay({ onStandDown }: { onStandDown: () => v
         <div className="font-mono text-xs uppercase tracking-[0.4em] text-st-emergency">Emergency active</div>
         <h1 className="font-display mt-2 text-5xl text-paper">All family phones are ringing</h1>
         <p className="mt-3 max-w-sm text-sm text-dim">
-          Every room sign is flashing violet. Location and doorbell snapshot have been sent to the family.
+          {cause ? `${cause}. ` : ""}Every room sign is flashing violet. Location and doorbell snapshot have been sent to the family.
         </p>
         <div className="mt-10 w-full max-w-xs">
           <HoldButton big label="Hold to stand down" color="#e6c36a" durationMs={2000} onComplete={onStandDown} />

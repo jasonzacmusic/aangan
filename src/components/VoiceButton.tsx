@@ -37,7 +37,7 @@ export default function VoiceButton({ onCommand }: Props) {
   const start = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
-      showToast("", "Voice control isn't supported in this browser", "#8b8b96");
+      showToast("", "Voice isn't available here — the dial still works", "#8b8b96");
       return;
     }
     if (listening) {
@@ -54,9 +54,9 @@ export default function VoiceButton({ onCommand }: Props) {
       haptic(10);
     };
     rec.onend = () => setListening(false);
-    rec.onerror = () => {
+    rec.onerror = (event: { error?: string }) => {
       setListening(false);
-      showToast("", "Didn't catch that — try again", "#8b8b96");
+      showToast("", event.error === "not-allowed" ? "Microphone permission is off — use the dial" : "Didn't catch that — try “start class”", "#8b8b96");
     };
     rec.onresult = (e: any) => {
       const heard = e.results[0][0].transcript as string;
@@ -77,7 +77,7 @@ export default function VoiceButton({ onCommand }: Props) {
   return (
     <>
       {toast && (
-        <div className="rise-in fixed bottom-36 left-1/2 z-30 w-[85%] max-w-sm -translate-x-1/2 rounded-2xl border border-line bg-surface/95 px-4 py-3 text-center backdrop-blur lg:bottom-24">
+        <div className="rise-in fixed bottom-36 left-1/2 z-30 w-[85%] max-w-sm -translate-x-1/2 rounded-2xl border border-line bg-surface/95 px-4 py-3 text-center backdrop-blur lg:bottom-24" role="status" aria-live="polite">
           {toast.heard && <div className="text-xs text-dim">{toast.heard}</div>}
           <div className="text-sm font-medium" style={{ color: toast.color }}>
             {toast.result}

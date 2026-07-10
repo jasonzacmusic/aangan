@@ -32,7 +32,7 @@ function CheckRow({ ok, title, detail }: { ok: boolean; title: string; detail: s
 }
 
 export default function Preflight({ onSelect }: Props) {
-  const { preflight, rooms, settings } = useStore();
+  const { preflight, preflightPrep, rooms, settings, prepareStudio, restoreStudio } = useStore();
   if (!preflight) return null;
 
   const music = rooms.find((r) => r.id === "music");
@@ -54,6 +54,7 @@ export default function Preflight({ onSelect }: Props) {
           ready ? "border-st-available/50" : "border-st-audio/50"
         }`}
         style={{ background: ready ? "radial-gradient(circle at 50% 0%, #2fbf7126, transparent 70%)" : "radial-gradient(circle at 50% 0%, #e5484d26, transparent 70%)" }}
+        aria-live="polite"
       >
         <div className="font-mono text-[10px] uppercase tracking-[0.4em] text-dim">Studio status</div>
         <div className={`font-display mt-2 text-5xl lg:text-6xl ${ready ? "text-st-available" : "text-st-audio"}`} style={{ textShadow: ready ? "0 0 30px #2fbf7155" : "0 0 30px #e5484d55" }}>
@@ -81,6 +82,45 @@ export default function Preflight({ onSelect }: Props) {
       <div className="mt-4 rounded-2xl border border-line bg-surface/80 p-4 backdrop-blur">
         <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-dim">Music room · live</div>
         <DbMeter value={db} threshold={settings.dbThreshold} />
+      </div>
+
+      {/* The pre-flight can act, not only diagnose. */}
+      <div className={`mt-4 rounded-2xl border p-4 transition-colors ${preflightPrep?.active ? "border-st-available/35 bg-st-available/5" : "border-gold/25 bg-gold/5"}`}>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="font-mono text-[9px] uppercase tracking-[0.25em] text-gold">One-touch quiet</div>
+            <div className="mt-1 text-sm font-semibold">
+              {preflightPrep?.status === "preparing" ? "Silencing the room…" : preflightPrep?.status === "restoring" ? "Restoring studio devices…" : preflightPrep?.active ? "Room silence is armed" : "Let the house fix the noise"}
+            </div>
+            <p className="mt-1 text-xs text-dim">
+              {preflightPrep?.active ? "Doorbell is muted; AC and fan stay off until you return to Available." : "Mutes the doorbell, cuts the AC and fan, then waits for the live meter to prove the drop."}
+            </p>
+          </div>
+          <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${preflightPrep?.active ? "bg-st-available" : preflightPrep?.status === "preparing" ? "pulse-dot bg-gold" : "bg-dim"}`} />
+        </div>
+
+        {(preflightPrep?.status === "preparing" || preflightPrep?.active) && (
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {[
+              ["Doorbell", preflightPrep.mutedDoorbell],
+              ["AC", preflightPrep.acOff],
+              ["Fan", preflightPrep.fanOff],
+            ].map(([label, done]) => (
+              <div key={String(label)} className={`rounded-lg border px-2 py-2 text-center font-mono text-[8px] uppercase tracking-wider ${done ? "border-st-available/30 bg-st-available/10 text-st-available" : "border-line text-dim"}`}>
+                {done ? "✓ " : "… "}{label}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button
+          onClick={() => preflightPrep?.active ? restoreStudio() : prepareStudio()}
+          disabled={preflightPrep?.status === "preparing" || preflightPrep?.status === "restoring"}
+          className="mt-4 w-full rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm font-semibold text-gold transition-all active:scale-[0.99] disabled:cursor-wait disabled:opacity-60"
+        >
+          {preflightPrep?.status === "preparing" ? "Listening for silence…" : preflightPrep?.status === "restoring" ? "Restoring…" : preflightPrep?.active ? "Restore doorbell, AC & fan" : "Silence the room"}
+        </button>
+        {!doorsClosed && <p className="mt-2 text-center font-mono text-[9px] text-st-meeting">The house cannot close a physical door — {openList} still needs you.</p>}
       </div>
 
       {/* Gated start */}

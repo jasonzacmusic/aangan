@@ -11,10 +11,3 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     </StoreProvider>
   </React.StrictMode>
 );
-
-// PWA offline shell — production only so dev HMR stays clean.
-if (import.meta.env.PROD && "serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
-  });
-}

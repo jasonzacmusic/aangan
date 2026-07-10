@@ -40,16 +40,76 @@ export interface Safety {
   leakBath: boolean;
 }
 
+export type SafetyAlertKind = keyof Safety | "clear";
+
 export interface Doorbell {
   snapshotUrl: string;
   ts: number;
 }
 
+export type ActivityEventType = "state" | "safety" | "doorbell" | "preflight" | "utility" | "system";
+export type ActivitySeverity = "info" | "success" | "warning" | "critical";
+
+export interface ActivityEvent {
+  id: string;
+  type: ActivityEventType;
+  title: string;
+  detail: string;
+  ts: number;
+  severity: ActivitySeverity;
+}
+
+export type PreflightPrepStatus = "idle" | "preparing" | "ready" | "restoring";
+
+export interface PreflightPrep {
+  active: boolean;
+  status: PreflightPrepStatus;
+  mutedDoorbell: boolean;
+  acOff: boolean;
+  fanOff: boolean;
+  startedAt?: number;
+}
+
+export interface Utilities {
+  water: {
+    sumpPct: number;
+    overheadPct: number;
+    pumpRunning: boolean;
+    dryRunProtected: boolean;
+    lastFillTs: number;
+  };
+  power: {
+    mainsOnline: boolean;
+    voltage: number;
+    inverterPct: number;
+    estimatedMinutes: number;
+    surgeProtected: boolean;
+  };
+  lpg: {
+    remainingPct: number;
+    estimatedDays: number;
+  };
+  air: {
+    aqi: number;
+    pm25: number;
+    tempC: number;
+    humidityPct: number;
+    purifierOn: boolean;
+  };
+}
+
+export type UtilityAction = "water_pump_toggle" | "purifier_toggle";
+export type ConnectionState = "online" | "reconnecting" | "offline";
+
 export type StreamEvent =
   | { type: "state"; state: StudioStateInfo }
   | { type: "rooms"; rooms: Room[] }
   | { type: "safety"; safety: Safety }
-  | { type: "doorbell"; doorbell: Doorbell };
+  | { type: "doorbell"; doorbell: Doorbell }
+  | { type: "history"; event: ActivityEvent }
+  | { type: "utilities"; utilities: Utilities }
+  | { type: "preflight"; preflight: Preflight; prep: PreflightPrep }
+  | { type: "connection"; status: ConnectionState };
 
 export interface SceneDef {
   id: string;
@@ -66,8 +126,17 @@ export interface ApiAdapter {
   getPreflight(): Promise<Preflight>;
   getSafety(): Promise<Safety>;
   getDoorbell(): Promise<Doorbell>;
+  getHistory(): Promise<ActivityEvent[]>;
+  getUtilities(): Promise<Utilities>;
+  getPreflightPrep(): Promise<PreflightPrep>;
   panic(): Promise<void>;
-  scene(name: string): Promise<StudioStateInfo>;
+  scene(name: string, state: StudioState): Promise<StudioStateInfo>;
+  preparePreflight(): Promise<PreflightPrep>;
+  restorePreflight(): Promise<PreflightPrep>;
+  runUtilityAction(action: UtilityAction): Promise<Utilities>;
+  playTone(hz: number): Promise<void>;
+  /** Development/commissioning endpoint. The production UI exposes this only in mock mode. */
+  triggerSafetyDemo(kind: SafetyAlertKind): Promise<Safety>;
   /** Subscribe to live updates (SSE on live, simulated ticker on mock). Returns unsubscribe. */
   subscribe(cb: (ev: StreamEvent) => void): () => void;
   /** Local recording-quiet threshold in dB (mock computes pre-flight with it). */
@@ -81,6 +150,7 @@ export interface StateMeta {
   rgb: string; // "r g b" for tailwind-style alpha usage
   needsConfirm: boolean;
   tagline: string;
+  houseAction: string;
 }
 
 export const STATE_ORDER: StudioState[] = [
@@ -100,6 +170,7 @@ export const STATE_META: Record<StudioState, StateMeta> = {
     rgb: "47 191 113",
     needsConfirm: false,
     tagline: "The house is open. Come on in.",
+    houseAction: "Signs green · doorbell on · studio devices restored",
   },
   class: {
     label: "Class",
@@ -108,6 +179,7 @@ export const STATE_META: Record<StudioState, StateMeta> = {
     rgb: "59 130 246",
     needsConfirm: false,
     tagline: "Lesson in progress — enter softly.",
+    houseAction: "Signs blue · silent doorbell · warm lesson lights",
   },
   meeting: {
     label: "Meeting",
@@ -116,6 +188,7 @@ export const STATE_META: Record<StudioState, StateMeta> = {
     rgb: "245 166 35",
     needsConfirm: false,
     tagline: "On a call. Knock before entering.",
+    houseAction: "Signs amber · calls protected · family nudged",
   },
   audio_rec: {
     label: "Audio Rec",
@@ -124,6 +197,7 @@ export const STATE_META: Record<StudioState, StateMeta> = {
     rgb: "229 72 77",
     needsConfirm: true,
     tagline: "Tape is rolling. Absolute silence.",
+    houseAction: "Tally red · AC and fan off · take log armed",
   },
   video_rec: {
     label: "Video Rec",
@@ -132,6 +206,7 @@ export const STATE_META: Record<StudioState, StateMeta> = {
     rgb: "217 48 54",
     needsConfirm: true,
     tagline: "Cameras hot. Do not cross the frame.",
+    houseAction: "On-Air red · doorbell muted · camera path clear",
   },
   emergency: {
     label: "Emergency",
@@ -140,6 +215,7 @@ export const STATE_META: Record<StudioState, StateMeta> = {
     rgb: "124 58 237",
     needsConfirm: true,
     tagline: "All family phones are ringing.",
+    houseAction: "Signs flash violet · phones ring · snapshot shared",
   },
 };
 

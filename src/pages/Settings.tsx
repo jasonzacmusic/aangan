@@ -4,13 +4,14 @@ import { DATA_SOURCE } from "../api/api";
 import { LIVE_BASE_URL } from "../config";
 import { STATE_META, STATE_ORDER, SceneDef, StudioState } from "../api/types";
 
-function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
     <button
       onClick={() => onChange(!on)}
       className={`relative h-7 w-12 rounded-full border transition-colors ${on ? "border-gold bg-gold/30" : "border-line bg-surface2"}`}
       role="switch"
       aria-checked={on}
+      aria-label={label}
     >
       <span
         className={`absolute top-0.5 h-5.5 w-5.5 rounded-full transition-all ${on ? "left-6 bg-gold" : "left-0.5 bg-dim"}`}
@@ -33,12 +34,21 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
 }
 
 export default function Settings() {
-  const { settings, updateSettings } = useStore();
+  const { settings, updateSettings, notificationPermission, requestNotificationPermission } = useStore();
+
+  const icons = ["🎬", "🎹", "🎙️", "🎧", "💡", "🌙", "☕", "🎸", "🎼", "🔴"];
 
   const updateScene = (idx: number, patch: Partial<SceneDef>) => {
     const scenes = settings.scenes.map((s, i) => (i === idx ? { ...s, ...patch } : s));
     updateSettings({ scenes });
   };
+
+  const addScene = () => {
+    const id = typeof crypto !== "undefined" && "randomUUID" in crypto ? `custom-${crypto.randomUUID()}` : `custom-${Date.now()}`;
+    updateSettings({ scenes: [...settings.scenes, { id, label: "New house scene", state: "available", icon: "💡" }] });
+  };
+
+  const removeScene = (idx: number) => updateSettings({ scenes: settings.scenes.filter((_, i) => i !== idx) });
 
   return (
     <div className="rise-in mx-auto max-w-md px-5 lg:max-w-2xl">
@@ -64,6 +74,8 @@ export default function Settings() {
             value={settings.dbThreshold}
             onChange={(e) => updateSettings({ dbThreshold: Number(e.target.value) })}
             className="mt-4 w-full accent-[#c9a84c]"
+            aria-label="Recording quiet threshold in decibels"
+            aria-valuetext={`${settings.dbThreshold} decibels`}
           />
           <div className="flex justify-between font-mono text-[9px] text-dim">
             <span>35 · studio silence</span>
@@ -77,33 +89,57 @@ export default function Settings() {
         <div className="border-b border-line py-3 font-mono text-[10px] uppercase tracking-[0.3em] text-dim">Family notifications</div>
         <div className="divide-y divide-line">
           <Row label="State changes" hint="WhatsApp ping when the studio state flips">
-            <Toggle on={settings.notifyStateChanges} onChange={(v) => updateSettings({ notifyStateChanges: v })} />
+            <Toggle label="State change notifications" on={settings.notifyStateChanges} onChange={(v) => updateSettings({ notifyStateChanges: v })} />
           </Row>
           <Row label="Emergency" hint="Ring every phone — cannot be missed">
-            <Toggle on={settings.notifyEmergency} onChange={(v) => updateSettings({ notifyEmergency: v })} />
+            <Toggle label="Emergency notifications" on={settings.notifyEmergency} onChange={(v) => updateSettings({ notifyEmergency: v })} />
           </Row>
           <Row label="Doorbell" hint="Snapshot to the family group on every ring">
-            <Toggle on={settings.notifyDoorbell} onChange={(v) => updateSettings({ notifyDoorbell: v })} />
+            <Toggle label="Doorbell notifications" on={settings.notifyDoorbell} onChange={(v) => updateSettings({ notifyDoorbell: v })} />
           </Row>
           <Row label="State chimes" hint="Each state answers with its own chord">
-            <Toggle on={settings.chimes} onChange={(v) => updateSettings({ chimes: v })} />
+            <Toggle label="State chimes" on={settings.chimes} onChange={(v) => updateSettings({ chimes: v })} />
+          </Row>
+          <Row label="Emergency siren loop" hint="Repeats until stand-down, even when state chimes are muted">
+            <Toggle label="Emergency siren loop" on={settings.emergencySiren} onChange={(v) => updateSettings({ emergencySiren: v })} />
+          </Row>
+          <Row label="Device safety alerts" hint={notificationPermission === "granted" ? "Gas and leak alerts can appear outside the app" : notificationPermission === "denied" ? "Blocked in this browser's settings" : notificationPermission === "unsupported" ? "Not supported by this browser" : "Allow urgent gas and leak notifications"}>
+            <button
+              onClick={requestNotificationPermission}
+              disabled={notificationPermission === "granted" || notificationPermission === "unsupported"}
+              className={`shrink-0 rounded-full border px-3 py-1.5 font-mono text-[9px] uppercase tracking-wider ${notificationPermission === "granted" ? "border-st-available/30 bg-st-available/10 text-st-available" : "border-gold/40 text-gold disabled:opacity-60"}`}
+            >
+              {notificationPermission === "granted" ? "Enabled" : "Enable"}
+            </button>
           </Row>
         </div>
       </section>
 
       {/* Scene editor */}
       <section className="mt-4 rounded-2xl border border-line bg-surface/80 px-4 pb-4 backdrop-blur">
-        <div className="border-b border-line py-3 font-mono text-[10px] uppercase tracking-[0.3em] text-dim">Scenes</div>
+        <div className="flex items-center justify-between border-b border-line py-3">
+          <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-dim">Scenes</span>
+          <button onClick={addScene} className="rounded-full border border-gold/35 bg-gold/5 px-3 py-1.5 font-mono text-[9px] uppercase tracking-wider text-gold">+ Add scene</button>
+        </div>
         <div className="space-y-3 pt-3">
           {settings.scenes.map((sc, i) => (
             <div key={sc.id} className="rounded-xl border border-line bg-surface2 p-3">
               <div className="flex items-center gap-2">
-                <span className="text-lg">{sc.icon}</span>
+                <select
+                  value={sc.icon}
+                  onChange={(e) => updateScene(i, { icon: e.target.value })}
+                  aria-label={`Icon for ${sc.label}`}
+                  className="h-10 w-12 rounded-lg border border-line bg-ink px-1 text-center text-lg outline-none focus:border-gold/60"
+                >
+                  {icons.map((icon) => <option key={icon} value={icon}>{icon}</option>)}
+                </select>
                 <input
                   value={sc.label}
                   onChange={(e) => updateScene(i, { label: e.target.value })}
-                  className="w-full rounded-lg border border-line bg-ink px-3 py-2 text-sm outline-none focus:border-gold/60"
+                  aria-label={`Scene name for ${sc.label}`}
+                  className="min-w-0 flex-1 rounded-lg border border-line bg-ink px-3 py-2 text-sm outline-none focus:border-gold/60"
                 />
+                <button onClick={() => removeScene(i)} className="h-10 rounded-lg border border-line px-3 text-xs text-dim hover:text-st-audio" aria-label={`Remove ${sc.label}`}>Remove</button>
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {STATE_ORDER.filter((s) => s !== "emergency").map((s) => {
@@ -113,6 +149,7 @@ export default function Settings() {
                     <button
                       key={s}
                       onClick={() => updateScene(i, { state: s as StudioState })}
+                      aria-label={`Set ${sc.label} to ${m.label}`}
                       className="rounded-full border px-2.5 py-1 font-mono text-[9px] uppercase tracking-wider transition-colors"
                       style={{
                         borderColor: active ? m.color : "#2a2a33",
@@ -127,11 +164,12 @@ export default function Settings() {
               </div>
             </div>
           ))}
+          {settings.scenes.length === 0 && <div className="rounded-xl border border-dashed border-line p-5 text-center text-xs text-dim">No quick scenes yet. Add one to the Command page.</div>}
         </div>
       </section>
 
       <p className="mt-6 pb-4 text-center font-mono text-[9px] leading-relaxed text-dim/60">
-        Studio Command v1 · Nathaniel School of Music
+        Studio Command · House + Studio · Nathaniel School of Music
         <br />
         flip USE_MOCK in src/config.ts when the Pi wrapper is live
       </p>

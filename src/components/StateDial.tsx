@@ -45,6 +45,7 @@ export default function StateDial({ info, committing, chimes, onSelect }: Props)
   const [dragging, setDragging] = useState(false);
   const draggingRef = useRef(false); // state alone is stale for fast tap (down+up same frame)
   const svgRef = useRef<SVGSVGElement>(null);
+  const segmentRefs = useRef<Array<SVGGElement | null>>([]);
   const lastHover = useRef<number | null>(null);
   const [, forceTick] = useState(0);
 
@@ -103,9 +104,28 @@ export default function StateDial({ info, committing, chimes, onSelect }: Props)
     }
   };
 
+  const handleKey = (event: React.KeyboardEvent<SVGGElement>, index: number) => {
+    if (committing) return;
+    let target = index;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") target = (index + 1) % STATE_ORDER.length;
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") target = (index - 1 + STATE_ORDER.length) % STATE_ORDER.length;
+    else if (event.key === "Home") target = 0;
+    else if (event.key === "End") target = STATE_ORDER.length - 1;
+    else if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    if (target !== currentIdx) {
+      playTick(chimes);
+      haptic(6);
+      setHoverIdx(target);
+      requestAnimationFrame(() => segmentRefs.current[target]?.focus());
+      onSelect(STATE_ORDER[target]);
+    }
+  };
+
   const needleIdx = hoverIdx ?? currentIdx;
   const needleAngle = centerAngle(needleIdx);
   const meta = STATE_META[info.state];
+  const previewMeta = STATE_META[STATE_ORDER[needleIdx]];
 
   return (
     <div className="relative mx-auto w-full max-w-[380px] select-none touch-none lg:max-w-[460px]">
@@ -118,6 +138,9 @@ export default function StateDial({ info, committing, chimes, onSelect }: Props)
         onPointerUp={handleUp}
         onPointerCancel={handleUp}
         style={{ touchAction: "none" }}
+        role="radiogroup"
+        aria-label="Studio state selector. Use arrow keys or choose a state."
+        aria-busy={committing}
       >
         <defs>
           <radialGradient id="hub" cx="50%" cy="42%" r="65%">
@@ -143,7 +166,19 @@ export default function StateDial({ info, committing, chimes, onSelect }: Props)
           const hovered = i === hoverIdx && i !== currentIdx;
           const [lx, ly] = polar((R_OUT + R_IN) / 2, a);
           return (
-            <g key={s} className="cursor-pointer">
+            <g
+              key={s}
+              ref={(node) => { segmentRefs.current[i] = node; }}
+              className="cursor-pointer outline-none"
+              role="radio"
+              aria-checked={active}
+              aria-label={`${m.label}. ${m.tagline}`}
+              aria-disabled={committing}
+              tabIndex={0}
+              onFocus={() => setHoverIdx(i)}
+              onBlur={() => setHoverIdx(null)}
+              onKeyDown={(event) => handleKey(event, i)}
+            >
               <path
                 d={arcPath(R_IN, R_OUT, a - SEG_SWEEP / 2, a + SEG_SWEEP / 2)}
                 fill={m.color}
@@ -208,6 +243,14 @@ export default function StateDial({ info, committing, chimes, onSelect }: Props)
         <div className="mt-1 font-mono text-[10px] text-dim">
           for {timeSince(info.since)} · by {info.setBy}
         </div>
+      </div>
+
+      <div
+        className="mx-auto -mt-1 min-h-9 max-w-[350px] rounded-full border px-4 py-2 text-center font-mono text-[9px] uppercase tracking-[0.12em] text-dim transition-colors"
+        style={{ borderColor: `${previewMeta.color}44`, color: `${previewMeta.color}cc`, background: `${previewMeta.color}0d` }}
+        aria-live="polite"
+      >
+        {previewMeta.houseAction}
       </div>
     </div>
   );

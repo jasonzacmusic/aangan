@@ -95,3 +95,57 @@ export function haptic(pattern: number | number[] = 8) {
     /* not supported */
   }
 }
+
+/** Clean concert A (or another requested reference) with a gentle fade. */
+export function playReferenceTone(hz = 440, seconds = 1.8) {
+  const a = ac();
+  if (!a) return;
+  const now = a.currentTime;
+  const osc = a.createOscillator();
+  const overtone = a.createOscillator();
+  const master = a.createGain();
+  const overtoneGain = a.createGain();
+  osc.type = "sine";
+  osc.frequency.value = hz;
+  overtone.type = "sine";
+  overtone.frequency.value = hz * 2;
+  overtoneGain.gain.value = 0.06;
+  master.gain.setValueAtTime(0.0001, now);
+  master.gain.exponentialRampToValueAtTime(0.12, now + 0.08);
+  master.gain.setValueAtTime(0.12, now + Math.max(0.1, seconds - 0.35));
+  master.gain.exponentialRampToValueAtTime(0.0001, now + seconds);
+  osc.connect(master);
+  overtone.connect(overtoneGain).connect(master);
+  master.connect(a.destination);
+  osc.start(now);
+  overtone.start(now);
+  osc.stop(now + seconds + 0.05);
+  overtone.stop(now + seconds + 0.05);
+}
+
+/**
+ * Optional emergency loop. It deliberately starts after the transition chord,
+ * so an emergency has one musical acknowledgement before the repeating siren.
+ */
+export function startEmergencySiren(enabled: boolean): () => void {
+  if (!enabled) return () => {};
+  let stopped = false;
+  let interval: ReturnType<typeof setInterval> | null = null;
+  let first: ReturnType<typeof setTimeout> | null = null;
+
+  const pulse = () => {
+    if (stopped) return;
+    // The siren setting intentionally overrides the general chime mute.
+    playStateChime("emergency", true);
+  };
+  first = setTimeout(() => {
+    pulse();
+    interval = setInterval(pulse, 2800);
+  }, 1200);
+
+  return () => {
+    stopped = true;
+    if (first) clearTimeout(first);
+    if (interval) clearInterval(interval);
+  };
+}

@@ -73,6 +73,7 @@ export default function Nav({ tab, setTab }: Props) {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
+              aria-current={tab === t.id ? "page" : undefined}
               className={`flex flex-1 flex-col items-center gap-1 py-2.5 transition-colors ${tab === t.id ? "text-gold" : "text-dim"}`}
             >
               {t.icon}
@@ -91,6 +92,7 @@ export default function Nav({ tab, setTab }: Props) {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
+              aria-current={tab === t.id ? "page" : undefined}
               className={`flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm transition-colors ${
                 tab === t.id ? "bg-surface text-gold" : "text-dim hover:text-paper"
               }`}

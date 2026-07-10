@@ -1,51 +1,67 @@
-/* Studio Command — offline shell service worker */
-const SHELL = "studio-command-shell-v1";
-const RUNTIME = "studio-command-runtime-v1";
-const PRECACHE = ["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/nsm-white.png"];
+/* Studio Command — versioned offline shell with user-controlled updates. */
+const BUILD_ID = "__BUILD_ID__";
+const SHELL = `studio-command-shell-${BUILD_ID}`;
+const RUNTIME = `studio-command-runtime-${BUILD_ID}`;
+const OFFLINE_SHELL = "/__studio-command-offline-shell__";
+const STABLE_ASSETS = ["/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/nsm-white.png"];
 
-self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(SHELL).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
-});
-
-self.addEventListener("activate", (e) => {
-  e.waitUntil(
-    caches
-      .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== SHELL && k !== RUNTIME).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(SHELL);
+      await cache.addAll(STABLE_ASSETS);
+      const response = await fetch(new Request("/", { cache: "reload" }));
+      if (!response.ok) throw new Error("App shell unavailable");
+      const html = await response.clone().text();
+      await cache.put(OFFLINE_SHELL, response);
+      const assetPaths = [...html.matchAll(/(?:src|href)=["'](\/assets\/[^"']+)["']/g)].map((match) => match[1]);
+      await Promise.all(assetPaths.map(async (path) => {
+        try { await cache.add(new Request(path, { cache: "reload" })); } catch { /* one optional asset must not block install */ }
+      }));
+      // Do not activate over a running recording session. The app displays a
+      // refresh prompt and sends SKIP_WAITING when Jason chooses the moment.
+    })()
   );
 });
 
-self.addEventListener("fetch", (e) => {
-  const url = new URL(e.request.url);
-  if (e.request.method !== "GET") return;
-  // Never intercept the live data plane.
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((key) => key.startsWith("studio-command-") && key !== SHELL && key !== RUNTIME).map((key) => caches.delete(key)));
+      await self.clients.claim();
+    })()
+  );
+});
+
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
   if (url.pathname.startsWith("/api/")) return;
 
-  // Navigations: network first, offline shell fallback.
-  if (e.request.mode === "navigate") {
-    e.respondWith(
-      fetch(e.request)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(SHELL).then((c) => c.put("/", copy));
-          return res;
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then(async (response) => {
+          if (response.ok) await (await caches.open(SHELL)).put(OFFLINE_SHELL, response.clone());
+          return response;
         })
-        .catch(() => caches.match("/"))
+        .catch(async () => (await caches.match(OFFLINE_SHELL)) || Response.error())
     );
     return;
   }
 
-  // Same-origin assets + fonts: stale-while-revalidate.
-  e.respondWith(
-    caches.match(e.request).then((cached) => {
-      const fresh = fetch(e.request)
-        .then((res) => {
-          if (res.ok && (url.origin === location.origin || url.hostname.endsWith("gstatic.com") || url.hostname.endsWith("googleapis.com"))) {
-            const copy = res.clone();
-            caches.open(RUNTIME).then((c) => c.put(e.request, copy));
-          }
-          return res;
+  if (url.origin !== self.location.origin) return;
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      const fresh = fetch(event.request)
+        .then(async (response) => {
+          if (response.ok) await (await caches.open(RUNTIME)).put(event.request, response.clone());
+          return response;
         })
         .catch(() => cached);
       return cached || fresh;

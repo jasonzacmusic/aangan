@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useStore } from "../state/store";
 import HoldButton from "../components/HoldButton";
-import { STATE_META } from "../api/types";
+import { SafetyAlertKind, STATE_META } from "../api/types";
 
 function SafetyTile({ label, alert, okText, alertText }: { label: string; alert: boolean; okText: string; alertText: string }) {
   return (
@@ -16,7 +16,34 @@ function SafetyTile({ label, alert, okText, alertText }: { label: string; alert:
 }
 
 export default function Safety() {
-  const { safety, doorbell, stateInfo, triggerPanic, refreshDoorbell } = useStore();
+  const { safety, doorbell, stateInfo, triggerPanic, refreshDoorbell, dataSource, triggerSafetyDemo } = useStore();
+  const [demoActive, setDemoActive] = useState(false);
+  const demoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const demoIndex = useRef(0);
+  const anyAlert = !!safety && Object.values(safety).some(Boolean);
+
+  const cancelDemoHold = () => {
+    if (demoTimer.current) clearTimeout(demoTimer.current);
+    demoTimer.current = null;
+  };
+
+  const startDemoHold = () => {
+    if (dataSource !== "mock") return;
+    cancelDemoHold();
+    demoTimer.current = setTimeout(() => {
+      const kinds: SafetyAlertKind[] = ["gas", "leakKitchen", "leakBath"];
+      void triggerSafetyDemo(kinds[demoIndex.current % kinds.length]);
+      demoIndex.current += 1;
+      setDemoActive(true);
+    }, 1200);
+  };
+
+  useEffect(() => {
+    if (!anyAlert) setDemoActive(false);
+  }, [anyAlert]);
+
+  useEffect(() => () => cancelDemoHold(), []);
+
   if (!safety || !stateInfo) return null;
 
   const recording = stateInfo.state === "audio_rec" || stateInfo.state === "video_rec";
@@ -24,8 +51,23 @@ export default function Safety() {
 
   return (
     <div className="rise-in mx-auto max-w-md px-5 lg:max-w-2xl">
-      <h2 className="font-display mb-1 text-2xl lg:text-3xl">Safety</h2>
+      <h2
+        className="font-display mb-1 w-fit text-2xl lg:text-3xl"
+        onPointerDown={startDemoHold}
+        onPointerUp={cancelDemoHold}
+        onPointerCancel={cancelDemoHold}
+        onPointerLeave={cancelDemoHold}
+        onContextMenu={(event) => event.preventDefault()}
+        title={dataSource === "mock" ? "Hold to run the next sensor demo" : undefined}
+      >Safety</h2>
       <p className="mb-5 font-mono text-[11px] text-dim">gas · water · front door</p>
+
+      {demoActive && anyAlert && (
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-st-meeting/40 bg-st-meeting/10 px-3 py-2.5">
+          <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-st-meeting">Sensor demo · visible and notification-ready</span>
+          <button onClick={() => triggerSafetyDemo("clear")} className="ml-3 shrink-0 text-xs font-semibold text-paper">Reset</button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <SafetyTile label="Gas · Kitchen" alert={safety.gas} okText="No gas detected" alertText="GAS DETECTED" />
