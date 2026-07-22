@@ -1,0 +1,49 @@
+# ESP32 node 1 — STUDIO DOORS
+# Two double-doors (recording studio + teaching room), TWO reeds per door,
+# one reed on each leaf, mounted BETWEEN the leaves at the top rail.
+# Reed = MC-38 (Jason owns 9). Wire: one lead to GPIO, one to GND.
+esphome:
+  name: studio-doors
+  friendly_name: Studio Doors
+
+esp32:
+  board: esp32dev # ESP-IDF is the default framework in ESPHome ≥2026.1
+
+logger:
+api:
+  encryption:
+    key: !secret api_key_studio_doors
+ota:
+  - platform: esphome
+    password: !secret ota_password
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "studio-doors setup"
+    password: !secret ap_password
+captive_portal:
+
+binary_sensor:
+  - platform: gpio
+    name: "Studio door leaf A"
+    pin: { number: GPIO25, mode: { input: true, pullup: true }, inverted: true }
+    device_class: door
+    filters: [delayed_on: 50ms, delayed_off: 50ms]
+  - platform: gpio
+    name: "Studio door leaf B"
+    pin: { number: GPIO26, mode: { input: true, pullup: true }, inverted: true }
+    device_class: door
+    filters: [delayed_on: 50ms, delayed_off: 50ms]
+  - platform: gpio
+    name: "Teaching door leaf A"
+    pin: { number: GPIO32, mode: { input: true, pullup: true }, inverted: true }
+    device_class: door
+    filters: [delayed_on: 50ms, delayed_off: 50ms]
+  - platform: gpio
+    name: "Teaching door leaf B"
+    pin: { number: GPIO33, mode: { input: true, pullup: true }, inverted: true }
+    device_class: door
+    filters: [delayed_on: 50ms, delayed_off: 50ms]
+  - platform: status
+    name: "Studio doors node online"

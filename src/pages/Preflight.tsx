@@ -39,7 +39,7 @@ export default function Preflight({ onSelect }: Props) {
   const db = music?.dbLevel ?? preflight.dbLevel;
   const quiet = db < settings.dbThreshold;
   const doorsClosed = preflight.doorsClosed;
-  const ready = doorsClosed && quiet;
+  const ready = doorsClosed && quiet && preflight.sensorsHealthy && preflight.safetyClear;
 
   const openList = preflight.openDoors.map((id) => ROOM_NAMES[id]).join(", ");
 
@@ -75,6 +75,16 @@ export default function Preflight({ onSelect }: Props) {
           ok={quiet}
           title={quiet ? "Room is quiet" : `Too loud — ${db.toFixed(0)} dB`}
           detail={quiet ? `Holding under your ${settings.dbThreshold} dB threshold.` : `Needs to drop under ${settings.dbThreshold} dB. Check the fan, AC, or traffic noise.`}
+        />
+        <CheckRow
+          ok={preflight.sensorsHealthy}
+          title={preflight.sensorsHealthy ? "Every sensor is reporting" : "A sensor node is silent"}
+          detail={preflight.sensorsHealthy ? "All zones checked in recently — the verdict can be trusted." : "A zone stopped reporting, so the house cannot vouch for the room. Check the ESP32 nodes."}
+        />
+        <CheckRow
+          ok={preflight.safetyClear}
+          title={preflight.safetyClear ? "No safety alerts" : "A safety alert is active"}
+          detail={preflight.safetyClear ? "No fire, gas, leak or panic anywhere in the house." : "Recording stays locked while a fire, gas, leak or panic alert is live."}
         />
       </div>
 

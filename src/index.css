@@ -151,6 +151,12 @@ select:focus-visible,
 }
 .rise-in { animation: rise-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
+@keyframes panel-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.panel-pulse { animation: panel-pulse 3.2s ease-in-out infinite; }
+
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
 

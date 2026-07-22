@@ -1,0 +1,208 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# STUDIO COMMAND — Home Assistant package (HOUSE Pi, Home Assistant OS ≥2026.7)
+# Drop into /config/packages/ and add to configuration.yaml:
+#   homeassistant:
+#     packages: !include_dir_named packages
+# Entity ids below match the ESPHome nodes in pi/house/esphome/. Rename in ONE
+# place (here) if your ids differ after adoption.
+# Replace notify.all_family with a notify group of every Companion-app phone.
+# ─────────────────────────────────────────────────────────────────────────────
+
+input_select:
+  studio_state:
+    name: Studio state
+    options: [available, class, meeting, audio_rec, video_rec, emergency]
+    icon: mdi:tune-variant
+
+input_number:
+  studio_db_threshold:
+    name: Studio dB threshold (trained)
+    min: 30
+    max: 90
+    step: 0.5
+    unit_of_measurement: dBA
+    icon: mdi:waveform
+    # Never hand-set: the Mac agent's `train` mode writes this from labelled takes.
+
+input_text:
+  studio_state_set_by:
+    name: Who set the studio state
+    initial: "Studio Command"
+
+template:
+  - binary_sensor:
+      # ── the one authoritative verdict ──────────────────────────────────────
+      - name: studio_ready
+        unique_id: studio_ready_verdict
+        device_class: running
+        state: >
+          {{ is_state('binary_sensor.studio_doors_ok', 'on')
+             and is_state('binary_sensor.studio_quiet', 'on')
+             and is_state('binary_sensor.studio_sensors_healthy', 'on')
+             and is_state('binary_sensor.house_safety_clear', 'on') }}
+
+      - name: studio_doors_ok
+        state: >
+          {{ is_state('binary_sensor.studio_door_leaf_a', 'off')
+             and is_state('binary_sensor.studio_door_leaf_b', 'off')
+             and is_state('binary_sensor.teaching_door_leaf_a', 'off')
+             and is_state('binary_sensor.teaching_door_leaf_b', 'off') }}
+
+      # Hysteresis: goes quiet only after holding under (threshold − 2 dB) for
+      # 20 s (the delay_on below), goes loud immediately past (threshold + 1 dB).
+      - name: studio_quiet
+        delay_on: "00:00:20"
+        state: >
+          {% set db = states('sensor.studio_sound_level') | float(999) %}
+          {% set thr = states('input_number.studio_db_threshold') | float(45) %}
+          {% if is_state('binary_sensor.studio_quiet', 'on') %}
+            {{ db < thr + 1 }}
+          {% else %}
+            {{ db < thr - 2 }}
+          {% endif %}
+
+      - name: studio_sensors_healthy
+        state: >
+          {{ is_state('binary_sensor.studio_doors_node_online', 'on')
+             and is_state('binary_sensor.studio_sense_node_online', 'on')
+             and is_state('binary_sensor.kitchen_safety_node_online', 'on')
+             and is_state('binary_sensor.wet_zones_node_online', 'on')
+             and is_state('binary_sensor.perimeter_node_online', 'on')
+             and is_state('binary_sensor.panic_loop_node_online', 'on') }}
+
+      - name: house_safety_clear
+        state: >
+          {{ is_state('binary_sensor.lpg_detector_alarm_contact', 'off')
+             and is_state('binary_sensor.smoke_alarm_studio_flat', 'off')
+             and is_state('binary_sensor.smoke_alarm_house_flat', 'off')
+             and is_state('binary_sensor.kitchen_flame_sensor', 'off')
+             and is_state('binary_sensor.studio_flame_sensor', 'off')
+             and is_state('binary_sensor.teaching_room_flame_sensor', 'off')
+             and is_state('binary_sensor.panic_loop_broken', 'off')
+             and is_state('binary_sensor.bathroom_1_leak', 'off')
+             and is_state('binary_sensor.bathroom_2_leak', 'off')
+             and is_state('binary_sensor.kitchen_sink_leak', 'off') }}
+
+# ── critical alerts: repeat until acknowledged, bypass silent mode ───────────
+alert:
+  fire_alarm:
+    name: "🔥 FIRE — smoke or flame detected"
+    entity_id: binary_sensor.house_fire_any
+    state: "on"
+    repeat: [1, 2, 5]
+    can_acknowledge: true
+    notifiers: [all_family_critical]
+  gas_alarm:
+    name: "⚠️ LPG GAS detected in the kitchen"
+    entity_id: binary_sensor.lpg_detector_alarm_contact
+    state: "on"
+    repeat: [1, 2, 5]
+    can_acknowledge: true
+    notifiers: [all_family_critical]
+  panic_alarm:
+    name: "🆘 PANIC button pressed"
+    entity_id: binary_sensor.panic_loop_broken
+    state: "on"
+    repeat: [1, 2]
+    can_acknowledge: true
+    notifiers: [all_family_critical]
+
+# helper the fire alert watches
+binary_sensor:
+  - platform: template
+    sensors:
+      house_fire_any:
+        friendly_name: "Any fire signal"
+        device_class: smoke
+        value_template: >
+          {{ is_state('binary_sensor.smoke_alarm_studio_flat', 'on')
+             or is_state('binary_sensor.smoke_alarm_house_flat', 'on')
+             or is_state('binary_sensor.kitchen_flame_sensor', 'on')
+             or is_state('binary_sensor.studio_flame_sensor', 'on')
+             or is_state('binary_sensor.teaching_room_flame_sensor', 'on') }}
+
+notify:
+  - name: all_family_critical
+    platform: group
+    services:
+      # one entry per phone; the data block makes iOS ring THROUGH silent mode
+      # and Android use the alarm channel (verified Companion-app syntax):
+      - action: mobile_app_jasons_iphone
+        data:
+          push:
+            sound: { name: default, critical: 1, volume: 1.0 }
+      - action: mobile_app_family_android
+        data:
+          ttl: 0
+          priority: high
+          channel: alarm_stream
+
+automation:
+  - id: studio_state_lights
+    alias: "Studio state → room signs + tally"
+    trigger:
+      - platform: state
+        entity_id: input_select.studio_state
+    action:
+      - variables:
+          colors:
+            available: [47, 191, 113]
+            class: [59, 130, 246]
+            meeting: [245, 166, 35]
+            audio_rec: [229, 72, 77]
+            video_rec: [217, 48, 54]
+            emergency: [124, 58, 237]
+          c: "{{ colors[trigger.to_state.state] }}"
+      - action: light.turn_on
+        target: { entity_id: light.studio_tally_strip }
+        data: { rgb_color: "{{ c }}", brightness: 200 }
+
+  - id: rec_cues_piano
+    alias: "Recording state → cue the piano rig"
+    trigger:
+      - platform: state
+        entity_id: input_select.studio_state
+        to: [audio_rec, video_rec]
+    action:
+      - action: rest_command.piano_cue_recording
+
+  - id: rec_done_piano
+    alias: "Back to available → piano at ease"
+    trigger:
+      - platform: state
+        entity_id: input_select.studio_state
+        to: available
+    action:
+      - action: rest_command.piano_cue_stopped
+
+  - id: imposter_watch
+    alias: "Perimeter trip while nobody expects it"
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.main_door_vibration
+          - binary_sensor.balcony_vibration
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: input_select.studio_state
+        state: [audio_rec, video_rec, class, meeting]
+    action:
+      - action: notify.all_family_critical
+        data:
+          title: "Perimeter"
+          message: "Movement at {{ trigger.to_state.name }} while the studio is busy."
+
+rest_command:
+  piano_cue_recording:
+    url: "http://piano.local:8951/cue"
+    method: post
+    content_type: application/json
+    payload: '{"cue": "recording_started"}'
+    timeout: 3
+  piano_cue_stopped:
+    url: "http://piano.local:8951/cue"
+    method: post
+    content_type: application/json
+    payload: '{"cue": "recording_stopped"}'
+    timeout: 3

@@ -1,0 +1,59 @@
+# ESP32 node 3 — KITCHEN SAFETY (house kitchen, zone H1)
+# PRIMARY safety = the CERTIFIED LPG detector with its own siren, mounted LOW
+# (LPG is heavier than air). This node only LISTENS to its relay/alarm contact
+# so the app can ring phones too — the certified unit keeps working with no
+# Wi-Fi, no Pi, no ESP32. Same pattern for the certified smoke alarm's relay
+# output if the model has one.
+# MQ-2 is a SECONDARY hint only (needs 24–48 h burn-in, drifts with humidity).
+esphome:
+  name: kitchen-safety
+  friendly_name: Kitchen Safety
+
+esp32:
+  board: esp32dev
+
+logger:
+api:
+  encryption:
+    key: !secret api_key_kitchen_safety
+ota:
+  - platform: esphome
+    password: !secret ota_password
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "kitchen-safety setup"
+    password: !secret ap_password
+captive_portal:
+
+binary_sensor:
+  # Dry-contact relay output of the certified LPG detector (volt-free contacts
+  # only — NEVER feed detector mains/siren voltage into the ESP32).
+  - platform: gpio
+    name: "LPG detector alarm contact"
+    pin: { number: GPIO25, mode: { input: true, pullup: true }, inverted: true }
+    device_class: gas
+    filters: [delayed_on: 100ms]
+  - platform: gpio
+    name: "Kitchen flame sensor"
+    pin: { number: GPIO26, mode: { input: true, pullup: true }, inverted: true }
+    filters: [delayed_on: 200ms] # IR flame modules false-trigger on sunlight flicker
+  - platform: gpio
+    name: "Kitchen sink leak"
+    pin: { number: GPIO32, mode: { input: true, pullup: true }, inverted: true }
+    device_class: moisture
+    filters: [delayed_on: 500ms]
+  - platform: status
+    name: "Kitchen safety node online"
+
+sensor:
+  - platform: adc
+    pin: GPIO34
+    name: "Kitchen MQ-2 raw"
+    attenuation: 12db
+    update_interval: 5s
+    filters:
+      - sliding_window_moving_average: { window_size: 6, send_every: 6 }
+    # Uncalibrated smoke/LPG hint. Alert logic in HA treats this as
+    # "secondary evidence", never as the primary trigger.

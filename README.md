@@ -12,7 +12,12 @@ Every state recolors the five room signs, changes the house behavior, protects t
 - **Home** — entrance, music room, bedroom, kitchen, and bathroom sensors plus the new **House Pulse** for water tanks/pump, mains and inverter, LPG level, and music-room air quality.
 - **Pre-flight** — an exact go/no-go verdict. “Silence the room” mutes the doorbell, switches off AC and fan, watches the dB meter fall, and restores those devices after the studio returns to Available.
 - **Safety** — gas/leak status, live doorbell image, device notifications, guarded emergency trigger, and a full-screen emergency takeover with an optional repeating siren.
+- **Displays** — every wall/door screen is a generic panel: assign it Door sign, Studio state, House board, Doorbell cam, Custom message, or Clock, open it full-screen at `/#/display/<id>`, and add/remove panels freely. The **delivery OTP hand-off** lives here too: pick Swiggy/Zomato/Amazon/etc., type the OTP, and the door display shows it big to the delivery partner (with a note like "Leave it at the door") until it expires — nobody opens the door mid-take.
+- **Piano Rig** (on Home) — live status of the PIANO Pi (Pianoteq preset, CPU, temperature, buffer/latency) with preset next/prev cues; arming a Rec state cues the rig's tally automatically. Cues are one-way and can never glitch the audio.
 - **Settings** — dB threshold, family notifications, chimes/siren, device-alert permission, and a scene editor that can add, remove, rename, recolor, and re-icon scenes.
+
+Pre-flight now shows the full authoritative **studio_ready** verdict: doors closed AND
+trained-quiet AND every sensor node healthy AND no fire/gas/leak/panic.
 
 The mock house persists the studio state in IndexedDB, so a wall panel comes back in the same state after a reload. Settings and custom scenes persist too.
 
@@ -54,6 +59,15 @@ The TypeScript shapes in [src/api/types.ts](src/api/types.ts) and the comments i
 | GET | `/api/utilities` | — | `Utilities` |
 | POST | `/api/utilities/action` | `{ "action": "water_pump_toggle" \| "purifier_toggle" }` | `Utilities` |
 | POST | `/api/tone` | `{ "hz": 440 }` | `{ "ok": true }` |
+| GET | `/api/piano` | — | `PianoRig` |
+| POST | `/api/piano/cue` | `{ "cue": PianoCue }` | `PianoRig` |
+| GET | `/api/delivery` | — | `Delivery \| null` |
+| POST | `/api/delivery` | `{ courier, otp, note, displayId, minutes }` | `Delivery` |
+| POST | `/api/delivery/clear` | — | `{ "ok": true }` |
+| GET | `/api/displays` | — | `DisplayConfig[]` |
+| POST | `/api/displays/update` | `{ id, patch }` | `DisplayConfig[]` |
+| POST | `/api/displays/add` | `{ name }` | `DisplayConfig[]` |
+| POST | `/api/displays/remove` | `{ id }` | `DisplayConfig[]` |
 | POST | `/api/safety/demo` | `{ "kind": "gas" \| "leakKitchen" \| "leakBath" \| "clear" }` | `Safety` |
 
 `/api/safety/demo` is for installation/commissioning only. Disable or protect it on the production Pi. Studio Command exposes that gesture only while `USE_MOCK=true`.
@@ -123,6 +137,9 @@ interface PreflightPrep {
 | `history` | one `ActivityEvent` |
 | `utilities` | `Utilities` |
 | `preflight` | `{ "preflight": Preflight, "prep": PreflightPrep }` |
+| `piano` | `PianoRig` |
+| `delivery` | `Delivery` or JSON `null` |
+| `displays` | `DisplayConfig[]` |
 
 Send an initial `safety`, `utilities`, and `preflight` frame as soon as a client subscribes. Heartbeat comments such as `: keepalive` are welcome. If SSE drops, Studio Command polls the state, rooms, safety, pre-flight, and utilities every three seconds while retrying SSE every ten seconds.
 
@@ -153,5 +170,20 @@ npm run build
 ```
 
 The production build is written to `dist/`. `npm run build` stamps the service worker with a unique build ID so every Vercel release can be detected cleanly.
+
+## The rest of the system (in this repo)
+
+```
+pi/piano/     PIANO Pi: setup script, HiFiBerry config, Pianoteq + status-server services
+pi/house/     HOUSE Pi: HA package (the studio_ready verdict + critical alerts),
+              six ESPHome zone nodes, and the wrapper that serves this app's live API
+mac-agent/    the recording-Mac gate: record_gate.py (+ threshold TRAINING from real
+              takes) and GuardedRecord.lua for REAPER
+hardware/     BUY_LIST.md — owned vs to-buy, Silverline/robu.in/hifiberry sourcing
+docs/         INSTALL_DIAGRAMS.md and TEST_CHECKLIST.md
+```
+
+Going live: run the wrapper (port **8126** — 8123 belongs to Home Assistant), then set
+`USE_MOCK = false` and `LIVE_BASE_URL = "http://<wrapper-host>:8126"` in `src/config.ts`.
 
 For the non-technical delivery summary and the prioritized hardware plan, see [REPORT.md](REPORT.md).

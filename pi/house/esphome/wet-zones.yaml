@@ -1,0 +1,45 @@
+# ESP32 node 4 — WET ZONES
+# Water-leak pucks (Jason owns 6) at the floor low point of each bathroom.
+# One node can serve the two bathrooms of ONE apartment (keep runs < ~5 m,
+# use shielded/twisted pairs). Flash this file twice with different names
+# (wet-zones-studio / wet-zones-house) if wiring both flats.
+esphome:
+  name: wet-zones
+  friendly_name: Wet Zones
+
+esp32:
+  board: esp32dev
+
+logger:
+api:
+  encryption:
+    key: !secret api_key_wet_zones
+ota:
+  - platform: esphome
+    password: !secret ota_password
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "wet-zones setup"
+    password: !secret ap_password
+captive_portal:
+
+binary_sensor:
+  - platform: gpio
+    name: "Bathroom 1 leak"
+    pin: { number: GPIO25, mode: { input: true, pullup: true }, inverted: true }
+    device_class: moisture
+    filters: [delayed_on: 500ms]
+  - platform: gpio
+    name: "Bathroom 2 leak"
+    pin: { number: GPIO26, mode: { input: true, pullup: true }, inverted: true }
+    device_class: moisture
+    filters: [delayed_on: 500ms]
+  - platform: gpio
+    name: "Geyser overflow leak"
+    pin: { number: GPIO32, mode: { input: true, pullup: true }, inverted: true }
+    device_class: moisture
+    filters: [delayed_on: 500ms]
+  - platform: status
+    name: "Wet zones node online"

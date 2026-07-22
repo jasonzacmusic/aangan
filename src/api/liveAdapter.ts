@@ -2,7 +2,12 @@ import {
   ActivityEvent,
   ApiAdapter,
   ConnectionState,
+  Delivery,
+  DeliveryInput,
+  DisplayConfig,
   Doorbell,
+  PianoCue,
+  PianoRig,
   Preflight,
   PreflightPrep,
   Room,
@@ -44,10 +49,32 @@ import {
  *   POST /api/utilities/action { action } -> Utilities
  *   POST /api/tone { hz }           -> { ok: true }
  *
+ * Piano rig (the PIANO Pi, proxied read-only by the House Pi wrapper)
+ *   GET  /api/piano                 -> PianoRig
+ *   POST /api/piano/cue { cue }     -> PianoRig
+ *   Cues: recording_started | recording_stopped | next_preset | prev_preset.
+ *   The wrapper forwards cues to the piano Pi's status server over HTTP and
+ *   must tolerate the rig being offline (return online:false, never block).
+ *
+ * Delivery OTP hand-off (door displays)
+ *   GET  /api/delivery              -> Delivery | null
+ *   POST /api/delivery { courier, otp, note, displayId, minutes } -> Delivery
+ *   POST /api/delivery/clear        -> { ok: true }
+ *   The wrapper computes expiresAt = now + minutes and must expire the
+ *   delivery server-side, emitting a delivery SSE frame with null.
+ *
+ * Displays (per-panel assignable content)
+ *   GET  /api/displays              -> DisplayConfig[]
+ *   POST /api/displays/update { id, patch } -> DisplayConfig[]
+ *   POST /api/displays/add { name } -> DisplayConfig[]
+ *   POST /api/displays/remove { id } -> DisplayConfig[]
+ *   Panels open the app at /#/display/<id>; content is resolved client-side.
+ *
  * Live stream
  *   GET /api/stream (text/event-stream)
  *   Named SSE events: state, rooms, safety, doorbell, history, utilities,
- *   preflight. The preflight event payload is { preflight, prep }.
+ *   preflight, piano, delivery, displays. The preflight event payload is
+ *   { preflight, prep }. The delivery payload may be JSON null.
  *
  * The client falls back to 3-second polling when SSE drops and retries SSE
  * every 10 seconds. No page knows whether this adapter or the mock is active.
@@ -127,6 +154,33 @@ export class LiveAdapter implements ApiAdapter {
   async playTone(hz: number) {
     await this.post<{ ok: true }>("/api/tone", { hz });
   }
+  getPianoRig() {
+    return this.get<PianoRig>("/api/piano");
+  }
+  pianoCue(cue: PianoCue) {
+    return this.post<PianoRig>("/api/piano/cue", { cue });
+  }
+  getDelivery() {
+    return this.get<Delivery | null>("/api/delivery");
+  }
+  setDelivery(input: DeliveryInput) {
+    return this.post<Delivery>("/api/delivery", input);
+  }
+  async clearDelivery() {
+    await this.post<{ ok: true }>("/api/delivery/clear");
+  }
+  getDisplays() {
+    return this.get<DisplayConfig[]>("/api/displays");
+  }
+  updateDisplay(id: string, patch: Partial<Pick<DisplayConfig, "content" | "message" | "name">>) {
+    return this.post<DisplayConfig[]>("/api/displays/update", { id, patch });
+  }
+  addDisplay(name: string) {
+    return this.post<DisplayConfig[]>("/api/displays/add", { name });
+  }
+  removeDisplay(id: string) {
+    return this.post<DisplayConfig[]>("/api/displays/remove", { id });
+  }
   triggerSafetyDemo(kind: SafetyAlertKind) {
     return this.post<Safety>("/api/safety/demo", { kind });
   }
@@ -148,19 +202,25 @@ export class LiveAdapter implements ApiAdapter {
 
   private async pollOnce() {
     try {
-      const [state, rooms, safety, preflight, prep, utilities] = await Promise.all([
+      const [state, rooms, safety, preflight, prep, utilities, piano, delivery, displays] = await Promise.all([
         this.getState(),
         this.getRooms(),
         this.getSafety(),
         this.getPreflight(),
         this.getPreflightPrep(),
         this.getUtilities(),
+        this.getPianoRig(),
+        this.getDelivery(),
+        this.getDisplays(),
       ]);
       this.emit({ type: "state", state });
       this.emit({ type: "rooms", rooms });
       this.emit({ type: "safety", safety });
       this.emit({ type: "preflight", preflight, prep });
       this.emit({ type: "utilities", utilities });
+      this.emit({ type: "piano", piano });
+      this.emit({ type: "delivery", delivery });
+      this.emit({ type: "displays", displays });
       this.setConnection("online");
     } catch {
       this.setConnection("offline");
@@ -193,6 +253,9 @@ export class LiveAdapter implements ApiAdapter {
         doorbell: "doorbell",
         history: "event",
         utilities: "utilities",
+        piano: "piano",
+        delivery: "delivery",
+        displays: "displays",
       };
       (Object.keys(keys) as Array<keyof typeof keys>).forEach((name) => {
         es.addEventListener(name, (raw) => {

@@ -1,6 +1,6 @@
 import React from "react";
 
-export type Tab = "command" | "home" | "preflight" | "safety" | "settings";
+export type Tab = "command" | "home" | "preflight" | "displays" | "safety" | "settings";
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   {
@@ -32,6 +32,16 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="8.5" />
         <path d="m8.5 12.2 2.4 2.4 4.6-5" />
+      </svg>
+    ),
+  },
+  {
+    id: "displays",
+    label: "Displays",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4.5" width="18" height="12.5" rx="2" />
+        <path d="M9 20.5h6M12 17v3.5" />
       </svg>
     ),
   },

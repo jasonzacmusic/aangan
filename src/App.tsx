@@ -6,6 +6,8 @@ import Nav, { Tab } from "./components/Nav";
 import PwaUpdatePrompt from "./components/PwaUpdatePrompt";
 import VoiceButton from "./components/VoiceButton";
 import Command from "./pages/Command";
+import DisplayPanel from "./pages/DisplayPanel";
+import Displays from "./pages/Displays";
 import Home from "./pages/Home";
 import Preflight from "./pages/Preflight";
 import Safety from "./pages/Safety";
@@ -14,6 +16,20 @@ import { startEmergencySiren } from "./state/audio";
 import { useStore } from "./state/store";
 
 type PendingCommand = { state: StudioState; scene?: SceneDef };
+
+function usePanelRoute(): string | null {
+  const read = () => {
+    const m = /^#\/display\/(.+)$/.exec(window.location.hash);
+    return m ? decodeURIComponent(m[1]) : null;
+  };
+  const [panel, setPanel] = useState<string | null>(read);
+  useEffect(() => {
+    const onHash = () => setPanel(read());
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  return panel;
+}
 
 export default function App() {
   const {
@@ -30,6 +46,7 @@ export default function App() {
   } = useStore();
   const [tab, setTab] = useState<Tab>("command");
   const [pending, setPending] = useState<PendingCommand | null>(null);
+  const panelId = usePanelRoute();
 
   useEffect(() => {
     if (!stateInfo) return;
@@ -39,9 +56,22 @@ export default function App() {
   }, [stateInfo?.state]);
 
   useEffect(() => {
-    if (stateInfo?.state !== "emergency") return;
+    if (stateInfo?.state !== "emergency" || panelId) return;
     return startEmergencySiren(settings.emergencySiren);
-  }, [stateInfo?.state, settings.emergencySiren]);
+  }, [stateInfo?.state, settings.emergencySiren, panelId]);
+
+  // Kiosk panels render only their assigned content — no nav, no dial.
+  if (panelId) {
+    const meta = stateInfo ? STATE_META[stateInfo.state] : STATE_META.available;
+    return (
+      <div className="relative min-h-dvh" style={{ ["--state-rgb" as string]: meta.rgb }}>
+        <div className="living-bg" />
+        <div className="relative z-10">
+          <DisplayPanel id={panelId} />
+        </div>
+      </div>
+    );
+  }
 
   if (!stateInfo) {
     return (
@@ -118,6 +148,7 @@ export default function App() {
         {tab === "command" && <Command onSelect={requestState} onScene={requestScene} />}
         {tab === "home" && <Home />}
         {tab === "preflight" && <Preflight onSelect={requestState} />}
+        {tab === "displays" && <Displays />}
         {tab === "safety" && <Safety />}
         {tab === "settings" && <Settings />}
       </main>

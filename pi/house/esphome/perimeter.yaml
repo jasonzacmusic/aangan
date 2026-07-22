@@ -1,0 +1,58 @@
+# ESP32 node 5 — PERIMETER ("imposter" layer)
+# Exterior doors: main door + balcony doors. Each gets reed + SW-420 vibration;
+# PIR covers the approach. Honest scope: this is a LIGHT security layer that
+# alerts phones — it is not a certified intrusion system.
+esphome:
+  name: perimeter
+  friendly_name: Perimeter
+
+esp32:
+  board: esp32dev
+
+logger:
+api:
+  encryption:
+    key: !secret api_key_perimeter
+ota:
+  - platform: esphome
+    password: !secret ota_password
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "perimeter setup"
+    password: !secret ap_password
+captive_portal:
+
+binary_sensor:
+  - platform: gpio
+    name: "Main door"
+    pin: { number: GPIO25, mode: { input: true, pullup: true }, inverted: true }
+    device_class: door
+    filters: [delayed_on: 50ms, delayed_off: 50ms]
+  - platform: gpio
+    name: "Studio balcony door"
+    pin: { number: GPIO26, mode: { input: true, pullup: true }, inverted: true }
+    device_class: door
+    filters: [delayed_on: 50ms, delayed_off: 50ms]
+  - platform: gpio
+    name: "House balcony door"
+    pin: { number: GPIO27, mode: { input: true, pullup: true }, inverted: true }
+    device_class: door
+    filters: [delayed_on: 50ms, delayed_off: 50ms]
+  - platform: gpio
+    name: "Main door vibration"
+    pin: { number: GPIO32, mode: { input: true, pullup: true } }
+    device_class: vibration
+    filters: [delayed_off: 3s] # latch a knock burst into one clean event
+  - platform: gpio
+    name: "Balcony vibration"
+    pin: { number: GPIO33, mode: { input: true, pullup: true } }
+    device_class: vibration
+    filters: [delayed_off: 3s]
+  - platform: gpio
+    name: "Entrance PIR"
+    pin: { number: GPIO35, mode: { input: true } } # HC-SR501 has push-pull out; GPIO35 is input-only
+    device_class: motion
+  - platform: status
+    name: "Perimeter node online"

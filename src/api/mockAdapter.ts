@@ -1,7 +1,13 @@
 import {
   ActivityEvent,
   ApiAdapter,
+  DEFAULT_DISPLAYS,
+  Delivery,
+  DeliveryInput,
+  DisplayConfig,
   Doorbell,
+  PianoCue,
+  PianoRig,
   Preflight,
   PreflightPrep,
   Room,
@@ -19,6 +25,23 @@ import { idbGet, idbSet } from "../state/idb";
 /** A living simulation of the Pi + Home Assistant wrapper. */
 
 const MOCK_STATE_KEY = "mock-studio-state";
+const MOCK_DISPLAYS_KEY = "mock-displays";
+const MOCK_DELIVERY_KEY = "mock-delivery";
+
+/** Cross-tab sync so a kiosk panel tab mirrors the phone tab instantly. */
+type MockSyncMessage =
+  | { src: string; kind: "state"; payload: StudioStateInfo }
+  | { src: string; kind: "delivery"; payload: Delivery | null }
+  | { src: string; kind: "displays"; payload: DisplayConfig[] };
+
+const PIANO_PRESETS = [
+  "NY Steinway D Classical",
+  "Hamburg Steinway D Prelude",
+  "C. Bechstein DG Sweet",
+  "Petrof Mistral Warm",
+  "U4 Upright Home",
+  "Electric Rhody Stage",
+];
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -69,6 +92,22 @@ export class MockAdapter implements ApiAdapter {
     { id: "welcome", type: "system", title: "House online", detail: "All five zones checked in", ts: Date.now() - 44 * 60 * 1000, severity: "success" },
     { id: "doorbell-seen", type: "doorbell", title: "Entrance doorbell", detail: "Snapshot captured · chime delivered", ts: this.doorbell.ts, severity: "info" },
   ];
+  private piano: PianoRig = {
+    online: true,
+    preset: PIANO_PRESETS[0],
+    cpuPct: 34,
+    tempC: 52.1,
+    audioDevice: "HiFiBerry DAC2 Pro XLR → console",
+    sampleRate: 48000,
+    bufferFrames: 192,
+    latencyMs: 4,
+    lastSeen: Date.now(),
+  };
+  private pianoPresetIx = 0;
+  private delivery: Delivery | null = null;
+  private displays: DisplayConfig[] = DEFAULT_DISPLAYS.map((d) => ({ ...d }));
+  private sensorsHealthy = true;
+  private healthReset: ReturnType<typeof setTimeout> | null = null;
   private dbThreshold = 45;
   private listeners = new Set<(ev: StreamEvent) => void>();
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -78,6 +117,37 @@ export class MockAdapter implements ApiAdapter {
   private quietMode = false;
   private tick = 0;
   private eventSeq = 0;
+  private sync: BroadcastChannel | null = null;
+  private syncId = Math.random().toString(36).slice(2);
+
+  constructor() {
+    if (typeof BroadcastChannel !== "undefined") {
+      this.sync = new BroadcastChannel("studio-command-mock");
+      this.sync.onmessage = (raw: MessageEvent<MockSyncMessage>) => {
+        const msg = raw.data;
+        if (!msg || msg.src === this.syncId) return;
+        if (msg.kind === "state") {
+          this.state = msg.payload;
+          const color = STATE_META[this.state.state].color;
+          this.rooms.forEach((room) => (room.signColor = color));
+          this.emit({ type: "state", state: { ...this.state } });
+          this.emit({ type: "rooms", rooms: this.rooms.map((r) => ({ ...r })) });
+        }
+        if (msg.kind === "delivery") {
+          this.delivery = msg.payload;
+          this.emit({ type: "delivery", delivery: this.delivery ? { ...this.delivery } : null });
+        }
+        if (msg.kind === "displays") {
+          this.displays = msg.payload.map((d) => ({ ...d }));
+          this.emit({ type: "displays", displays: this.displays.map((d) => ({ ...d })) });
+        }
+      };
+    }
+  }
+
+  private broadcast(msg: Omit<MockSyncMessage, "src">) {
+    this.sync?.postMessage({ ...msg, src: this.syncId } as MockSyncMessage);
+  }
 
   private emit(ev: StreamEvent) {
     this.listeners.forEach((cb) => cb(ev));
@@ -113,6 +183,10 @@ export class MockAdapter implements ApiAdapter {
         if (saved && saved.state in STATE_META && Number.isFinite(saved.since)) this.state = saved;
         const color = STATE_META[this.state.state].color;
         this.rooms.forEach((room) => (room.signColor = color));
+        const displays = await idbGet<DisplayConfig[]>(MOCK_DISPLAYS_KEY);
+        if (displays?.length) this.displays = displays;
+        const delivery = await idbGet<Delivery | null>(MOCK_DELIVERY_KEY);
+        if (delivery?.active && delivery.expiresAt > Date.now()) this.delivery = delivery;
       })();
     }
     await this.hydration;
@@ -131,7 +205,18 @@ export class MockAdapter implements ApiAdapter {
     const dbLevel = this.rooms.find((r) => r.id === "music")!.dbLevel ?? 0;
     const doorsClosed = openDoors.length === 0;
     const quietEnough = dbLevel < this.dbThreshold;
-    return { doorsClosed, quietEnough, ready: doorsClosed && quietEnough, openDoors, dbLevel, dbThreshold: this.dbThreshold };
+    const sensorsHealthy = this.sensorsHealthy;
+    const safetyClear = !Object.values(this.safety).some(Boolean);
+    return {
+      doorsClosed,
+      quietEnough,
+      sensorsHealthy,
+      safetyClear,
+      ready: doorsClosed && quietEnough && sensorsHealthy && safetyClear,
+      openDoors,
+      dbLevel,
+      dbThreshold: this.dbThreshold,
+    };
   }
 
   private emitPreflight() {
@@ -153,6 +238,7 @@ export class MockAdapter implements ApiAdapter {
       };
       this.addHistory({ type: "safety", title: "Safety alert", detail: details[kind], severity: "critical" });
     }
+    this.emitPreflight();
     if (this.safetyReset) clearTimeout(this.safetyReset);
     if (kind !== "clear") this.safetyReset = setTimeout(() => this.setSafety("clear", "Sensor"), 14_000);
     return { ...this.safety };
@@ -228,6 +314,37 @@ export class MockAdapter implements ApiAdapter {
       this.emit({ type: "utilities", utilities: this.cloneUtilities() });
     }
 
+    // Piano rig breathes: CPU follows the state, temperature drifts slowly.
+    if (this.tick % 2 === 0) {
+      const p = this.piano;
+      const busy = this.state.state === "audio_rec" || this.state.state === "video_rec" ? 46 : 32;
+      p.cpuPct = Math.round(Math.max(12, Math.min(88, busy + Math.sin(this.tick / 7) * 8 + (Math.random() - 0.5) * 6)));
+      p.tempC = Math.round(Math.max(44, Math.min(64, p.tempC + (Math.random() - 0.5) * 0.3)) * 10) / 10;
+      p.lastSeen = Date.now();
+      this.emit({ type: "piano", piano: { ...p } });
+    }
+
+    // Rare sensor-node dropout so "every sensor healthy" is a real, visible check.
+    if (this.sensorsHealthy && Math.random() < 0.0004) {
+      this.sensorsHealthy = false;
+      this.addHistory({ type: "system", title: "Sensor node silent", detail: "A zone stopped reporting · studio_ready is held", severity: "warning" });
+      if (this.healthReset) clearTimeout(this.healthReset);
+      this.healthReset = setTimeout(() => {
+        this.sensorsHealthy = true;
+        this.addHistory({ type: "system", title: "Sensor node back", detail: "All zones reporting again", severity: "success" });
+        this.emitPreflight();
+      }, 12_000);
+    }
+
+    // Delivery OTPs expire on their own.
+    if (this.delivery?.active && Date.now() > this.delivery.expiresAt) {
+      this.delivery = null;
+      void idbSet(MOCK_DELIVERY_KEY, null);
+      this.emit({ type: "delivery", delivery: null });
+      this.broadcast({ kind: "delivery", payload: null });
+      this.addHistory({ type: "system", title: "Delivery OTP expired", detail: "The door display returned to its usual content", severity: "info" });
+    }
+
     this.emit({ type: "rooms", rooms: this.rooms.map((r) => ({ ...r })) });
     this.emitPreflight();
   }
@@ -244,7 +361,10 @@ export class MockAdapter implements ApiAdapter {
     this.rooms.forEach((room) => (room.signColor = color));
     this.emit({ type: "state", state: { ...this.state } });
     this.emit({ type: "rooms", rooms: this.rooms.map((room) => ({ ...room })) });
+    this.broadcast({ kind: "state", payload: { ...this.state } });
     this.addHistory({ type: "state", title: `Studio → ${STATE_META[state].label}`, detail: `${setBy} conducted the house`, severity: state === "emergency" ? "critical" : "info" });
+    if (state === "audio_rec" || state === "video_rec") void this.pianoCue("recording_started");
+    if (state === "available") void this.pianoCue("recording_stopped");
     return { ...this.state };
   }
 
@@ -349,6 +469,101 @@ export class MockAdapter implements ApiAdapter {
     this.addHistory({ type: "system", title: `${Math.round(hz)} Hz reference tone`, detail: "Played from Studio Command", severity: "info" });
   }
 
+  async getPianoRig() {
+    return { ...this.piano };
+  }
+
+  async pianoCue(cue: PianoCue) {
+    if (cue === "next_preset" || cue === "prev_preset") {
+      this.pianoPresetIx = (this.pianoPresetIx + (cue === "next_preset" ? 1 : PIANO_PRESETS.length - 1)) % PIANO_PRESETS.length;
+      this.piano.preset = PIANO_PRESETS[this.pianoPresetIx];
+      this.addHistory({ type: "system", title: "Piano preset changed", detail: this.piano.preset, severity: "info" });
+    } else {
+      this.addHistory({
+        type: "system",
+        title: cue === "recording_started" ? "Piano rig cued · recording" : "Piano rig cued · at ease",
+        detail: cue === "recording_started" ? "The rig shows a red tally on its screen" : "Rig tally cleared",
+        severity: "info",
+      });
+    }
+    this.piano.lastSeen = Date.now();
+    const piano = { ...this.piano };
+    this.emit({ type: "piano", piano });
+    return piano;
+  }
+
+  async getDelivery() {
+    await this.hydrateState();
+    return this.delivery ? { ...this.delivery } : null;
+  }
+
+  async setDelivery(input: DeliveryInput) {
+    await this.hydrateState();
+    const next: Delivery = {
+      active: true,
+      courier: input.courier.trim() || "Delivery",
+      otp: input.otp.trim(),
+      note: input.note.trim(),
+      displayId: input.displayId,
+      expiresAt: Date.now() + Math.max(1, input.minutes) * 60_000,
+    };
+    this.delivery = next;
+    await idbSet(MOCK_DELIVERY_KEY, next);
+    this.emit({ type: "delivery", delivery: { ...next } });
+    this.broadcast({ kind: "delivery", payload: { ...next } });
+    const display = this.displays.find((d) => d.id === next.displayId);
+    this.addHistory({
+      type: "system",
+      title: `${next.courier} OTP on the door`,
+      detail: `${display?.name ?? "Door display"} is showing the hand-off · expires in ${Math.max(1, input.minutes)} min`,
+      severity: "info",
+    });
+    return { ...next };
+  }
+
+  async clearDelivery() {
+    await this.hydrateState();
+    if (!this.delivery) return;
+    this.delivery = null;
+    await idbSet(MOCK_DELIVERY_KEY, null);
+    this.emit({ type: "delivery", delivery: null });
+    this.broadcast({ kind: "delivery", payload: null });
+    this.addHistory({ type: "system", title: "Delivery hand-off cleared", detail: "Door display returned to its usual content", severity: "info" });
+  }
+
+  private async commitDisplays() {
+    await idbSet(MOCK_DISPLAYS_KEY, this.displays);
+    const displays = this.displays.map((d) => ({ ...d }));
+    this.emit({ type: "displays", displays });
+    this.broadcast({ kind: "displays", payload: displays });
+    return displays;
+  }
+
+  async getDisplays() {
+    await this.hydrateState();
+    return this.displays.map((d) => ({ ...d }));
+  }
+
+  async updateDisplay(id: string, patch: Partial<Pick<DisplayConfig, "content" | "message" | "name">>) {
+    await this.hydrateState();
+    this.displays = this.displays.map((d) => (d.id === id ? { ...d, ...patch } : d));
+    return this.commitDisplays();
+  }
+
+  async addDisplay(name: string) {
+    await this.hydrateState();
+    const id = `panel-${Date.now().toString(36)}`;
+    this.displays = [...this.displays, { id, name: name.trim() || "New display", content: "door", message: "" }];
+    return this.commitDisplays();
+  }
+
+  async removeDisplay(id: string) {
+    await this.hydrateState();
+    if (DEFAULT_DISPLAYS.some((d) => d.id === id)) return this.getDisplays();
+    this.displays = this.displays.filter((d) => d.id !== id);
+    return this.commitDisplays();
+  }
+
   async triggerSafetyDemo(kind: SafetyAlertKind) {
     return this.setSafety(kind, "Demo");
   }
@@ -364,6 +579,9 @@ export class MockAdapter implements ApiAdapter {
       cb({ type: "safety", safety: { ...this.safety } });
       cb({ type: "utilities", utilities: this.cloneUtilities() });
       cb({ type: "preflight", preflight: this.getPreflightSync(), prep: this.clonePrep() });
+      cb({ type: "piano", piano: { ...this.piano } });
+      cb({ type: "delivery", delivery: this.delivery ? { ...this.delivery } : null });
+      cb({ type: "displays", displays: this.displays.map((d) => ({ ...d })) });
     });
     return () => {
       this.listeners.delete(cb);

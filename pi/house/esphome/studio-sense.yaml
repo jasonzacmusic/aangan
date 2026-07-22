@@ -1,0 +1,101 @@
+# ESP32 node 2 — STUDIO SENSE
+# In the recording room: dBA meter (SEN0232) at ear height near the recording
+# position, LD2410 presence, and the WS2812B recording tally strip.
+# SEN0232 outputs 0.6–2.6 V for 30–130 dBA (10 mV/dB) — safe for the ESP32 ADC
+# at 12db attenuation, no divider needed. Power it from 5V, signal to GPIO34.
+# LD2410 on hardware UART2 (GPIO16 RX ← LD2410 TX, GPIO17 TX → LD2410 RX), 256000 baud.
+# WS2812B data on GPIO18 THROUGH the 74AHCT level shifter, strip powered by the 5V SMPS
+# with grounds common.
+esphome:
+  name: studio-sense
+  friendly_name: Studio Sense
+
+esp32:
+  board: esp32dev
+
+logger:
+  baud_rate: 0 # UART0 logging off — keeps hardware UARTs clean for the LD2410
+
+api:
+  encryption:
+    key: !secret api_key_studio_sense
+ota:
+  - platform: esphome
+    password: !secret ota_password
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "studio-sense setup"
+    password: !secret ap_password
+captive_portal:
+
+uart:
+  id: ld2410_uart
+  rx_pin: GPIO16
+  tx_pin: GPIO17
+  baud_rate: 256000
+  parity: NONE
+  stop_bits: 1
+
+ld2410:
+  uart_id: ld2410_uart
+
+sensor:
+  # SEN0232: dBA = voltage(V) / 0.01  (datasheet: 10 mV per dBA)
+  - platform: adc
+    pin: GPIO34
+    name: "Studio sound level"
+    id: studio_dba
+    unit_of_measurement: "dBA"
+    device_class: sound_pressure
+    attenuation: 12db
+    update_interval: 200ms
+    filters:
+      - multiply: 100.0
+      - sliding_window_moving_average:
+          window_size: 10
+          send_every: 5
+    accuracy_decimals: 1
+
+binary_sensor:
+  - platform: ld2410
+    has_target:
+      name: "Studio presence"
+      device_class: occupancy
+  - platform: status
+    name: "Studio sense node online"
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: tally_strip_raw
+    chipset: ws2812
+    rgb_order: GRB
+    pin: GPIO18
+    num_leds: 60
+    name: "Studio tally strip"
+    default_transition_length: 400ms
+
+# ---------------------------------------------------------------------------
+# INMP441 pilot (optional, on a spare ESP32): relative loud/quiet only — the
+# SEN0232 above is the calibrated gate. Uncomment on a node that has no LD2410
+# (i2s pins clash-free):
+#
+# i2s_audio:
+#   i2s_lrclk_pin: GPIO25
+#   i2s_bclk_pin: GPIO27
+# microphone:
+#   - platform: i2s_audio
+#     id: studio_mic
+#     adc_type: external
+#     i2s_din_pin: GPIO26
+#     pdm: false
+#     bits_per_sample: 32bit
+#     sample_rate: 16000
+# sensor:
+#   - platform: sound_level
+#     microphone: studio_mic
+#     measurement_duration: 500ms
+#     rms:
+#       name: "Studio mic RMS level"
+# ---------------------------------------------------------------------------

@@ -1,0 +1,19 @@
+[Unit]
+Description=Pianoteq 9 stage piano
+After=sound.target network-online.target
+
+[Service]
+User=__USER__
+# --serve exposes Pianoteq's local JSON-RPC so the status server can read/set presets.
+# Remove --serve if you never want network control of the instrument.
+ExecStart=__BIN__ --multicore max --serve 127.0.0.1:8081
+WorkingDirectory=__HOME__/pianoteq
+Restart=on-failure
+RestartSec=3
+LimitRTPRIO=95
+LimitMEMLOCK=infinity
+Environment=DISPLAY=:0
+# On the Desktop image the GUI appears on the touch display; on Lite, add --headless above.
+
+[Install]
+WantedBy=graphical.target

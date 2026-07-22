@@ -4,6 +4,7 @@ import RoomCard from "../components/RoomCard";
 import DbMeter, { Sparkline } from "../components/DbMeter";
 import { Room } from "../api/types";
 import UtilitiesPanel from "../components/UtilitiesPanel";
+import PianoRigCard from "../components/PianoRigCard";
 
 export default function Home() {
   const { rooms, settings, dbHistory } = useStore();
@@ -20,6 +21,8 @@ export default function Home() {
           <RoomCard key={r.id} room={r} threshold={settings.dbThreshold} onOpen={() => setOpenRoom(r)} />
         ))}
       </div>
+
+      <PianoRigCard />
 
       <UtilitiesPanel />
 

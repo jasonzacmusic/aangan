@@ -1,0 +1,14 @@
+[Unit]
+Description=Piano rig status server (read-only bridge for the house)
+After=network-online.target pianoteq.service
+
+[Service]
+User=__USER__
+ExecStart=/usr/bin/python3 /usr/local/bin/piano_status_server.py
+Restart=always
+RestartSec=5
+# Nice +10: this must NEVER compete with the audio thread.
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

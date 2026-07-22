@@ -28,6 +28,11 @@ export interface Room {
 export interface Preflight {
   doorsClosed: boolean;
   quietEnough: boolean;
+  /** Every ESP32 sensor node has reported recently. */
+  sensorsHealthy: boolean;
+  /** No fire / gas / leak / panic is active. */
+  safetyClear: boolean;
+  /** The one authoritative studio_ready verdict — all four checks green. */
   ready: boolean;
   openDoors: RoomId[]; // which doors are the problem
   dbLevel: number;
@@ -101,6 +106,68 @@ export interface Utilities {
 export type UtilityAction = "water_pump_toggle" | "purifier_toggle";
 export type ConnectionState = "online" | "reconnecting" | "offline";
 
+/** The Pianoteq stage rig (the PIANO Pi) as seen over the network. */
+export interface PianoRig {
+  online: boolean;
+  preset: string;
+  cpuPct: number;
+  tempC: number;
+  audioDevice: string;
+  sampleRate: number;
+  bufferFrames: number;
+  latencyMs: number;
+  lastSeen: number; // epoch ms
+}
+
+export type PianoCue = "recording_started" | "recording_stopped" | "next_preset" | "prev_preset";
+
+/** A delivery hand-off shown on a door display (Swiggy/Amazon OTP etc). */
+export interface Delivery {
+  active: boolean;
+  courier: string;
+  otp: string;
+  note: string;
+  displayId: string;
+  expiresAt: number; // epoch ms
+}
+
+export interface DeliveryInput {
+  courier: string;
+  otp: string;
+  note: string;
+  displayId: string;
+  minutes: number;
+}
+
+/**
+ * What a wall/door display can show. "door" is the visitor-facing smart sign
+ * whose wording follows the studio state. A targeted active Delivery always
+ * takes over its display, whatever the assigned content.
+ */
+export type DisplayContent = "door" | "state" | "house" | "doorbell" | "message" | "clock";
+
+export interface DisplayConfig {
+  id: string;
+  name: string;
+  content: DisplayContent;
+  message: string; // used by the "message" content
+}
+
+export const DISPLAY_CONTENT_META: Record<DisplayContent, { label: string; hint: string }> = {
+  door: { label: "Door sign", hint: "Visitor wording follows the studio state" },
+  state: { label: "Studio state", hint: "Big ON AIR style state card" },
+  house: { label: "House board", hint: "Rooms, doors and house pulse" },
+  doorbell: { label: "Doorbell cam", hint: "Latest entrance snapshot" },
+  message: { label: "Custom message", hint: "Any text you type" },
+  clock: { label: "Clock", hint: "A calm studio clock" },
+};
+
+export const DEFAULT_DISPLAYS: DisplayConfig[] = [
+  { id: "front-house", name: "Front of House", content: "door", message: "" },
+  { id: "front-studio", name: "Front of Studio", content: "state", message: "" },
+  { id: "wall-ipad", name: "Wall iPad", content: "house", message: "" },
+];
+
 export type StreamEvent =
   | { type: "state"; state: StudioStateInfo }
   | { type: "rooms"; rooms: Room[] }
@@ -109,6 +176,9 @@ export type StreamEvent =
   | { type: "history"; event: ActivityEvent }
   | { type: "utilities"; utilities: Utilities }
   | { type: "preflight"; preflight: Preflight; prep: PreflightPrep }
+  | { type: "piano"; piano: PianoRig }
+  | { type: "delivery"; delivery: Delivery | null }
+  | { type: "displays"; displays: DisplayConfig[] }
   | { type: "connection"; status: ConnectionState };
 
 export interface SceneDef {
@@ -135,6 +205,18 @@ export interface ApiAdapter {
   restorePreflight(): Promise<PreflightPrep>;
   runUtilityAction(action: UtilityAction): Promise<Utilities>;
   playTone(hz: number): Promise<void>;
+  /** The Pianoteq rig (PIANO Pi). Cues are one-way and never touch its audio thread. */
+  getPianoRig(): Promise<PianoRig>;
+  pianoCue(cue: PianoCue): Promise<PianoRig>;
+  /** Delivery OTP hand-off shown on a door display. */
+  getDelivery(): Promise<Delivery | null>;
+  setDelivery(input: DeliveryInput): Promise<Delivery>;
+  clearDelivery(): Promise<void>;
+  /** Per-display assignable content for the wall/door panels. */
+  getDisplays(): Promise<DisplayConfig[]>;
+  updateDisplay(id: string, patch: Partial<Pick<DisplayConfig, "content" | "message" | "name">>): Promise<DisplayConfig[]>;
+  addDisplay(name: string): Promise<DisplayConfig[]>;
+  removeDisplay(id: string): Promise<DisplayConfig[]>;
   /** Development/commissioning endpoint. The production UI exposes this only in mock mode. */
   triggerSafetyDemo(kind: SafetyAlertKind): Promise<Safety>;
   /** Subscribe to live updates (SSE on live, simulated ticker on mock). Returns unsubscribe. */

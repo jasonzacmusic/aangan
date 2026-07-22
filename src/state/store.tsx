@@ -3,7 +3,12 @@ import { api, DATA_SOURCE } from "../api/api";
 import {
   ActivityEvent,
   DEFAULT_SCENES,
+  Delivery,
+  DeliveryInput,
+  DisplayConfig,
   Doorbell,
+  PianoCue,
+  PianoRig,
   Preflight,
   PreflightPrep,
   Room,
@@ -48,6 +53,9 @@ interface Store {
   safety: Safety | null;
   doorbell: Doorbell | null;
   utilities: Utilities | null;
+  pianoRig: PianoRig | null;
+  delivery: Delivery | null;
+  displays: DisplayConfig[];
   history: ActivityEvent[];
   settings: Settings;
   dbHistory: number[];
@@ -67,6 +75,12 @@ interface Store {
   restoreStudio: () => Promise<void>;
   runUtilityAction: (action: UtilityAction) => Promise<void>;
   playTone: (hz?: number) => Promise<void>;
+  sendPianoCue: (cue: PianoCue) => Promise<void>;
+  postDelivery: (input: DeliveryInput) => Promise<void>;
+  clearDelivery: () => Promise<void>;
+  updateDisplay: (id: string, patch: Partial<Pick<DisplayConfig, "content" | "message" | "name">>) => Promise<void>;
+  addDisplay: (name: string) => Promise<void>;
+  removeDisplay: (id: string) => Promise<void>;
   triggerSafetyDemo: (kind: SafetyAlertKind) => Promise<void>;
   requestNotificationPermission: () => Promise<void>;
   clearError: () => void;
@@ -107,6 +121,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [safety, setSafety] = useState<Safety | null>(null);
   const [doorbell, setDoorbell] = useState<Doorbell | null>(null);
   const [utilities, setUtilities] = useState<Utilities | null>(null);
+  const [pianoRig, setPianoRig] = useState<PianoRig | null>(null);
+  const [delivery, setDeliveryState] = useState<Delivery | null>(null);
+  const [displays, setDisplays] = useState<DisplayConfig[]>([]);
   const [history, setHistory] = useState<ActivityEvent[]>([]);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [dbHistory, setDbHistory] = useState<number[]>([]);
@@ -156,7 +173,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       while (!cancelled) {
         setConnectionStatus(attempt === 0 ? "connecting" : "reconnecting");
         try {
-          const [st, rm, pf, prep, sf, db, events, util] = await Promise.all([
+          const [st, rm, pf, prep, sf, db, events, util, piano, del, disp] = await Promise.all([
             api.getState(),
             api.getRooms(),
             api.getPreflight(),
@@ -165,6 +182,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             api.getDoorbell(),
             api.getHistory(),
             api.getUtilities(),
+            api.getPianoRig(),
+            api.getDelivery(),
+            api.getDisplays(),
           ]);
           if (cancelled) return;
           setStateInfo(st);
@@ -176,6 +196,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           setDoorbell(db);
           setHistory(events);
           setUtilities(util);
+          setPianoRig(piano);
+          setDeliveryState(del);
+          setDisplays(disp);
           const music = rm.find((room) => room.id === "music");
           if (music?.dbLevel != null) setDbHistory([music.dbLevel]);
           setConnected(true);
@@ -194,6 +217,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             if (ev.type === "doorbell") setDoorbell(ev.doorbell);
             if (ev.type === "history") setHistory((eventsNow) => mergeHistory(eventsNow, [ev.event]));
             if (ev.type === "utilities") setUtilities(ev.utilities);
+            if (ev.type === "piano") setPianoRig(ev.piano);
+            if (ev.type === "delivery") setDeliveryState(ev.delivery);
+            if (ev.type === "displays") setDisplays(ev.displays);
             if (ev.type === "preflight") {
               setPreflight(ev.preflight);
               setPreflightPrep(ev.prep);
@@ -353,6 +379,55 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const sendPianoCue = useCallback(async (cue: PianoCue) => {
+    try {
+      setPianoRig(await api.pianoCue(cue));
+    } catch {
+      setLastError("The piano rig did not answer that cue.");
+    }
+  }, []);
+
+  const postDelivery = useCallback(async (input: DeliveryInput) => {
+    try {
+      setDeliveryState(await api.setDelivery(input));
+    } catch {
+      setLastError("The door display did not accept the delivery hand-off.");
+    }
+  }, []);
+
+  const clearDelivery = useCallback(async () => {
+    try {
+      await api.clearDelivery();
+      setDeliveryState(null);
+    } catch {
+      setLastError("Could not clear the delivery hand-off.");
+    }
+  }, []);
+
+  const updateDisplay = useCallback(async (id: string, patch: Partial<Pick<DisplayConfig, "content" | "message" | "name">>) => {
+    try {
+      setDisplays(await api.updateDisplay(id, patch));
+    } catch {
+      setLastError("That display did not confirm the change.");
+    }
+  }, []);
+
+  const addDisplay = useCallback(async (name: string) => {
+    try {
+      setDisplays(await api.addDisplay(name));
+    } catch {
+      setLastError("Could not add the display.");
+    }
+  }, []);
+
+  const removeDisplay = useCallback(async (id: string) => {
+    try {
+      setDisplays(await api.removeDisplay(id));
+    } catch {
+      setLastError("Could not remove the display.");
+    }
+  }, []);
+
   const triggerSafetyDemo = useCallback(async (kind: SafetyAlertKind) => {
     try {
       const next = await api.triggerSafetyDemo(kind);
@@ -383,6 +458,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       safety,
       doorbell,
       utilities,
+      pianoRig,
+      delivery,
+      displays,
       history,
       settings,
       dbHistory,
@@ -402,11 +480,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       restoreStudio,
       runUtilityAction,
       playTone,
+      sendPianoCue,
+      postDelivery,
+      clearDelivery,
+      updateDisplay,
+      addDisplay,
+      removeDisplay,
       triggerSafetyDemo,
       requestNotificationPermission,
       clearError,
     }),
-    [stateInfo, rooms, preflight, preflightPrep, safety, doorbell, utilities, history, settings, dbHistory, connected, connectionStatus, committing, sceneRunning, lastError, notificationPermission, setStudioState, runScene, triggerPanic, updateSettings, refreshDoorbell, prepareStudio, restoreStudio, runUtilityAction, playTone, triggerSafetyDemo, requestNotificationPermission, clearError]
+    [stateInfo, rooms, preflight, preflightPrep, safety, doorbell, utilities, pianoRig, delivery, displays, history, settings, dbHistory, connected, connectionStatus, committing, sceneRunning, lastError, notificationPermission, setStudioState, runScene, triggerPanic, updateSettings, refreshDoorbell, prepareStudio, restoreStudio, runUtilityAction, playTone, sendPianoCue, postDelivery, clearDelivery, updateDisplay, addDisplay, removeDisplay, triggerSafetyDemo, requestNotificationPermission, clearError]
   );
 
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;

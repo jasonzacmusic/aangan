@@ -1,0 +1,65 @@
+# ESP32 node 6 — PANIC LOOP + ALARM LISTENER
+# The panic system is a WIRED, NORMALLY-CLOSED loop through every latching
+# panic switch, powered by the battery-backed sounder circuit an electrician
+# installs. Pressing ANY latching switch breaks the loop → the standalone
+# sounder fires WITH NO PI INVOLVED. This node only OBSERVES the loop and the
+# certified smoke-alarm relay contacts so phones ring too.
+esphome:
+  name: panic-loop
+  friendly_name: Panic Loop
+
+esp32:
+  board: esp32dev
+
+logger:
+api:
+  encryption:
+    key: !secret api_key_panic_loop
+ota:
+  - platform: esphome
+    password: !secret ota_password
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "panic-loop setup"
+    password: !secret ap_password
+captive_portal:
+
+binary_sensor:
+  # NC loop: intact = LOW (pressed anywhere breaks it → HIGH → alarm)
+  - platform: gpio
+    name: "Panic loop broken"
+    pin: { number: GPIO25, mode: { input: true, pullup: true } }
+    device_class: problem
+    filters: [delayed_on: 100ms]
+  # Volt-free relay contacts from the certified smoke/heat alarms (one per flat
+  # if the alarms are interlinked; per-alarm if not).
+  - platform: gpio
+    name: "Smoke alarm studio flat"
+    pin: { number: GPIO26, mode: { input: true, pullup: true }, inverted: true }
+    device_class: smoke
+    filters: [delayed_on: 100ms]
+  - platform: gpio
+    name: "Smoke alarm house flat"
+    pin: { number: GPIO27, mode: { input: true, pullup: true }, inverted: true }
+    device_class: smoke
+    filters: [delayed_on: 100ms]
+  - platform: gpio
+    name: "Studio flame sensor"
+    pin: { number: GPIO32, mode: { input: true, pullup: true }, inverted: true }
+    filters: [delayed_on: 200ms]
+  - platform: gpio
+    name: "Teaching room flame sensor"
+    pin: { number: GPIO33, mode: { input: true, pullup: true }, inverted: true }
+    filters: [delayed_on: 200ms]
+  - platform: status
+    name: "Panic loop node online"
+
+# App-triggered emergency chime through a small relay (relay module with
+# opto-isolation; the WIRED sounder stays independent of this).
+switch:
+  - platform: gpio
+    name: "House chime relay"
+    pin: GPIO23
+    restore_mode: ALWAYS_OFF

@@ -1,0 +1,15 @@
+[Unit]
+Description=Studio Command wrapper (app REST/SSE bridge to Home Assistant)
+After=network-online.target
+
+[Service]
+Environment=HA_URL=http://127.0.0.1:8123
+Environment=PIANO_URL=http://piano.local:8951
+# Put the long-lived token in an env file, not in this unit:
+EnvironmentFile=/etc/studio-wrapper.env
+ExecStart=/usr/bin/python3 /usr/local/bin/studio_wrapper.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
