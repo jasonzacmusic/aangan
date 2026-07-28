@@ -13,6 +13,7 @@ import {
   Room,
   Safety,
   SafetyAlertKind,
+  Sos,
   StreamEvent,
   StudioState,
   StudioStateInfo,
@@ -56,6 +57,15 @@ import {
  *   The wrapper forwards cues to the piano Pi's status server over HTTP and
  *   must tolerate the rig being offline (return online:false, never block).
  *
+ * Family SOS (raised from any phone's #/sos page)
+ *   GET  /api/sos                   -> Sos | null
+ *   POST /api/sos { who, message }  -> Sos
+ *   POST /api/sos/clear             -> { ok: true }
+ *   Raising an SOS must also set the studio state to "emergency" (setBy
+ *   "SOS · <who>") and fire the critical family notifications. Clearing the
+ *   SOS never changes the studio state by itself — the app stands down
+ *   explicitly. Emit an sos SSE frame (payload may be JSON null).
+ *
  * Delivery OTP hand-off (door displays)
  *   GET  /api/delivery              -> Delivery | null
  *   POST /api/delivery { courier, otp, note, displayId, minutes } -> Delivery
@@ -73,8 +83,8 @@ import {
  * Live stream
  *   GET /api/stream (text/event-stream)
  *   Named SSE events: state, rooms, safety, doorbell, history, utilities,
- *   preflight, piano, delivery, displays. The preflight event payload is
- *   { preflight, prep }. The delivery payload may be JSON null.
+ *   preflight, piano, delivery, displays, sos. The preflight event payload is
+ *   { preflight, prep }. The delivery and sos payloads may be JSON null.
  *
  * The client falls back to 3-second polling when SSE drops and retries SSE
  * every 10 seconds. No page knows whether this adapter or the mock is active.
@@ -160,6 +170,15 @@ export class LiveAdapter implements ApiAdapter {
   pianoCue(cue: PianoCue) {
     return this.post<PianoRig>("/api/piano/cue", { cue });
   }
+  getSos() {
+    return this.get<Sos | null>("/api/sos");
+  }
+  triggerSos(who: string, message: string) {
+    return this.post<Sos>("/api/sos", { who, message });
+  }
+  async clearSos() {
+    await this.post<{ ok: true }>("/api/sos/clear");
+  }
   getDelivery() {
     return this.get<Delivery | null>("/api/delivery");
   }
@@ -202,7 +221,7 @@ export class LiveAdapter implements ApiAdapter {
 
   private async pollOnce() {
     try {
-      const [state, rooms, safety, preflight, prep, utilities, piano, delivery, displays] = await Promise.all([
+      const [state, rooms, safety, preflight, prep, utilities, piano, delivery, displays, sos] = await Promise.all([
         this.getState(),
         this.getRooms(),
         this.getSafety(),
@@ -212,6 +231,7 @@ export class LiveAdapter implements ApiAdapter {
         this.getPianoRig(),
         this.getDelivery(),
         this.getDisplays(),
+        this.getSos(),
       ]);
       this.emit({ type: "state", state });
       this.emit({ type: "rooms", rooms });
@@ -221,6 +241,7 @@ export class LiveAdapter implements ApiAdapter {
       this.emit({ type: "piano", piano });
       this.emit({ type: "delivery", delivery });
       this.emit({ type: "displays", displays });
+      this.emit({ type: "sos", sos });
       this.setConnection("online");
     } catch {
       this.setConnection("offline");
@@ -256,6 +277,7 @@ export class LiveAdapter implements ApiAdapter {
         piano: "piano",
         delivery: "delivery",
         displays: "displays",
+        sos: "sos",
       };
       (Object.keys(keys) as Array<keyof typeof keys>).forEach((name) => {
         es.addEventListener(name, (raw) => {

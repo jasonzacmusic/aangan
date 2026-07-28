@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { STATE_META, StudioState } from "../api/types";
 import { useStore } from "../state/store";
 import DbMeter from "../components/DbMeter";
+import NudgeBanner from "../components/NudgeBanner";
 
 /**
  * Full-screen kiosk view for a wall/door display.
@@ -48,7 +49,7 @@ function PanelChrome({ children, accent, pulse }: { children: React.ReactNode; a
 }
 
 export default function DisplayPanel({ id }: { id: string }) {
-  const { stateInfo, displays, delivery, rooms, utilities, doorbell, settings, dbHistory } = useStore();
+  const { stateInfo, displays, delivery, sos, rooms, utilities, doorbell, settings, dbHistory } = useStore();
   const now = useClock();
 
   if (!stateInfo) {
@@ -68,6 +69,21 @@ export default function DisplayPanel({ id }: { id: string }) {
         <div className="font-mono text-xs uppercase tracking-[0.35em] text-gold">Unknown display</div>
         <div className="font-display mt-4 text-4xl">“{id}” is not configured</div>
         <p className="mt-4 max-w-md text-dim">Open Studio Command → Displays and add this panel, then reload.</p>
+      </PanelChrome>
+    );
+  }
+
+  // A live family SOS takes over every panel in the house.
+  if (sos?.active) {
+    return (
+      <PanelChrome accent="#7C3AED" pulse>
+        <div className="emergency-flash text-8xl">🆘</div>
+        <div className="mt-6 font-mono text-sm uppercase tracking-[0.4em] text-st-emergency">Family SOS</div>
+        <div className="font-display mt-4 text-7xl leading-tight lg:text-8xl" style={{ color: "#a78bfa", textShadow: "0 0 50px #7C3AED88" }}>
+          {sos.who} NEEDS HELP
+        </div>
+        {sos.message && <div className="mt-8 text-3xl text-paper">“{sos.message}”</div>}
+        <div className="mt-8 font-mono text-sm text-dim">Go to them now · every family phone is ringing</div>
       </PanelChrome>
     );
   }
@@ -104,6 +120,7 @@ export default function DisplayPanel({ id }: { id: string }) {
             {wording.big}
           </div>
           <div className="mt-8 text-2xl text-paper/90">{wording.small}</div>
+          <NudgeBanner variant="panel" />
         </PanelChrome>
       );
     }
@@ -116,6 +133,7 @@ export default function DisplayPanel({ id }: { id: string }) {
           </div>
           <div className="mt-6 text-3xl text-paper">{meta.tagline}</div>
           <div className="mt-8 font-mono text-sm text-dim">set by {stateInfo.setBy}</div>
+          <NudgeBanner variant="panel" />
         </PanelChrome>
       );
     case "house": {
@@ -150,6 +168,7 @@ export default function DisplayPanel({ id }: { id: string }) {
               <div className="mt-1 font-mono text-[10px] text-dim">{dbHistory.length ? "music room · live" : ""}</div>
             </div>
           )}
+          <NudgeBanner variant="panel" />
         </PanelChrome>
       );
     }

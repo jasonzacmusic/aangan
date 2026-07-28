@@ -5,6 +5,7 @@ import EmergencyOverlay from "./components/EmergencyOverlay";
 import Nav, { Tab } from "./components/Nav";
 import PwaUpdatePrompt from "./components/PwaUpdatePrompt";
 import VoiceButton from "./components/VoiceButton";
+import NudgeBanner from "./components/NudgeBanner";
 import Command from "./pages/Command";
 import DisplayPanel from "./pages/DisplayPanel";
 import Displays from "./pages/Displays";
@@ -12,29 +13,35 @@ import Home from "./pages/Home";
 import Preflight from "./pages/Preflight";
 import Safety from "./pages/Safety";
 import Settings from "./pages/Settings";
+import SosPage from "./pages/SosPage";
 import { startEmergencySiren } from "./state/audio";
 import { useStore } from "./state/store";
 
 type PendingCommand = { state: StudioState; scene?: SceneDef };
 
-function usePanelRoute(): string | null {
-  const read = () => {
+type Route = { kind: "app" } | { kind: "panel"; id: string } | { kind: "sos" };
+
+function useRoute(): Route {
+  const read = (): Route => {
     const m = /^#\/display\/(.+)$/.exec(window.location.hash);
-    return m ? decodeURIComponent(m[1]) : null;
+    if (m) return { kind: "panel", id: decodeURIComponent(m[1]) };
+    if (/^#\/sos\/?$/.test(window.location.hash)) return { kind: "sos" };
+    return { kind: "app" };
   };
-  const [panel, setPanel] = useState<string | null>(read);
+  const [route, setRoute] = useState<Route>(read);
   useEffect(() => {
-    const onHash = () => setPanel(read());
+    const onHash = () => setRoute(read());
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
-  return panel;
+  return route;
 }
 
 export default function App() {
   const {
     stateInfo,
     safety,
+    sos,
     dataSource,
     connected,
     connectionStatus,
@@ -42,11 +49,13 @@ export default function App() {
     lastError,
     clearError,
     setStudioState,
+    clearSos,
     runScene,
   } = useStore();
   const [tab, setTab] = useState<Tab>("command");
   const [pending, setPending] = useState<PendingCommand | null>(null);
-  const panelId = usePanelRoute();
+  const route = useRoute();
+  const panelId = route.kind === "panel" ? route.id : null;
 
   useEffect(() => {
     if (!stateInfo) return;
@@ -59,6 +68,19 @@ export default function App() {
     if (stateInfo?.state !== "emergency" || panelId) return;
     return startEmergencySiren(settings.emergencySiren);
   }, [stateInfo?.state, settings.emergencySiren, panelId]);
+
+  // The family SOS page — a home-screen bookmark on every family phone.
+  if (route.kind === "sos") {
+    return (
+      <div className="relative min-h-dvh" style={{ ["--state-rgb" as string]: STATE_META.emergency.rgb }}>
+        <div className="living-bg" />
+        <div className="relative z-10">
+          <SosPage />
+        </div>
+        <PwaUpdatePrompt />
+      </div>
+    );
+  }
 
   // Kiosk panels render only their assigned content — no nav, no dial.
   if (panelId) {
@@ -108,13 +130,15 @@ export default function App() {
     setPending(null);
   };
 
-  const emergencyCause = safety?.gas
-    ? "Kitchen gas sensor triggered"
-    : safety?.leakKitchen
-      ? "Kitchen water sensor triggered"
-      : safety?.leakBath
-        ? "Bathroom water sensor triggered"
-        : "Emergency was triggered manually";
+  const emergencyCause = sos?.active
+    ? `SOS — ${sos.who}${sos.message ? `: “${sos.message}”` : " needs help"}`
+    : safety?.gas
+      ? "Kitchen gas sensor triggered"
+      : safety?.leakKitchen
+        ? "Kitchen water sensor triggered"
+        : safety?.leakBath
+          ? "Bathroom water sensor triggered"
+          : "Emergency was triggered manually";
 
   const statusLabel = connected
     ? "online"
@@ -153,6 +177,7 @@ export default function App() {
         {tab === "settings" && <Settings />}
       </main>
 
+      <NudgeBanner />
       <Nav tab={tab} setTab={setTab} />
       <VoiceButton onCommand={requestState} />
       <PwaUpdatePrompt />
@@ -166,7 +191,15 @@ export default function App() {
       )}
 
       {pending && <ConfirmSheet state={pending.state} onConfirm={confirmPending} onCancel={() => setPending(null)} />}
-      {stateInfo.state === "emergency" && <EmergencyOverlay cause={emergencyCause} onStandDown={() => void setStudioState("available")} />}
+      {stateInfo.state === "emergency" && (
+        <EmergencyOverlay
+          cause={emergencyCause}
+          onStandDown={() => {
+            void clearSos();
+            void setStudioState("available");
+          }}
+        />
+      )}
     </div>
   );
 }

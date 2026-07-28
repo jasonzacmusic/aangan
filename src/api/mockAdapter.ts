@@ -13,6 +13,7 @@ import {
   Room,
   Safety,
   SafetyAlertKind,
+  Sos,
   STATE_META,
   StreamEvent,
   StudioState,
@@ -27,12 +28,14 @@ import { idbGet, idbSet } from "../state/idb";
 const MOCK_STATE_KEY = "mock-studio-state";
 const MOCK_DISPLAYS_KEY = "mock-displays";
 const MOCK_DELIVERY_KEY = "mock-delivery";
+const MOCK_SOS_KEY = "mock-sos";
 
 /** Cross-tab sync so a kiosk panel tab mirrors the phone tab instantly. */
 type MockSyncMessage =
   | { src: string; kind: "state"; payload: StudioStateInfo }
   | { src: string; kind: "delivery"; payload: Delivery | null }
-  | { src: string; kind: "displays"; payload: DisplayConfig[] };
+  | { src: string; kind: "displays"; payload: DisplayConfig[] }
+  | { src: string; kind: "sos"; payload: Sos | null };
 
 const PIANO_PRESETS = [
   "NY Steinway D Classical",
@@ -105,6 +108,7 @@ export class MockAdapter implements ApiAdapter {
   };
   private pianoPresetIx = 0;
   private delivery: Delivery | null = null;
+  private sos: Sos | null = null;
   private displays: DisplayConfig[] = DEFAULT_DISPLAYS.map((d) => ({ ...d }));
   private sensorsHealthy = true;
   private healthReset: ReturnType<typeof setTimeout> | null = null;
@@ -140,6 +144,10 @@ export class MockAdapter implements ApiAdapter {
         if (msg.kind === "displays") {
           this.displays = msg.payload.map((d) => ({ ...d }));
           this.emit({ type: "displays", displays: this.displays.map((d) => ({ ...d })) });
+        }
+        if (msg.kind === "sos") {
+          this.sos = msg.payload ? { ...msg.payload } : null;
+          this.emit({ type: "sos", sos: this.sos ? { ...this.sos } : null });
         }
       };
     }
@@ -187,6 +195,8 @@ export class MockAdapter implements ApiAdapter {
         if (displays?.length) this.displays = displays;
         const delivery = await idbGet<Delivery | null>(MOCK_DELIVERY_KEY);
         if (delivery?.active && delivery.expiresAt > Date.now()) this.delivery = delivery;
+        const sos = await idbGet<Sos | null>(MOCK_SOS_KEY);
+        if (sos?.active) this.sos = sos;
       })();
     }
     await this.hydration;
@@ -492,6 +502,37 @@ export class MockAdapter implements ApiAdapter {
     return piano;
   }
 
+  async getSos() {
+    await this.hydrateState();
+    return this.sos ? { ...this.sos } : null;
+  }
+
+  async triggerSos(who: string, message: string) {
+    await this.hydrateState();
+    this.sos = { active: true, who: who.trim() || "Family", message: message.trim(), since: Date.now() };
+    await idbSet(MOCK_SOS_KEY, this.sos);
+    this.emit({ type: "sos", sos: { ...this.sos } });
+    this.broadcast({ kind: "sos", payload: { ...this.sos } });
+    this.addHistory({
+      type: "safety",
+      title: `SOS — ${this.sos.who}`,
+      detail: this.sos.message || "Family SOS raised from a phone",
+      severity: "critical",
+    });
+    await this.setStateFrom("emergency", `SOS · ${this.sos.who}`);
+    return { ...this.sos };
+  }
+
+  async clearSos() {
+    await this.hydrateState();
+    if (!this.sos) return;
+    this.sos = null;
+    await idbSet(MOCK_SOS_KEY, null);
+    this.emit({ type: "sos", sos: null });
+    this.broadcast({ kind: "sos", payload: null });
+    this.addHistory({ type: "safety", title: "SOS cleared", detail: "Marked safe — thank you", severity: "success" });
+  }
+
   async getDelivery() {
     await this.hydrateState();
     return this.delivery ? { ...this.delivery } : null;
@@ -582,6 +623,7 @@ export class MockAdapter implements ApiAdapter {
       cb({ type: "piano", piano: { ...this.piano } });
       cb({ type: "delivery", delivery: this.delivery ? { ...this.delivery } : null });
       cb({ type: "displays", displays: this.displays.map((d) => ({ ...d })) });
+      cb({ type: "sos", sos: this.sos ? { ...this.sos } : null });
     });
     return () => {
       this.listeners.delete(cb);

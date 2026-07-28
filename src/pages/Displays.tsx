@@ -2,15 +2,22 @@ import React, { useState } from "react";
 import { DISPLAY_CONTENT_META, DEFAULT_DISPLAYS, DisplayContent } from "../api/types";
 import { useStore } from "../state/store";
 
-const COURIERS = ["Swiggy", "Zomato", "Amazon", "Flipkart", "Blinkit", "Porter"];
-const NOTES = ["Leave it at the door", "Please wait — coming out", "Hand it to the family", "Ring once, then leave it"];
+const COURIERS = ["Swiggy", "Instamart", "Blinkit", "Zepto", "Zomato", "Amazon", "BigBasket", "Porter"];
+const NOTES = [
+  "Leave it at the door",
+  "Take the OTP — no need to ring",
+  "Please don't ring the bell — class in session",
+  "Ring once and wait — coming out",
+  "Hand it to whoever opens the door",
+  "Leave it with building security",
+];
 const DURATIONS = [10, 20, 30, 60];
 
 const CONTENT_ORDER: DisplayContent[] = ["door", "state", "house", "doorbell", "message", "clock"];
 
 /** Displays page — per-panel content assignment + the delivery OTP hand-off. */
 export default function Displays() {
-  const { displays, delivery, updateDisplay, addDisplay, removeDisplay, postDelivery, clearDelivery } = useStore();
+  const { displays, delivery, settings, updateSettings, updateDisplay, addDisplay, removeDisplay, postDelivery, clearDelivery } = useStore();
 
   const [courier, setCourier] = useState("Swiggy");
   const [customCourier, setCustomCourier] = useState("");
@@ -27,7 +34,9 @@ export default function Displays() {
   const send = async () => {
     if (!canSend) return;
     setSending(true);
-    await postDelivery({ courier: effectiveCourier, otp: otp.trim(), note, displayId: targetId, minutes });
+    const directions = settings.deliveryDirections.trim();
+    const fullNote = directions ? `${note} · ${directions}` : note;
+    await postDelivery({ courier: effectiveCourier, otp: otp.trim(), note: fullNote, displayId: targetId, minutes });
     setOtp("");
     setSending(false);
   };
@@ -103,6 +112,16 @@ export default function Displays() {
                   {n}
                 </button>
               ))}
+            </div>
+
+            <div className="mt-3">
+              <div className="mb-1 font-mono text-[9px] uppercase tracking-widest text-dim">Standing directions · shown under every hand-off</div>
+              <input
+                value={settings.deliveryDirections}
+                onChange={(e) => updateSettings({ deliveryDirections: e.target.value })}
+                placeholder="e.g. Blue gate · lift to 2nd floor · door on the right"
+                className="w-full rounded-xl border border-line bg-ink/60 px-4 py-3 text-sm text-paper placeholder:text-dim/60 focus:border-gold/50 focus:outline-none"
+              />
             </div>
 
             <div className="mt-3 grid grid-cols-2 gap-3">

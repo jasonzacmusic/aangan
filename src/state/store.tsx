@@ -15,6 +15,7 @@ import {
   Safety,
   SafetyAlertKind,
   SceneDef,
+  Sos,
   StudioState,
   StudioStateInfo,
   Utilities,
@@ -30,6 +31,8 @@ export interface Settings {
   notifyStateChanges: boolean;
   notifyEmergency: boolean;
   notifyDoorbell: boolean;
+  /** Standing directions appended to every delivery hand-off (lift, floor, landmark). */
+  deliveryDirections: string;
   scenes: SceneDef[];
 }
 
@@ -40,6 +43,7 @@ const DEFAULT_SETTINGS: Settings = {
   notifyStateChanges: true,
   notifyEmergency: true,
   notifyDoorbell: false,
+  deliveryDirections: "",
   scenes: DEFAULT_SCENES,
 };
 
@@ -51,6 +55,7 @@ interface Store {
   preflight: Preflight | null;
   preflightPrep: PreflightPrep | null;
   safety: Safety | null;
+  sos: Sos | null;
   doorbell: Doorbell | null;
   utilities: Utilities | null;
   pianoRig: PianoRig | null;
@@ -69,6 +74,8 @@ interface Store {
   setStudioState: (s: StudioState) => Promise<void>;
   runScene: (scene: SceneDef) => Promise<void>;
   triggerPanic: () => Promise<void>;
+  triggerSos: (who: string, message: string) => Promise<void>;
+  clearSos: () => Promise<void>;
   updateSettings: (patch: Partial<Settings>) => void;
   refreshDoorbell: () => Promise<void>;
   prepareStudio: () => Promise<void>;
@@ -119,6 +126,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [preflight, setPreflight] = useState<Preflight | null>(null);
   const [preflightPrep, setPreflightPrep] = useState<PreflightPrep | null>(null);
   const [safety, setSafety] = useState<Safety | null>(null);
+  const [sos, setSos] = useState<Sos | null>(null);
   const [doorbell, setDoorbell] = useState<Doorbell | null>(null);
   const [utilities, setUtilities] = useState<Utilities | null>(null);
   const [pianoRig, setPianoRig] = useState<PianoRig | null>(null);
@@ -173,7 +181,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       while (!cancelled) {
         setConnectionStatus(attempt === 0 ? "connecting" : "reconnecting");
         try {
-          const [st, rm, pf, prep, sf, db, events, util, piano, del, disp] = await Promise.all([
+          const [st, rm, pf, prep, sf, db, events, util, piano, del, disp, sosNow] = await Promise.all([
             api.getState(),
             api.getRooms(),
             api.getPreflight(),
@@ -185,6 +193,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             api.getPianoRig(),
             api.getDelivery(),
             api.getDisplays(),
+            api.getSos(),
           ]);
           if (cancelled) return;
           setStateInfo(st);
@@ -199,6 +208,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           setPianoRig(piano);
           setDeliveryState(del);
           setDisplays(disp);
+          setSos(sosNow);
           const music = rm.find((room) => room.id === "music");
           if (music?.dbLevel != null) setDbHistory([music.dbLevel]);
           setConnected(true);
@@ -220,6 +230,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             if (ev.type === "piano") setPianoRig(ev.piano);
             if (ev.type === "delivery") setDeliveryState(ev.delivery);
             if (ev.type === "displays") setDisplays(ev.displays);
+            if (ev.type === "sos") setSos(ev.sos);
             if (ev.type === "preflight") {
               setPreflight(ev.preflight);
               setPreflightPrep(ev.prep);
@@ -308,6 +319,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     await api.panic();
     return api.getState();
   }), [commitState]);
+
+  const triggerSos = useCallback(
+    (who: string, message: string) =>
+      commitState("emergency", async () => {
+        const next = await api.triggerSos(who, message);
+        setSos(next);
+        return api.getState();
+      }),
+    [commitState]
+  );
+
+  const clearSos = useCallback(async () => {
+    try {
+      await api.clearSos();
+      setSos(null);
+    } catch {
+      setLastError("Could not mark the SOS as safe — try once more.");
+    }
+  }, []);
 
   const updateSettings = useCallback((patch: Partial<Settings>) => {
     setSettings((previous) => {
@@ -456,6 +486,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       preflight,
       preflightPrep,
       safety,
+      sos,
       doorbell,
       utilities,
       pianoRig,
@@ -474,6 +505,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setStudioState,
       runScene,
       triggerPanic,
+      triggerSos,
+      clearSos,
       updateSettings,
       refreshDoorbell,
       prepareStudio,
@@ -490,7 +523,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       requestNotificationPermission,
       clearError,
     }),
-    [stateInfo, rooms, preflight, preflightPrep, safety, doorbell, utilities, pianoRig, delivery, displays, history, settings, dbHistory, connected, connectionStatus, committing, sceneRunning, lastError, notificationPermission, setStudioState, runScene, triggerPanic, updateSettings, refreshDoorbell, prepareStudio, restoreStudio, runUtilityAction, playTone, sendPianoCue, postDelivery, clearDelivery, updateDisplay, addDisplay, removeDisplay, triggerSafetyDemo, requestNotificationPermission, clearError]
+    [stateInfo, rooms, preflight, preflightPrep, safety, sos, doorbell, utilities, pianoRig, delivery, displays, history, settings, dbHistory, connected, connectionStatus, committing, sceneRunning, lastError, notificationPermission, setStudioState, runScene, triggerPanic, triggerSos, clearSos, updateSettings, refreshDoorbell, prepareStudio, restoreStudio, runUtilityAction, playTone, sendPianoCue, postDelivery, clearDelivery, updateDisplay, addDisplay, removeDisplay, triggerSafetyDemo, requestNotificationPermission, clearError]
   );
 
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;

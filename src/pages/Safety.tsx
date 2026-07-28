@@ -16,7 +16,7 @@ function SafetyTile({ label, alert, okText, alertText }: { label: string; alert:
 }
 
 export default function Safety() {
-  const { safety, doorbell, stateInfo, triggerPanic, refreshDoorbell, dataSource, triggerSafetyDemo } = useStore();
+  const { safety, sos, doorbell, stateInfo, triggerPanic, refreshDoorbell, dataSource, triggerSafetyDemo, clearSos } = useStore();
   const [demoActive, setDemoActive] = useState(false);
   const demoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const demoIndex = useRef(0);
@@ -102,6 +102,33 @@ export default function Safety() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Family SOS */}
+      <div className="mt-6 rounded-3xl border border-st-emergency/30 bg-surface/80 p-5">
+        <div className="mb-1 flex items-center justify-between">
+          <div className="font-display text-lg text-paper">Family SOS</div>
+          {sos?.active && <span className="emergency-flash rounded-full border border-st-emergency/60 bg-st-emergency/20 px-2.5 py-1 font-mono text-[9px] uppercase tracking-wider text-st-emergency">live · {sos.who}</span>}
+        </div>
+        <p className="mb-4 text-xs text-dim">
+          One page, one hold — anyone in the family can raise the whole house from their phone. Open it once on Amma's and everyone's phone and add it to the home screen.
+        </p>
+        <div className="flex gap-2">
+          <a
+            href="#/sos"
+            className="flex-1 rounded-xl border border-st-emergency/50 bg-st-emergency/10 px-4 py-3 text-center text-sm font-semibold text-st-emergency transition-all active:scale-[0.99]"
+          >
+            Open the SOS page
+          </a>
+          {sos?.active && (
+            <button
+              onClick={() => void clearSos()}
+              className="rounded-xl border border-st-available/50 bg-st-available/10 px-4 py-3 text-sm font-semibold text-st-available"
+            >
+              Mark safe
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Guarded emergency */}

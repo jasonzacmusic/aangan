@@ -45,6 +45,24 @@ export interface Safety {
   leakBath: boolean;
 }
 
+/** A family SOS raised from any phone on the house Wi-Fi (the #/sos page). */
+export interface Sos {
+  active: boolean;
+  who: string;
+  message: string;
+  since: number; // epoch ms
+}
+
+export const SOS_PEOPLE = ["Amma", "Jason", "Brother", "Guest"];
+
+export const SOS_MESSAGES = [
+  "I need help right now",
+  "I'm feeling unwell",
+  "Please come home",
+  "Come to the kitchen",
+  "Call a doctor",
+];
+
 export type SafetyAlertKind = keyof Safety | "clear";
 
 export interface Doorbell {
@@ -179,6 +197,7 @@ export type StreamEvent =
   | { type: "piano"; piano: PianoRig }
   | { type: "delivery"; delivery: Delivery | null }
   | { type: "displays"; displays: DisplayConfig[] }
+  | { type: "sos"; sos: Sos | null }
   | { type: "connection"; status: ConnectionState };
 
 export interface SceneDef {
@@ -208,6 +227,10 @@ export interface ApiAdapter {
   /** The Pianoteq rig (PIANO Pi). Cues are one-way and never touch its audio thread. */
   getPianoRig(): Promise<PianoRig>;
   pianoCue(cue: PianoCue): Promise<PianoRig>;
+  /** Family SOS — one tap from any phone raises the whole house. */
+  getSos(): Promise<Sos | null>;
+  triggerSos(who: string, message: string): Promise<Sos>;
+  clearSos(): Promise<void>;
   /** Delivery OTP hand-off shown on a door display. */
   getDelivery(): Promise<Delivery | null>;
   setDelivery(input: DeliveryInput): Promise<Delivery>;

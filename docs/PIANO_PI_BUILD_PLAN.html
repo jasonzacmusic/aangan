@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NSM · Piano Pi — The Complete Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14121c;--plum:#2a1e4d;--violet:#8B5CF6;--violet-deep:#6D28D9;--cyan:#22D3EE;
+    --teal:#10B981;--amber:#F59E0B;--red:#EF4444;--gold:#C9A84C;--rasp:#C51A4A;
+    --paper:#F5F2EC;--paper-2:#ECE7DC;--card:#FFFFFF;
+    --line:#E4DECF;--line-2:#D6CFBE;--muted:#6B6456;--muted-2:#938A77;
+    --mono:'IBM Plex Mono',monospace;--sans:'Inter',sans-serif;--serif:'Fraunces',Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px 100px;}
+
+  header.hero{position:relative;overflow:hidden;background:radial-gradient(circle at 85% -10%,rgba(197,26,74,0.28),transparent 44%),radial-gradient(circle at 3% 118%,rgba(139,92,246,0.22),transparent 42%),linear-gradient(140deg,#140b1e,#2a1e4d 56%,#4a1d38);color:#fff;border-bottom:1px solid rgba(197,26,74,0.4);}
+  .hero-inner{max-width:1000px;margin:0 auto;padding:58px 20px 48px;}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:4px;color:#f4a6c0;text-transform:uppercase;margin-bottom:15px;}
+  header.hero h1{font-family:var(--serif);font-size:clamp(30px,5.5vw,52px);font-weight:600;line-height:1.03;margin-bottom:17px;}
+  header.hero h1 em{font-style:italic;color:#f4a6c0;}
+  header.hero p{color:#ded2ec;font-size:15.5px;max-width:690px;}
+  .hero-meta{display:flex;gap:0;margin-top:30px;border-top:1px solid rgba(255,255,255,0.14);flex-wrap:wrap;}
+  .hero-meta div{padding:15px 30px 4px 0;}
+  .hero-meta span{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:#b9a6c4;text-transform:uppercase;display:block;}
+  .hero-meta b{color:#fff;font-family:var(--serif);font-size:18px;font-weight:500;display:block;margin-top:4px;}
+  .hero-meta b small{font-size:11.5px;color:#f4a6c0;font-family:var(--sans);}
+
+  .toc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 26px;margin-top:36px;display:grid;grid-template-columns:repeat(2,1fr);gap:2px 30px;}
+  .toc a{display:flex;align-items:baseline;gap:10px;padding:8px 0;color:var(--ink);text-decoration:none;font-size:14px;transition:color .15s;}
+  .toc a:hover{color:var(--rasp);}
+  .toc a .n{font-family:var(--mono);font-size:11px;color:var(--muted-2);font-weight:600;min-width:26px;}
+
+  section{margin-top:60px;scroll-margin-top:16px;}
+  .sect-num{font-family:var(--mono);font-size:12px;color:var(--rasp);letter-spacing:3px;font-weight:600;margin-bottom:9px;}
+  h2{font-family:var(--serif);font-size:clamp(25px,4.2vw,35px);font-weight:600;color:var(--plum);line-height:1.08;}
+  .sect-sub{color:var(--muted);font-size:15px;margin-top:11px;max-width:720px;}
+  h3{font-family:var(--sans);font-size:16px;font-weight:600;color:var(--plum);margin:24px 0 10px;}
+  h4{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--rasp);letter-spacing:1px;text-transform:uppercase;margin:24px 0 10px;}
+
+  .diagram-frame{background:var(--plum);border-radius:18px;padding:26px 20px;margin-top:14px;box-shadow:0 10px 34px rgba(42,30,77,0.24);}
+  .diagram-frame svg{width:100%;height:auto;display:block;}
+  .diag-cap{font-family:var(--mono);font-size:10.5px;letter-spacing:1px;color:#b9a6c4;text-transform:uppercase;text-align:center;margin-top:14px;}
+
+  .callout{border-radius:0 12px 12px 0;padding:15px 20px;margin-top:16px;font-size:13.5px;line-height:1.55;}
+  .callout.amber{background:#FDF6E9;border-left:4px solid var(--amber);color:#6B4D08;}.callout.amber strong{color:#92580a;}
+  .callout.green{background:#EAF8F1;border-left:4px solid var(--teal);color:#0A5840;}.callout.green strong{color:#077857;}
+  .callout.violet{background:#F3EEFB;border-left:4px solid var(--violet);color:#4A2F87;}.callout.violet strong{color:#6D28D9;}
+  .callout.red{background:#FDECEC;border-left:4px solid var(--red);color:#7a2020;}.callout.red strong{color:#a32d2d;}
+  .callout.rasp{background:#FCE9EF;border-left:4px solid var(--rasp);color:#7a1030;}.callout.rasp strong{color:#C51A4A;}
+
+  .tbl-wrap{border-radius:14px;overflow:hidden;border:1px solid var(--line);box-shadow:0 1px 2px rgba(20,18,28,0.03);overflow-x:auto;margin-top:12px;}
+  table{width:100%;border-collapse:collapse;background:var(--card);font-size:13px;min-width:700px;}
+  thead th{background:var(--plum);color:#fff;text-align:left;padding:12px 13px;font-size:10px;font-family:var(--mono);letter-spacing:.8px;text-transform:uppercase;font-weight:600;}
+  th.c,td.c{text-align:center;}
+  tbody td{padding:13px;border-top:1px solid var(--line);vertical-align:top;}
+  tbody tr:nth-child(even){background:#FBFAF6;}
+  tbody tr.hl{background:#FCE9EF;}
+  .item-name{font-weight:600;color:var(--plum);font-size:13.5px;}
+  .item-sub{color:var(--muted);font-size:11.5px;margin-top:3px;line-height:1.5;}
+  .qty{font-family:var(--mono);font-weight:700;color:var(--rasp);font-size:16px;text-align:center;}
+  .badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:20px;font-weight:600;letter-spacing:.3px;}
+  .b-have{background:#EAF8F1;color:#077857;}
+  .b-buy{background:#F3EEFB;color:#6D28D9;}
+  .b-key{background:#FCE9EF;color:#C51A4A;}
+  .b-opt{background:#EEF2F7;color:#475569;}
+  .b-skip{background:#F1F5F9;color:#94A3B8;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:0 1px 2px rgba(20,18,28,0.03);}
+  .card.v{margin-top:0;}
+  ul.tick,ul.arrow{list-style:none;margin-top:4px;}
+  ul.tick li,ul.arrow li{position:relative;padding:8px 0 8px 26px;font-size:13px;color:#3D3A33;border-bottom:1px dashed var(--line);line-height:1.45;}
+  ul.tick li:last-child,ul.arrow li:last-child{border-bottom:none;}
+  ul.tick li::before{content:"✓";position:absolute;left:0;color:var(--teal);font-weight:700;}
+  ul.arrow li::before{content:"→";position:absolute;left:0;color:var(--rasp);font-weight:700;}
+  li b{color:var(--plum);}
+
+  ul.check{list-style:none;margin-top:6px;}
+  ul.check li{position:relative;padding:11px 0 11px 32px;border-bottom:1px solid var(--line);font-size:13.5px;line-height:1.5;color:#3D3A33;}
+  ul.check li:last-child{border-bottom:none;}
+  ul.check li::before{content:"";position:absolute;left:0;top:13px;width:17px;height:17px;border:2px solid var(--line-2);border-radius:5px;background:#fff;}
+  ul.check li b{color:var(--plum);}
+
+  .steps{counter-reset:step;margin-top:12px;}
+  .step{display:flex;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:18px 20px;margin-bottom:11px;align-items:flex-start;box-shadow:0 1px 2px rgba(20,18,28,0.03);}
+  .step-num{counter-increment:step;flex:0 0 34px;height:34px;background:var(--rasp);color:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:600;font-size:16px;}
+  .step-num::before{content:counter(step);}
+  .step-content{flex:1;}
+  .step-content h3{margin:0 0 5px;font-size:15.5px;}
+  .step-content p{font-size:13.5px;color:#4A463D;line-height:1.55;}
+  .step-content p+p{margin-top:7px;}
+  .step-content code{font-family:var(--mono);font-size:12px;background:var(--paper-2);padding:2px 7px;border-radius:5px;color:var(--plum);}
+  .step-time{flex:0 0 auto;font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--paper-2);border:1px solid var(--line-2);padding:5px 10px;border-radius:7px;white-space:nowrap;}
+
+  .conn{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0;margin-top:12px;overflow:hidden;}
+  .conn-row{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .conn-row:last-child{border-bottom:none;}
+  .conn-row:nth-child(even){background:#FBFAF6;}
+  .conn-from{flex:1;min-width:150px;font-weight:600;color:var(--plum);font-size:13.5px;}
+  .conn-mid{font-family:var(--mono);font-size:10.5px;color:#fff;background:var(--rasp);padding:4px 11px;border-radius:20px;white-space:nowrap;}
+  .conn-to{flex:1;min-width:150px;font-size:13.5px;color:#3D3A33;text-align:right;}
+  .conn-note{width:100%;font-size:11.5px;color:var(--muted);padding-top:5px;line-height:1.5;}
+
+  pre.code{background:#0d1524;border:1px solid #1f2f4a;border-radius:12px;padding:16px 18px;font-family:var(--mono);font-size:11.5px;line-height:1.75;color:#C6D4EA;white-space:pre-wrap;margin-top:12px;overflow-x:auto;}
+  pre.code b{color:#6EE7F5;font-weight:600;}
+  pre.code .cm{color:#7C93B3;}
+
+  footer{text-align:center;color:var(--muted-2);font-size:11.5px;font-family:var(--mono);padding-top:44px;margin-top:50px;border-top:1px solid var(--line);letter-spacing:.5px;line-height:1.8;}
+  @media(max-width:760px){.toc,.grid2,.grid3{grid-template-columns:1fr;}.step{flex-wrap:wrap;}.conn-to{text-align:left;}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <div class="kicker">NSM · Piano Pi · Raspberry Pi DAC Pro Build · The Complete Plan</div>
+    <h1>Order to first note.<br><em>Nothing skipped.</em></h1>
+    <p>The full Pianoteq stage rig built around the Raspberry Pi DAC Pro — true balanced XLR output, no soldering. Every part, every connection, every command, every test. Separate machine from the house-automation Pi.</p>
+    <div class="hero-meta">
+      <div><span>DAC</span><b>Raspberry Pi DAC Pro</b></div>
+      <div><span>Chip</span><b>TI PCM5242</b></div>
+      <div><span>Output</span><b>Balanced XLR <small>0–4V RMS</small></b></div>
+      <div><span>Soldering</span><b>None</b></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="toc">
+    <a href="#why"><span class="n">01</span> Why this board</a>
+    <a href="#chain"><span class="n">02</span> The signal chain</a>
+    <a href="#order"><span class="n">03</span> The order list</a>
+    <a href="#before"><span class="n">04</span> Before you order — 4 checks</a>
+    <a href="#unbox"><span class="n">05</span> When it arrives</a>
+    <a href="#assemble"><span class="n">06</span> Physical assembly</a>
+    <a href="#connections"><span class="n">07</span> Every connection</a>
+    <a href="#os"><span class="n">08</span> Flashing the OS</a>
+    <a href="#dac"><span class="n">09</span> Enabling the DAC</a>
+    <a href="#pianoteq"><span class="n">10</span> Installing Pianoteq Pro</a>
+    <a href="#latency"><span class="n">11</span> Tuning latency</a>
+    <a href="#autostart"><span class="n">12</span> Auto-start &amp; backup</a>
+    <a href="#stage"><span class="n">13</span> Stage setup</a>
+    <a href="#test"><span class="n">14</span> The test checklist</a>
+    <a href="#trouble"><span class="n">15</span> Troubleshooting</a>
+    <a href="#after"><span class="n">16</span> After it works</a>
+  </nav>
+
+  <!-- 01 WHY -->
+  <section id="why">
+    <div class="sect-num">§ 01 — WHY THIS BOARD</div>
+    <h2>The decision, settled</h2>
+    <p class="sect-sub">Both candidate DACs sound excellent. The Raspberry Pi DAC Pro wins on the thing that matters for a rig feeding a studio console.</p>
+    <div class="grid2">
+      <div class="card v">
+        <h3 style="margin-top:0;color:var(--rasp)">What makes it right</h3>
+        <ul class="tick">
+          <li><b>Native balanced/differential output</b> — not RCA wired into an XLR shell. Genuine balanced signal.</li>
+          <li><b>Official XLR daughter board</b> plugs onto the P7/P9 headers — no Neutriks to buy, nothing to solder.</li>
+          <li><b>0–4V RMS balanced</b> vs 2V on RCA — a stronger, cleaner feed to your desk.</li>
+          <li><b>First-party Raspberry Pi</b> (rebranded IQaudio) — best driver and documentation support.</li>
+          <li><b>24-bit / 192kHz PCM5242</b> with a headphone amp for monitoring.</li>
+          <li><b>RCA out in parallel</b> — you keep a second output for free.</li>
+        </ul>
+      </div>
+      <div class="card v">
+        <h3 style="margin-top:0">What it removes from the build</h3>
+        <ul class="arrow">
+          <li><span class="badge b-skip">NOT NEEDED</span> &nbsp;2× Neutrik NC3MD connectors</li>
+          <li><span class="badge b-skip">NOT NEEDED</span> &nbsp;Project box to mount them in</li>
+          <li><span class="badge b-skip">NOT NEEDED</span> &nbsp;Soldering iron, solder, heat-shrink</li>
+          <li><span class="badge b-skip">NOT NEEDED</span> &nbsp;RCA-to-bare wiring pair</li>
+          <li><span class="badge b-skip">NOT NEEDED</span> &nbsp;Drilling anything</li>
+          <li>Fewer parts, fewer failure points, better signal.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout rasp"><strong>Honest note on the chip comparison:</strong> the InnoMaker's ES9038Q2M is, on paper, a more prestigious converter than the PCM5242. For a pure hi-fi listening rig that argument would carry weight. For a stage instrument feeding a desk over cable, <b>a true balanced output path matters more than the converter chip</b> — balanced rejects hum and interference in a way no amount of DAC quality compensates for. That's the whole reasoning.</div>
+  </section>
+
+  <!-- 02 CHAIN -->
+  <section id="chain">
+    <div class="sect-num">§ 02 — THE SIGNAL CHAIN</div>
+    <h2>How sound travels</h2>
+    <div class="diagram-frame">
+      <svg viewBox="0 0 940 320" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif">
+        <rect x="12" y="115" width="130" height="80" rx="12" fill="#1e1836" stroke="#8B5CF6"/>
+        <text x="77" y="145" fill="#fff" font-size="11.5" font-weight="700" text-anchor="middle">🎹 MIDI keyboard</text>
+        <text x="77" y="164" fill="#c4b5fd" font-size="9" text-anchor="middle">your existing one</text>
+        <text x="77" y="179" fill="#c4b5fd" font-size="9" text-anchor="middle">note data only</text>
+
+        <rect x="192" y="38" width="255" height="240" rx="15" fill="#3a2a63" stroke="#C51A4A" stroke-width="1.5"/>
+        <text x="319" y="66" fill="#fff" font-size="13" font-weight="700" text-anchor="middle">THE RIG · one stack</text>
+        <rect x="210" y="80" width="219" height="44" rx="9" fill="#4a3780"/>
+        <text x="319" y="98" fill="#fff" font-size="10.5" font-weight="600" text-anchor="middle">Raspberry Pi 5 (8GB)</text>
+        <text x="319" y="114" fill="#d8ccf5" font-size="8.8" text-anchor="middle">Pianoteq Pro models the piano</text>
+        <rect x="210" y="130" width="219" height="44" rx="9" fill="#5c2340"/>
+        <text x="319" y="148" fill="#fff" font-size="10.5" font-weight="600" text-anchor="middle">Raspberry Pi DAC Pro</text>
+        <text x="319" y="164" fill="#f4a6c0" font-size="8.8" text-anchor="middle">PCM5242 · digital → analog</text>
+        <rect x="210" y="180" width="219" height="44" rx="9" fill="#5c2340"/>
+        <text x="319" y="198" fill="#fff" font-size="10.5" font-weight="600" text-anchor="middle">XLR daughter board</text>
+        <text x="319" y="214" fill="#f4a6c0" font-size="8.8" text-anchor="middle">P7/P9 → balanced XLR sockets</text>
+        <text x="319" y="245" fill="#c9a8d8" font-size="9" text-anchor="middle" font-style="italic">+ touchscreen · fan · microSD</text>
+        <text x="319" y="263" fill="#b7a6ee" font-size="8.5" text-anchor="middle">three boards, plugged together</text>
+
+        <rect x="497" y="115" width="150" height="80" rx="12" fill="#1e1836" stroke="#C9A84C"/>
+        <text x="572" y="145" fill="#fff" font-size="11.5" font-weight="700" text-anchor="middle">XLR cables ×2</text>
+        <text x="572" y="164" fill="#e6d6a6" font-size="9" text-anchor="middle">balanced L + R</text>
+        <text x="572" y="179" fill="#e6d6a6" font-size="9" text-anchor="middle">0–4V RMS</text>
+
+        <rect x="697" y="105" width="165" height="100" rx="12" fill="#123a2e" stroke="#10B981"/>
+        <text x="779" y="135" fill="#fff" font-size="11.5" font-weight="700" text-anchor="middle">🎚️ Console / DI</text>
+        <text x="779" y="155" fill="#a7e8cf" font-size="9" text-anchor="middle">your existing desk</text>
+        <text x="779" y="171" fill="#a7e8cf" font-size="9" text-anchor="middle">no Focusrite needed</text>
+        <text x="779" y="187" fill="#a7e8cf" font-size="9" text-anchor="middle">→ monitors / recording</text>
+
+        <line x1="142" y1="155" x2="190" y2="155" stroke="#8B5CF6" stroke-width="2.5"/>
+        <polygon points="190,155 183,151 183,159" fill="#8B5CF6"/>
+        <text x="166" y="147" fill="#c4b5fd" font-size="8.5" text-anchor="middle">USB</text>
+        <line x1="447" y1="155" x2="495" y2="155" stroke="#C51A4A" stroke-width="2.5"/>
+        <polygon points="495,155 488,151 488,159" fill="#C51A4A"/>
+        <text x="471" y="147" fill="#f4a6c0" font-size="8.5" text-anchor="middle">XLR</text>
+        <line x1="647" y1="155" x2="695" y2="155" stroke="#10B981" stroke-width="2.5"/>
+        <polygon points="695,155 688,151 688,159" fill="#10B981"/>
+
+        <rect x="192" y="290" width="255" height="24" rx="8" fill="#1e1836" stroke="#22D3EE"/>
+        <text x="319" y="306" fill="#8fd4e6" font-size="9" text-anchor="middle">⚡ 27W PSU (studio) · 100W PD power bank (stage)</text>
+      </svg>
+      <div class="diag-cap">Keys → Pianoteq models the piano → PCM5242 converts → XLR board → balanced out to console</div>
+    </div>
+    <div class="callout violet"><strong>What's actually happening:</strong> your keyboard sends only note information — which key, how hard, no sound at all. Pianoteq calculates what a real piano would sound like from the physics of strings, hammers and soundboard. The DAC turns that into an electrical signal. The XLR board sends it out balanced. That's why a board smaller than your hand can sound like a concert grand.</div>
+  </section>
+
+  <!-- 03 ORDER -->
+  <section id="order">
+    <div class="sect-num">§ 03 — THE ORDER LIST</div>
+    <h2>Everything to buy</h2>
+    <p class="sect-sub">Grouped by what depends on what. The two KEY items should be ordered together; everything else can ship in parallel.</p>
+
+    <h4>The core — order these together</h4>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th style="width:30%">Item</th><th class="c" style="width:8%">Qty</th><th style="width:38%">What it does</th><th style="width:24%">Source</th></tr></thead>
+        <tbody>
+          <tr><td class="item-name">Raspberry Pi 5 (8GB)<span class="badge b-have">HAVE</span></td><td class="qty">1</td><td class="item-sub">Runs Pianoteq Pro — the instrument engine itself</td><td class="item-sub">Silverline · owned</td></tr>
+          <tr class="hl"><td class="item-name">Raspberry Pi DAC Pro<span class="badge b-key">KEY</span><div class="item-sub">PCM5242 · ex-IQaudio</div></td><td class="qty">1</td><td class="item-sub">Converts digital audio to analog with native balanced output. Powered by the Pi through GPIO — no external supply.</td><td class="item-sub">Robu.in (official RPi distributor)</td></tr>
+          <tr class="hl"><td class="item-name">XLR board for DAC Pro<span class="badge b-key">KEY</span></td><td class="qty">1</td><td class="item-sub">Daughter card on P7/P9 headers providing the balanced XLR sockets. <b>Replaces all Neutrik + soldering work.</b></td><td class="item-sub">Robu / PiShop / import — <b>confirm stock</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>Control, storage &amp; cooling</h4>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th style="width:30%">Item</th><th class="c" style="width:8%">Qty</th><th style="width:38%">What it does</th><th style="width:24%">Source</th></tr></thead>
+        <tbody>
+          <tr><td class="item-name">Pi Touch Display 2<div class="item-sub">or 5" HDMI touchscreen</div></td><td class="qty">1</td><td class="item-sub">On-rig screen — switch patches, see status, no laptop on stage. Official display uses the DSI ribbon, freeing HDMI/USB.</td><td class="item-sub">Robu / Robocraze</td></tr>
+          <tr><td class="item-name">A2 microSD 64GB<div class="item-sub">SanDisk Extreme / Samsung EVO Plus</div></td><td class="qty">1</td><td class="item-sub">Holds OS + Pianoteq. A2 rating = snappier system. Pianoteq models rather than samples, so it's small.</td><td class="item-sub">Any reputable seller</td></tr>
+          <tr><td class="item-name">Active cooling<div class="item-sub">official Pi 5 Active Cooler, or open-frame + fan</div></td><td class="qty">1</td><td class="item-sub">Keeps the Pi cool during long sessions. <b>See §04 — a normal closed case likely won't fit the XLR board.</b></td><td class="item-sub">Robu / Silverline</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>Power</h4>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th style="width:30%">Item</th><th class="c" style="width:8%">Qty</th><th style="width:38%">What it does</th><th style="width:24%">Source</th></tr></thead>
+        <tbody>
+          <tr><td class="item-name">Official 27W USB-C PSU</td><td class="qty">1</td><td class="item-sub">Studio power. The Pi 5 with HAT + screen needs real current — a phone charger causes random crashes.</td><td class="item-sub">Robu / Silverline</td></tr>
+          <tr><td class="item-name">USB-C PD power bank, 100W</td><td class="qty">1</td><td class="item-sub">Stage power with no wall socket. Must support USB-C Power Delivery, not just 5V/2A.</td><td class="item-sub">Amazon.in</td></tr>
+          <tr><td class="item-name">USB-C cable, 5A / 100W e-marked</td><td class="qty">2</td><td class="item-sub">PSU→Pi and bank→Pi. A weak cable causes under-voltage even with a good supply. Keep them 0.5–1m.</td><td class="item-sub">Amazon.in</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>Cables &amp; transport</h4>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th style="width:30%">Item</th><th class="c" style="width:8%">Qty</th><th style="width:38%">What it does</th><th style="width:24%">Source</th></tr></thead>
+        <tbody>
+          <tr><td class="item-name">USB-A → USB-B cable<div class="item-sub">⚠ check your keyboard's port first</div></td><td class="qty">1</td><td class="item-sub">MIDI keyboard to Pi. Most keyboards use USB-B ("printer style"); some newer ones use USB-C.</td><td class="item-sub">Local / SP Road</td></tr>
+          <tr><td class="item-name">XLR cables, male→female</td><td class="qty">2</td><td class="item-sub">Rig's XLR board out to console or DI inputs. Length to suit your room/stage.</td><td class="item-sub">BLR pro-audio dealer</td></tr>
+          <tr><td class="item-name">Hard transport case<div class="item-sub">pedalboard-style, foam-lined</div></td><td class="qty">1</td><td class="item-sub">Carries the whole rig + power bank + cables to gigs. Also where an open-frame build lives safely.</td><td class="item-sub">Music store</td></tr>
+          <tr><td class="item-name">Cable ties, velcro, small standoffs</td><td class="qty">kit</td><td class="item-sub">Tidy mounting and strain relief inside the case</td><td class="item-sub">SP Road</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout green"><strong>13 line items, one already owned.</strong> No Neutriks, no project box, no soldering kit, no RCA wiring — the XLR board removes all of it. That's four fewer things to source and four fewer things to get wrong.</div>
+  </section>
+
+  <!-- 04 BEFORE -->
+  <section id="before">
+    <div class="sect-num">§ 04 — BEFORE YOU ORDER</div>
+    <h2>Four things to check first</h2>
+    <p class="sect-sub">Five minutes of checking here prevents the two things that could stall this build.</p>
+    <div class="steps">
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Is the XLR board in stock in India?</h3><p>This is the one genuine unknown. Call or message <b>Robu.in</b> and ask specifically for the <b>XLR board for the Raspberry Pi DAC Pro</b>. If they don't stock it, ask whether they can order it in, and how long.</p><p><b>If it can't be sourced quickly:</b> buy the DAC Pro anyway and feed its RCA output into a passive stereo DI box. You still get first-party support and true balanced XLR out of the DI. That fallback is genuinely good.</p></div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Do the P7/P9 headers come pre-soldered?</h3><p>Newer revisions of the DAC Pro ship with <b>bare pads instead of a pre-fitted 6-pin female header</b> on P7/P9. If yours arrives that way, the XLR board needs a header soldered on — a small job, but you'd want to know beforehand.</p><p>Ask the seller which revision they're shipping. If it's the bare-pad version, add a <b>6-pin female header</b> to the order and plan five minutes of soldering.</p></div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Which USB port does your keyboard have?</h3><p>Look at the socket on your MIDI keyboard. Square-ish with bevelled corners = <b>USB-B</b> (most common). Small oval = <b>USB-C</b>. Five-pin round = <b>DIN MIDI</b>, which needs a USB-MIDI interface instead.</p><p>Order the matching cable. This is a ₹200 part that can block the whole build if wrong.</p></div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Don't buy a closed case yet</h3><p>The XLR board sits <b>above the Pi's USB and Ethernet ports</b> — a standard Pi 5 case will not close over it. Options: an open-frame/stackable mount with the official Active Cooler, a taller case that clears the daughter board, or mount the whole stack inside the transport case.</p><p>Wait until the boards are in hand, measure, then choose. It's the one part where guessing wastes money.</p></div></div>
+    </div>
+  </section>
+
+  <!-- 05 UNBOX -->
+  <section id="unbox">
+    <div class="sect-num">§ 05 — WHEN IT ARRIVES</div>
+    <h2>Check before you build</h2>
+    <div class="card">
+      <ul class="check">
+        <li><b>DAC Pro is genuine</b> — Raspberry Pi branding, clean board finish, no bent pins on the GPIO connector</li>
+        <li><b>P7/P9 headers</b> — confirm whether they're pre-soldered or bare pads (determines your next step)</li>
+        <li><b>XLR board</b> — sockets clean and undamaged, connector matches the DAC Pro's header spacing</li>
+        <li><b>Pi 5</b> — no damage, GPIO pins straight</li>
+        <li><b>microSD</b> — genuine (counterfeits are common; buy from reputable sellers)</li>
+        <li><b>PSU</b> — official 27W, correct plug type for India</li>
+        <li><b>USB-C cables</b> — confirm they're rated 5A/100W, not generic charging cables</li>
+        <li><b>Keyboard cable</b> — matches the socket you checked in §04</li>
+        <li><b>Test-fit before permanent mounting</b> — stack the boards loosely and confirm everything physically clears</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 06 ASSEMBLE -->
+  <section id="assemble">
+    <div class="sect-num">§ 06 — PHYSICAL ASSEMBLY</div>
+    <h2>Building the stack</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Power off, work on a clean surface</h3><p>Pi unplugged, no power anywhere. Static-safe surface if you have one. Have the transport case nearby to check fit as you go.</p></div><div class="step-time">2 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Fit the Active Cooler (if using)</h3><p>If you're using the official Pi 5 Active Cooler, fit it <b>before</b> the DAC — it clips onto the Pi and connects to the fan header. Fitting it later means dismantling the stack.</p></div><div class="step-time">5 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Seat the DAC Pro on the GPIO</h3><p>Line up the DAC Pro's connector with all 40 GPIO pins and press down evenly. It should seat fully with no gap and no pin visible. Use standoffs if supplied so the board sits rigid rather than flexing.</p><p><b>Check:</b> the P7/P9 headers should now be sitting above the Pi's USB/Ethernet ports.</p></div><div class="step-time">5 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Solder the 6-pin header (only if needed)</h3><p>If your DAC Pro shipped with bare P7/P9 pads, solder a 6-pin female header onto them now. Six joints, low difficulty — but do it before the XLR board goes on.</p><p><em>Skip entirely if the headers came pre-fitted.</em></p></div><div class="step-time">10 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Fit the XLR daughter board</h3><p>Plug the XLR board onto the P7/P9 headers. It sits above the USB/Ethernet ports with the XLR sockets facing outward. Confirm it's fully seated and the sockets are accessible.</p></div><div class="step-time">5 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Connect the touchscreen</h3><p>Official display: connect the DSI ribbon to the Pi's display port, note the ribbon orientation. Generic HDMI touchscreen: HDMI cable for video plus a USB cable for touch input.</p></div><div class="step-time">10 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Mount the whole stack</h3><p>Fix the assembly into your chosen mounting — open frame, tall case, or directly into the foam of the transport case. Everything should be rigid; nothing should move when the rig is picked up.</p><p>Tidy any cable with velcro ties. Label the XLR sockets <b>L</b> and <b>R</b>.</p></div><div class="step-time">30 min</div></div>
+    </div>
+    <div class="callout amber"><strong>The rule for this whole section:</strong> nothing gets powered until the stack is fully seated and checked. A half-seated HAT powered up is the one way to damage a board.</div>
+  </section>
+
+  <!-- 07 CONNECTIONS -->
+  <section id="connections">
+    <div class="sect-num">§ 07 — EVERY CONNECTION</div>
+    <h2>What plugs into what</h2>
+    <div class="conn">
+      <div class="conn-row">
+        <div class="conn-from">MIDI keyboard</div><div class="conn-mid">USB-A → USB-B</div><div class="conn-to">Raspberry Pi USB port</div>
+        <div class="conn-note">Carries note data only, no audio. Any USB port works; a USB 3.0 (blue) port is marginally more reliable.</div>
+      </div>
+      <div class="conn-row">
+        <div class="conn-from">Raspberry Pi DAC Pro</div><div class="conn-mid">40-PIN GPIO</div><div class="conn-to">Pi GPIO header</div>
+        <div class="conn-note">Board-to-board. Carries power and the I2S digital audio signal. No cable, no external power.</div>
+      </div>
+      <div class="conn-row">
+        <div class="conn-from">XLR daughter board</div><div class="conn-mid">P7 / P9 HEADERS</div><div class="conn-to">DAC Pro balanced output pins</div>
+        <div class="conn-note">P7 carries LEFT, P9 carries RIGHT — the differential/balanced signal at 0–4V RMS. Board-to-board, no wiring.</div>
+      </div>
+      <div class="conn-row">
+        <div class="conn-from">XLR board sockets ×2</div><div class="conn-mid">XLR CABLES</div><div class="conn-to">Console / DI inputs</div>
+        <div class="conn-note">Balanced L and R to your desk. Keep left and right consistent at both ends.</div>
+      </div>
+      <div class="conn-row">
+        <div class="conn-from">Touchscreen</div><div class="conn-mid">DSI RIBBON</div><div class="conn-to">Pi display port</div>
+        <div class="conn-note">Official display. A generic HDMI screen instead needs HDMI + a USB cable for touch.</div>
+      </div>
+      <div class="conn-row">
+        <div class="conn-from">27W USB-C PSU (studio)</div><div class="conn-mid">USB-C 5A</div><div class="conn-to">Pi power input</div>
+        <div class="conn-note">Studio use. Official supply prevents the under-voltage crashes that plague Pi 5 builds.</div>
+      </div>
+      <div class="conn-row">
+        <div class="conn-from">100W PD power bank (stage)</div><div class="conn-mid">USB-C 5A PD</div><div class="conn-to">Pi power input</div>
+        <div class="conn-note">Swap in for gigs. Confirm the bank negotiates PD at the current the Pi 5 needs under load.</div>
+      </div>
+      <div class="conn-row">
+        <div class="conn-from">DAC Pro RCA out<span class="badge b-opt" style="margin-left:8px">OPTIONAL</span></div><div class="conn-mid">RCA CABLE</div><div class="conn-to">Monitors / second destination</div>
+        <div class="conn-note">Available in parallel with the balanced output — a free second feed if you want it. Headphone socket also available for monitoring.</div>
+      </div>
+    </div>
+    <div class="callout green"><strong>Seven connections, three of them board-to-board with no cable at all.</strong> That's the payoff of the DAC Pro + XLR board combination — most of the audio path is just boards plugged together.</div>
+  </section>
+
+  <!-- 08 OS -->
+  <section id="os">
+    <div class="sect-num">§ 08 — FLASHING THE OS</div>
+    <h2>Getting the Pi running</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Install Raspberry Pi Imager on your laptop</h3><p>Download from raspberrypi.com. Works on Windows, Mac and Linux.</p></div><div class="step-time">5 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Choose Raspberry Pi OS (64-bit)</h3><p>Pick the standard <b>Raspberry Pi OS (64-bit)</b> with desktop — you need a GUI for Pianoteq's interface on the touchscreen.</p><p><b>Not Home Assistant OS</b> — that's for the house-automation Pi. Different machine, different OS.</p></div><div class="step-time">2 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Pre-configure in Imager settings</h3><p>Before writing, open the gear/settings icon and set: <b>hostname</b> (e.g. <code>pianopi</code>), <b>username and password</b>, <b>Wi-Fi network and password</b>, <b>locale/timezone</b>, and <b>enable SSH</b>.</p><p>This saves you needing a keyboard and monitor for first boot — you can SSH straight in.</p></div><div class="step-time">5 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Write to the microSD</h3><p>Insert the card, select it, and write. Takes several minutes. Let it verify.</p></div><div class="step-time">10 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>First boot</h3><p>Insert the card into the Pi, connect the touchscreen and power. First boot takes a couple of minutes. Confirm the desktop appears on the touchscreen and touch input responds.</p></div><div class="step-time">10 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Update everything</h3><pre class="code"><span class="cm"># bring the system fully up to date</span>
+sudo apt update
+sudo apt full-upgrade -y
+sudo reboot</pre><p>Do this before installing anything else — it prevents most driver oddities.</p></div><div class="step-time">20 min</div></div>
+    </div>
+  </section>
+
+  <!-- 09 DAC -->
+  <section id="dac">
+    <div class="sect-num">§ 09 — ENABLING THE DAC</div>
+    <h2>Making the Pi use the DAC Pro</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Edit the boot config</h3><pre class="code">sudo nano /boot/firmware/config.txt</pre><p>On older OS versions this file is at <code>/boot/config.txt</code> — check both.</p></div><div class="step-time">2 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Disable onboard audio, enable the DAC overlay</h3><pre class="code"><span class="cm"># find this line and set it to off</span>
+dtparam=audio=off
+
+<span class="cm"># comment out the automatic audio overlay if present</span>
+<span class="cm">#dtoverlay=vc4-kms-v3d</span>   <span class="cm">← leave graphics alone, only audio matters</span>
+
+<span class="cm"># add the DAC Pro overlay</span>
+dtoverlay=iqaudio-dacplus</pre><p><b>Verify the exact overlay name</b> against Raspberry Pi's current audio documentation before relying on it — overlay names occasionally change between OS releases, and the DAC Pro historically uses the IQaudio overlay family.</p></div><div class="step-time">5 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Reboot and verify the DAC is seen</h3><pre class="code">sudo reboot
+
+<span class="cm"># after reboot — list audio playback devices</span>
+aplay -l</pre><p>You should see the DAC listed as a sound card. If you only see HDMI, the overlay isn't loading — recheck the config line.</p></div><div class="step-time">5 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Set the DAC as default output</h3><p>Use the desktop's audio settings (right-click the speaker icon) or <code>raspi-config</code> to select the DAC as the default audio device.</p></div><div class="step-time">3 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Test audio BEFORE installing Pianoteq</h3><pre class="code"><span class="cm"># plays a test tone through the default device</span>
+speaker-test -c2 -twav</pre><p>Connect the XLR outputs to your console and confirm you hear the test tone on both channels. <b>Prove the audio path works before adding Pianoteq</b> — it isolates any problem to one thing at a time.</p></div><div class="step-time">10 min</div></div>
+    </div>
+    <div class="callout rasp"><strong>This is the step most likely to need current documentation.</strong> Overlay names and config file paths shift between OS releases. If <code>aplay -l</code> doesn't show the DAC, check Raspberry Pi's official audio boards documentation for the current overlay name rather than guessing — or hand this section to Claude Code and let it fetch the current instructions.</div>
+  </section>
+
+  <!-- 10 PIANOTEQ -->
+  <section id="pianoteq">
+    <div class="sect-num">§ 10 — INSTALLING PIANOTEQ PRO</div>
+    <h2>The instrument itself</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Log into your Modartt account</h3><p>Go to modartt.com and sign in with the account holding your <b>Pianoteq Pro</b> licence. Your Pro licence covers the ARM/Raspberry Pi build.</p></div><div class="step-time">2 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Download the ARM / Raspberry Pi build</h3><p>In the downloads area, find the <b>Linux ARM</b> version — this is the one for Raspberry Pi. Not the x86 Linux build.</p><p>Download directly on the Pi if it has a browser, or download on your laptop and transfer via USB drive or <code>scp</code>.</p></div><div class="step-time">10 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Unpack and run</h3><pre class="code"><span class="cm"># extract the archive (name will vary by version)</span>
+cd ~/Downloads
+unzip pianoteq_linux_arm*.zip
+cd Pianoteq*/arm-64bit/
+./Pianoteq*</pre><p>Pianoteq runs directly from the extracted folder — there's typically no system-wide install step.</p></div><div class="step-time">10 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Activate your licence</h3><p>On first run, Pianoteq will ask for activation. Enter your Modartt credentials or licence key. It needs internet for this step — after activation it runs offline, which is what you want on stage.</p></div><div class="step-time">10 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Select the audio device</h3><p>In Pianoteq's <b>Options → Devices</b>, set the output device to the DAC. Set the sample rate to <b>48000 Hz</b> to start.</p><p>Also confirm your MIDI keyboard appears in the MIDI input list and shows activity when you press keys.</p></div><div class="step-time">10 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Play something</h3><p>Press a key. You should hear piano through the console. <b>This is the moment the rig becomes an instrument.</b></p></div><div class="step-time">1 min</div></div>
+    </div>
+    <div class="callout amber"><strong>Version caveat, honestly:</strong> the exact package name, folder structure and activation flow change between Pianoteq releases. The commands above show the shape of the job — <b>follow Modartt's current instructions for your downloaded version</b>. If anything differs, trust their documentation over this page.</div>
+  </section>
+
+  <!-- 11 LATENCY -->
+  <section id="latency">
+    <div class="sect-num">§ 11 — TUNING LATENCY</div>
+    <h2>Making it feel like a real piano</h2>
+    <p class="sect-sub">This is the step that separates "it makes sound" from "it feels like an instrument." Take your time here.</p>
+    <div class="steps">
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Understand the trade-off</h3><p><b>Smaller buffer</b> = less delay between pressing a key and hearing sound, but more risk of clicks and dropouts if the CPU can't keep up.</p><p><b>Larger buffer</b> = rock solid, but you feel a lag that makes playing unnatural.</p><p>Your goal: the smallest buffer that never clicks.</p></div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Start safe, then reduce</h3><p>In <b>Options → Devices</b>, start at a comfortable buffer (e.g. 512 samples). Play. Then step down — 256, then 128 — testing thoroughly at each level.</p></div><div class="step-time">20 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Stress-test at each setting</h3><p>Don't just play single notes. Play <b>dense chords, fast passages, and heavy sustain pedal</b> — that's when the CPU works hardest. If you hear a single click, go back up one level.</p></div><div class="step-time">15 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Reduce polyphony if needed</h3><p>If you can't get low latency without clicks, lower Pianoteq's <b>polyphony</b> setting (max simultaneous notes). Going from 256 to 128 voices frees significant CPU and is rarely audible in normal playing.</p></div><div class="step-time">10 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Close everything else</h3><p>Nothing else should run on this Pi. No browser, no background updates, no other software. The whole point of a dedicated machine is that Pianoteq gets the entire CPU.</p></div><div class="step-time">5 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Long-session test</h3><p>Once tuned, play for <b>30 minutes continuously</b>. Thermal throttling and slow memory issues only show up over time. If it's clean after 30 minutes, it's clean.</p></div><div class="step-time">30 min</div></div>
+    </div>
+    <div class="callout green"><strong>What "good" feels like:</strong> when you press a key, the sound should feel simultaneous with your finger — no perceptible gap. If you're consciously aware of a delay, keep tuning. A well-tuned Pi 5 running Pianoteq is genuinely responsive enough for serious playing.</div>
+  </section>
+
+  <!-- 12 AUTOSTART -->
+  <section id="autostart">
+    <div class="sect-num">§ 12 — AUTO-START &amp; BACKUP</div>
+    <h2>Making it a real appliance</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Auto-start Pianoteq on boot</h3><p>Create a desktop autostart entry so Pianoteq launches full-screen when the Pi powers on:</p><pre class="code">mkdir -p ~/.config/autostart
+nano ~/.config/autostart/pianoteq.desktop</pre><pre class="code">[Desktop Entry]
+Type=Application
+Name=Pianoteq
+Exec=/home/pi/Pianoteq/arm-64bit/Pianoteq --fullscreen
+X-GNOME-Autostart-enabled=true</pre><p>Adjust the <code>Exec</code> path to match where you extracted Pianoteq.</p></div><div class="step-time">15 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Disable screen blanking</h3><p>You don't want the touchscreen going dark mid-performance. Disable screen blanking in <code>raspi-config</code> under Display Options.</p></div><div class="step-time">5 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Test the full cold-start</h3><p>Power off completely. Power on. <b>The rig should reach a playable Pianoteq with no keyboard, no mouse, no intervention.</b> That's the target.</p></div><div class="step-time">5 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Back up the microSD</h3><p>With everything working, image the card to your laptop (Raspberry Pi Imager, Win32DiskImager, or <code>dd</code>). Store it somewhere safe.</p><p><b>Why this matters:</b> if the card fails during a tour or session, you restore in fifteen minutes instead of rebuilding for a day.</p></div><div class="step-time">20 min</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Optional: a spare card</h3><p>Write the same image to a second microSD and keep it in the transport case. Card failure becomes a 60-second swap.</p></div><div class="step-time">15 min</div></div>
+    </div>
+  </section>
+
+  <!-- 13 STAGE -->
+  <section id="stage">
+    <div class="sect-num">§ 13 — STAGE SETUP</div>
+    <h2>Taking it out</h2>
+    <div class="grid2">
+      <div class="card v">
+        <h3 style="margin-top:0">In the transport case</h3>
+        <ul class="tick">
+          <li><b>The rig</b>, mounted rigid in foam</li>
+          <li><b>Power bank</b>, charged</li>
+          <li><b>27W PSU</b> as backup if mains is available</li>
+          <li><b>2× XLR cables</b></li>
+          <li><b>Keyboard USB cable</b></li>
+          <li><b>Spare microSD</b> with the backup image</li>
+        </ul>
+      </div>
+      <div class="card v">
+        <h3 style="margin-top:0">Setup routine on site</h3>
+        <ul class="arrow">
+          <li>Place rig, connect <b>keyboard USB</b></li>
+          <li>Connect <b>XLR L and R</b> to the desk or DI</li>
+          <li>Connect <b>power</b> (bank or mains)</li>
+          <li>Power on — it boots straight into Pianoteq</li>
+          <li>Ask for level check on both channels</li>
+          <li>Play a few bars to confirm feel and latency</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout violet"><strong>Label everything.</strong> On a dark stage under time pressure, clear labels on the XLR sockets (L / R), the power input, and the keyboard USB turn setup into a thirty-second job. Cheap tape and a marker; enormously worth it.</div>
+    <div class="callout amber"><strong>On fan noise:</strong> active cooling makes some noise. It's load-dependent and quiet in normal use, fine for stage and most studio work. If you're ever recording in a dead-silent room with the rig beside a microphone, move the rig further away or lower the fan curve for that session. Small trade for the reliability cooling gives on long sessions.</div>
+  </section>
+
+  <!-- 14 TEST -->
+  <section id="test">
+    <div class="sect-num">§ 14 — THE TEST CHECKLIST</div>
+    <h2>Done when every box ticks</h2>
+    <div class="card">
+      <ul class="check">
+        <li><b>DAC recognised</b> — <code>aplay -l</code> shows the DAC as a sound card</li>
+        <li><b>Test tone plays</b> on both channels through the XLR outputs before Pianoteq is involved</li>
+        <li><b>Pianoteq activated</b> with your Pro licence and launches cleanly</li>
+        <li><b>Keyboard detected</b> — pressing a key produces sound</li>
+        <li><b>Both channels correct</b> — Left arrives on left, Right on right, at the console</li>
+        <li><b>No hum or buzz</b> with nothing playing — a quiet noise floor</li>
+        <li><b>Balanced level is healthy</b> — the console sees a strong signal without needing extreme gain</li>
+        <li><b>Latency feels immediate</b> — no perceptible gap between key and sound</li>
+        <li><b>No clicks under load</b> — dense chords and heavy pedal for five minutes straight</li>
+        <li><b>30-minute session clean</b> — no thermal throttling, no degradation</li>
+        <li><b>Touchscreen works</b> — you can change instruments and settings by touch</li>
+        <li><b>Auto-start verified</b> — cold power-on reaches playable Pianoteq unaided</li>
+        <li><b>Power bank tested</b> — full rig runs on battery with no under-voltage warning</li>
+        <li><b>Screen doesn't blank</b> during a long idle period</li>
+        <li><b>microSD backed up</b> and ideally a spare card written</li>
+        <li><b>Everything labelled</b> — XLR L/R, power, MIDI</li>
+      </ul>
+    </div>
+    <div class="callout green"><strong>When all sixteen tick,</strong> you have a proven, gig-ready world-class piano — and you've validated the Raspberry Pi approach before spending on the second Pi for the house automation.</div>
+  </section>
+
+  <!-- 15 TROUBLE -->
+  <section id="trouble">
+    <div class="sect-num">§ 15 — TROUBLESHOOTING</div>
+    <h2>If something's wrong</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th style="width:24%">Symptom</th><th style="width:38%">Most likely cause</th><th style="width:38%">Fix</th></tr></thead>
+        <tbody>
+          <tr><td class="item-name">DAC not listed in <code>aplay -l</code></td><td class="item-sub">Overlay not loading, or onboard audio still enabled</td><td class="item-sub">Recheck <code>dtparam=audio=off</code> and the overlay line; verify the overlay name against current Raspberry Pi audio docs</td></tr>
+          <tr><td class="item-name">No sound at all</td><td class="item-sub">DAC not set as default output, or XLR board not seated</td><td class="item-sub">Set default device in audio settings; reseat the XLR board on P7/P9</td></tr>
+          <tr><td class="item-name">Only one channel</td><td class="item-sub">XLR board partially seated, or a bad XLR cable</td><td class="item-sub">Reseat the board evenly; swap the XLR cable to isolate</td></tr>
+          <tr><td class="item-name">Clicks, pops, dropouts</td><td class="item-sub">Buffer too small, or CPU contention</td><td class="item-sub">Increase buffer one step; close all other software; reduce polyphony</td></tr>
+          <tr><td class="item-name">Noticeable playing lag</td><td class="item-sub">Buffer too large</td><td class="item-sub">Reduce buffer gradually, retesting with dense chords each time</td></tr>
+          <tr><td class="item-name">Random crashes or reboots</td><td class="item-sub">Under-powered supply or weak USB-C cable</td><td class="item-sub">Use the official 27W PSU with a 5A e-marked cable — the single most common Pi 5 fault</td></tr>
+          <tr><td class="item-name">Under-voltage warning icon</td><td class="item-sub">Cable can't carry the current</td><td class="item-sub">Replace with a genuine 5A/100W e-marked USB-C cable</td></tr>
+          <tr><td class="item-name">Hum or buzz</td><td class="item-sub">Ground loop between rig and console</td><td class="item-sub">Try a DI box with ground-lift between rig and desk; check both are on the same mains circuit</td></tr>
+          <tr><td class="item-name">Keyboard not detected</td><td class="item-sub">Charge-only cable, or wrong port type</td><td class="item-sub">Use a proper data USB cable; confirm the keyboard's socket type</td></tr>
+          <tr><td class="item-name">Slows down after long play</td><td class="item-sub">Thermal throttling</td><td class="item-sub">Confirm the fan is spinning and its header is connected; improve airflow around the stack</td></tr>
+          <tr><td class="item-name">Touchscreen blank or unresponsive</td><td class="item-sub">DSI ribbon reversed or loose</td><td class="item-sub">Power off, reseat the ribbon with correct orientation</td></tr>
+          <tr><td class="item-name">Pianoteq won't activate</td><td class="item-sub">No internet, or wrong build downloaded</td><td class="item-sub">Connect to Wi-Fi for activation; confirm you have the ARM build, not x86</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 16 AFTER -->
+  <section id="after">
+    <div class="sect-num">§ 16 — AFTER IT WORKS</div>
+    <h2>What comes next</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Use it on a real session</h3><p>A bench test isn't the real test. Play the rig in an actual recording or rehearsal and see how it holds up under real conditions.</p></div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Buy the second Pi for the house</h3><p>With the Pi approach proven and your team now familiar with the ecosystem, order the House Pi for the automation build. It'll go faster because you've done this once.</p></div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Link the two machines</h3><p>The Piano Pi and House Pi talk over the network. The house app can show piano rig status and send simple cues — while staying decoupled so house alerts can never touch the piano's real-time audio thread.</p></div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><h3>Explore Pianoteq's instrument packs</h3><p>Your Pro licence covers the full instrument range — grands, uprights, electric pianos, harpsichords, vibraphones. Each is tiny to install because they're models, not sample libraries.</p></div></div>
+    </div>
+    <div class="callout green"><strong>Why this was the right first project:</strong> the piano rig is your fastest complete win. It validates the hardware, the software approach, and your team's confidence with Raspberry Pi — all before you commit to the much larger house-automation build.</div>
+  </section>
+
+  <footer>
+    NSM · Piano Pi · The Complete Plan · Raspberry Pi DAC Pro build · July 2026<br>
+    Dedicated Pianoteq machine · separate from the House-automation Pi · true balanced XLR · no soldering (unless P7/P9 pads are bare)<br>
+    Verify current Raspberry Pi audio overlay names and Modartt install instructions at build time · confirm XLR board stock before ordering
+  </footer>
+</div>
+</body>
+</html>
