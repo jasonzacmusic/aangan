@@ -1,0 +1,88 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# AANGAN → APPLE HOME (HomeKit bridge) — drop into /config/packages/
+#
+# The Apple TV in the studio is the HomeKit HUB: once this bridge is paired,
+# every family iPhone gets Aangan in the native Home app + Siri, from anywhere:
+#   "Hey Siri, is the studio ready?"        → reads Studio Ready
+#   "Hey Siri, turn on Class Mode"          → sets the dial to class
+#   "Hey Siri, turn on Studio Available"    → back to available
+# Safety sensors appear as REAL HomeKit smoke/leak/gas sensors, so iPhones show
+# native critical alerts too (belt AND braces beside the HA critical alerts).
+#
+# Pairing (one time, after this file is installed and HA restarted):
+#   Settings → Devices & Services → HomeKit Bridge appears with a QR code →
+#   scan it with any family iPhone (Home app → + → Add Accessory). The Apple TV
+#   is auto-selected as the home hub because it lives on the same network.
+# ─────────────────────────────────────────────────────────────────────────────
+
+homekit:
+  - name: Aangan
+    filter:
+      include_entities:
+        - binary_sensor.studio_ready
+        - binary_sensor.house_fire_any
+        - binary_sensor.lpg_detector_alarm_contact
+        - binary_sensor.kitchen_sink_leak
+        - binary_sensor.bathroom_1_leak
+        - binary_sensor.bathroom_2_leak
+        - switch.studio_class_mode
+        - switch.studio_recording_mode
+        - switch.studio_available_mode
+    entity_config:
+      binary_sensor.studio_ready:
+        name: Studio Ready
+      binary_sensor.house_fire_any:
+        name: Fire
+      binary_sensor.lpg_detector_alarm_contact:
+        name: Kitchen Gas
+        type: gas
+
+# Siri-friendly switches: turning one ON sets the dial; they self-report so the
+# Home app always shows the true current state. Turning Class/Recording OFF
+# returns the house to available.
+switch:
+  - platform: template
+    switches:
+      studio_class_mode:
+        friendly_name: Class Mode
+        icon_template: mdi:piano
+        value_template: "{{ is_state('input_select.studio_state', 'class') }}"
+        turn_on:
+          - action: input_select.select_option
+            target: { entity_id: input_select.studio_state }
+            data: { option: class }
+          - action: input_text.set_value
+            target: { entity_id: input_text.studio_state_set_by }
+            data: { value: "Siri / Apple Home" }
+        turn_off:
+          - action: input_select.select_option
+            target: { entity_id: input_select.studio_state }
+            data: { option: available }
+      studio_recording_mode:
+        friendly_name: Recording Mode
+        icon_template: mdi:record-rec
+        value_template: >
+          {{ states('input_select.studio_state') in ['audio_rec', 'video_rec'] }}
+        turn_on:
+          - action: input_select.select_option
+            target: { entity_id: input_select.studio_state }
+            data: { option: audio_rec }
+          - action: input_text.set_value
+            target: { entity_id: input_text.studio_state_set_by }
+            data: { value: "Siri / Apple Home" }
+        turn_off:
+          - action: input_select.select_option
+            target: { entity_id: input_select.studio_state }
+            data: { option: available }
+      studio_available_mode:
+        friendly_name: Studio Available
+        icon_template: mdi:door-open
+        value_template: "{{ is_state('input_select.studio_state', 'available') }}"
+        turn_on:
+          - action: input_select.select_option
+            target: { entity_id: input_select.studio_state }
+            data: { option: available }
+          - action: input_text.set_value
+            target: { entity_id: input_text.studio_state_set_by }
+            data: { value: "Siri / Apple Home" }
+        turn_off: []  # "available off" is meaningless — ignore

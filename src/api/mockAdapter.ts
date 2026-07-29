@@ -100,11 +100,18 @@ export class MockAdapter implements ApiAdapter {
     preset: PIANO_PRESETS[0],
     cpuPct: 34,
     tempC: 52.1,
-    audioDevice: "HiFiBerry DAC2 Pro XLR → console",
+    audioDevice: "Raspberry Pi DAC Pro → balanced XLR → console",
     sampleRate: 48000,
     bufferFrames: 192,
     latencyMs: 4,
     lastSeen: Date.now(),
+    blackbox: {
+      recording: false,
+      takesToday: 3,
+      lastTakeAt: Date.now() - 47 * 60 * 1000,
+      lastTakeMinutes: 12.4,
+      lastTakeNotes: 2431,
+    },
   };
   private pianoPresetIx = 0;
   private delivery: Delivery | null = null;
@@ -331,7 +338,19 @@ export class MockAdapter implements ApiAdapter {
       p.cpuPct = Math.round(Math.max(12, Math.min(88, busy + Math.sin(this.tick / 7) * 8 + (Math.random() - 0.5) * 6)));
       p.tempC = Math.round(Math.max(44, Math.min(64, p.tempC + (Math.random() - 0.5) * 0.3)) * 10) / 10;
       p.lastSeen = Date.now();
-      this.emit({ type: "piano", piano: { ...p } });
+      // The black-box follows the music-room mic: someone playing = capturing.
+      const bb = p.blackbox!;
+      const music = this.rooms.find((r) => r.id === "music")!;
+      const playing = (music.dbLevel ?? 0) > 46 && music.presence;
+      if (playing && !bb.recording) bb.recording = true;
+      else if (!playing && bb.recording && Math.random() < 0.2) {
+        bb.recording = false;
+        bb.takesToday += 1;
+        bb.lastTakeAt = Date.now();
+        bb.lastTakeMinutes = Math.round((3 + Math.random() * 15) * 10) / 10;
+        bb.lastTakeNotes = Math.round(bb.lastTakeMinutes * (140 + Math.random() * 120));
+      }
+      this.emit({ type: "piano", piano: { ...p, blackbox: { ...bb } } });
     }
 
     // Rare sensor-node dropout so "every sensor healthy" is a real, visible check.
@@ -488,6 +507,16 @@ export class MockAdapter implements ApiAdapter {
       this.pianoPresetIx = (this.pianoPresetIx + (cue === "next_preset" ? 1 : PIANO_PRESETS.length - 1)) % PIANO_PRESETS.length;
       this.piano.preset = PIANO_PRESETS[this.pianoPresetIx];
       this.addHistory({ type: "system", title: "Piano preset changed", detail: this.piano.preset, severity: "info" });
+    } else if (cue === "replay_last") {
+      const bb = this.piano.blackbox;
+      this.addHistory({
+        type: "system",
+        title: "Black-box replay",
+        detail: bb?.lastTakeAt
+          ? `Replaying the last take (${bb.lastTakeMinutes} min · ${bb.lastTakeNotes.toLocaleString()} notes) through Pianoteq`
+          : "No takes captured yet",
+        severity: "info",
+      });
     } else {
       this.addHistory({
         type: "system",

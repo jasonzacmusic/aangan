@@ -57,6 +57,33 @@ export default function PianoRigCard() {
           ))}
         </div>
 
+        {p.blackbox && (
+          <div className="mt-3 flex items-center gap-3 rounded-xl border border-line bg-surface2 px-3 py-2.5">
+            <span
+              className={`h-2 w-2 shrink-0 rounded-full ${p.blackbox.recording ? "bg-st-audio pulse-dot" : "bg-dim/40"}`}
+              style={p.blackbox.recording ? { boxShadow: "0 0 10px #e5484d" } : undefined}
+            />
+            <div className="min-w-0 flex-1">
+              <div className="font-mono text-[9px] uppercase tracking-[0.2em] text-gold">MIDI black-box</div>
+              <div className="mt-0.5 truncate text-xs text-paper">
+                {p.blackbox.recording
+                  ? "capturing now — every note is being saved"
+                  : p.blackbox.lastTakeAt
+                    ? `${p.blackbox.takesToday} take${p.blackbox.takesToday === 1 ? "" : "s"} today · last ${timeSince(p.blackbox.lastTakeAt)} ago · ${p.blackbox.lastTakeMinutes} min, ${p.blackbox.lastTakeNotes.toLocaleString()} notes`
+                    : "listening · nothing captured yet"}
+              </div>
+            </div>
+            {p.online && p.blackbox.lastTakeAt && !p.blackbox.recording && (
+              <button
+                onClick={() => void sendPianoCue("replay_last")}
+                className="shrink-0 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-gold transition-all active:scale-95"
+              >
+                ▶ Replay
+              </button>
+            )}
+          </div>
+        )}
+
         <p className="mt-3 font-mono text-[9px] leading-relaxed text-dim/80">
           {p.sampleRate / 1000} kHz · balanced XLR to the console · cues are one-way and can never glitch the audio
         </p>

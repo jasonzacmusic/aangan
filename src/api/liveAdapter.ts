@@ -53,7 +53,10 @@ import {
  * Piano rig (the PIANO Pi, proxied read-only by the House Pi wrapper)
  *   GET  /api/piano                 -> PianoRig
  *   POST /api/piano/cue { cue }     -> PianoRig
- *   Cues: recording_started | recording_stopped | next_preset | prev_preset.
+ *   Cues: recording_started | recording_stopped | next_preset | prev_preset
+ *   | replay_last (plays the newest MIDI black-box take back through Pianoteq).
+ *   PianoRig.blackbox carries the black-box summary — the piano Pi's status
+ *   server includes it in /status; the wrapper passes it through untouched.
  *   The wrapper forwards cues to the piano Pi's status server over HTTP and
  *   must tolerate the rig being offline (return online:false, never block).
  *

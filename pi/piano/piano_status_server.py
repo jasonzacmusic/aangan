@@ -8,6 +8,7 @@ unreachable we still answer with best-effort data — this server must never mak
 the instrument's life harder. Stdlib only.
 """
 import json
+import os
 import subprocess
 import time
 import urllib.request
@@ -16,6 +17,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 PORT = 8951
 PIANOTEQ_RPC = "http://127.0.0.1:8081/jsonrpc"
 STATE = {"tally": False, "preset": "—", "last_rpc_ok": 0.0}
+BLACKBOX_DIR = os.path.expanduser("~/blackbox")
 
 
 def rpc(method, params=None):
@@ -58,6 +60,31 @@ def refresh_preset():
         pass
 
 
+def read_blackbox():
+    """Best-effort summary from the midi_blackbox.py files. Never raises."""
+    out = {"recording": False, "takesToday": 0, "lastTakeAt": None, "lastTakeMinutes": 0, "lastTakeNotes": 0}
+    try:
+        with open(os.path.join(BLACKBOX_DIR, "state.json")) as f:
+            live = json.load(f)
+        # stale state file (service down) must not claim "recording"
+        out["recording"] = bool(live.get("recording")) and (time.time() * 1000 - live.get("ts", 0)) < 120_000
+    except (OSError, json.JSONDecodeError):
+        pass
+    try:
+        with open(os.path.join(BLACKBOX_DIR, "takes.json")) as f:
+            takes = json.load(f)
+        midnight = time.mktime(time.localtime()[:3] + (0, 0, 0, 0, 0, -1)) * 1000
+        out["takesToday"] = sum(1 for t in takes if t.get("at", 0) >= midnight)
+        if takes:
+            last = takes[-1]
+            out["lastTakeAt"] = last.get("at")
+            out["lastTakeMinutes"] = last.get("minutes", 0)
+            out["lastTakeNotes"] = last.get("notes", 0)
+    except (OSError, json.JSONDecodeError):
+        pass
+    return out
+
+
 def status_payload():
     refresh_preset()
     online = (time.time() - STATE["last_rpc_ok"]) < 30
@@ -66,11 +93,12 @@ def status_payload():
         "preset": STATE["preset"],
         "cpuPct": read_cpu_pct(),
         "tempC": read_temp(),
-        "audioDevice": "HiFiBerry DAC2 Pro XLR → console",
+        "audioDevice": "Raspberry Pi DAC Pro → balanced XLR → console",
         "sampleRate": 48000,
         "bufferFrames": 192,
         "latencyMs": 4,
         "lastSeen": int(time.time() * 1000),
+        "blackbox": read_blackbox(),
     }
 
 
@@ -109,6 +137,12 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 rpc("nextPreset" if cue == "next_preset" else "prevPreset")
             except Exception:
+                pass
+        elif cue == "replay_last":
+            # fire-and-forget: aplaymidi streams the newest take into Pianoteq
+            try:
+                subprocess.Popen(["python3", "/usr/local/bin/midi_blackbox.py", "--replay-last"])
+            except OSError:
                 pass
         self._json(status_payload())
 

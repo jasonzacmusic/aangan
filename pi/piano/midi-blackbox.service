@@ -1,0 +1,14 @@
+[Unit]
+Description=MIDI black-box — captures every note ever played, as MIDI takes
+After=sound.target
+
+[Service]
+Type=simple
+User=__USER__
+ExecStart=/usr/bin/python3 /usr/local/bin/midi_blackbox.py
+Restart=always
+RestartSec=5
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,69 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# CALENDAR-DRIVEN STATES — drop into /config/packages/
+#
+# Google Calendar class slots conduct the house: when a class event starts the
+# dial goes to CLASS automatically; when it ends the house returns to
+# AVAILABLE. No human ever forgets the door sign again.
+#
+# One-time setup:
+#   1. Settings → Devices & Services → Add integration → Google Calendar →
+#      sign in with music@nathanielschool.com. This creates calendar.* entities.
+#   2. Set CAL below to the calendar entity that holds class bookings
+#      (Settings → Devices & Services → Google Calendar → entities).
+#   3. Only events whose title contains "class" or "lesson" (any case) trigger.
+#
+# Safety rails, deliberately conservative:
+#   • The calendar NEVER interrupts a recording, a meeting or an emergency —
+#     it only moves the dial from available → class.
+#   • It only returns class → available if the CALENDAR set it (so a human who
+#     chose Class manually keeps control).
+# ─────────────────────────────────────────────────────────────────────────────
+
+automation:
+  - id: calendar_class_start
+    alias: "Calendar → class begins"
+    trigger:
+      - platform: calendar
+        event: start
+        entity_id: calendar.nsm_classes   # ← rename to your calendar entity
+        offset: "-0:05:00"                # signs flip 5 minutes early
+    condition:
+      - condition: template
+        value_template: >
+          {{ 'class' in trigger.calendar_event.summary | lower
+             or 'lesson' in trigger.calendar_event.summary | lower }}
+      - condition: state
+        entity_id: input_select.studio_state
+        state: available
+    action:
+      - action: input_select.select_option
+        target: { entity_id: input_select.studio_state }
+        data: { option: class }
+      - action: input_text.set_value
+        target: { entity_id: input_text.studio_state_set_by }
+        data: { value: "Calendar · {{ trigger.calendar_event.summary }}" }
+
+  - id: calendar_class_end
+    alias: "Calendar → class over"
+    trigger:
+      - platform: calendar
+        event: end
+        entity_id: calendar.nsm_classes   # ← rename to your calendar entity
+    condition:
+      - condition: template
+        value_template: >
+          {{ 'class' in trigger.calendar_event.summary | lower
+             or 'lesson' in trigger.calendar_event.summary | lower }}
+      - condition: state
+        entity_id: input_select.studio_state
+        state: class
+      - condition: template
+        value_template: >
+          {{ states('input_text.studio_state_set_by').startswith('Calendar') }}
+    action:
+      - action: input_select.select_option
+        target: { entity_id: input_select.studio_state }
+        data: { option: available }
+      - action: input_text.set_value
+        target: { entity_id: input_text.studio_state_set_by }
+        data: { value: "Calendar · class ended" }

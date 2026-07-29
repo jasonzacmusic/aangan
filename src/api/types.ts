@@ -124,6 +124,15 @@ export interface Utilities {
 export type UtilityAction = "water_pump_toggle" | "purifier_toggle";
 export type ConnectionState = "online" | "reconnecting" | "offline";
 
+/** The MIDI black-box: the rig silently saves every note ever played. */
+export interface BlackboxInfo {
+  recording: boolean;
+  takesToday: number;
+  lastTakeAt: number | null; // epoch ms
+  lastTakeMinutes: number;
+  lastTakeNotes: number;
+}
+
 /** The Pianoteq stage rig (the PIANO Pi) as seen over the network. */
 export interface PianoRig {
   online: boolean;
@@ -135,9 +144,10 @@ export interface PianoRig {
   bufferFrames: number;
   latencyMs: number;
   lastSeen: number; // epoch ms
+  blackbox?: BlackboxInfo;
 }
 
-export type PianoCue = "recording_started" | "recording_stopped" | "next_preset" | "prev_preset";
+export type PianoCue = "recording_started" | "recording_stopped" | "next_preset" | "prev_preset" | "replay_last";
 
 /** A delivery hand-off shown on a door display (Swiggy/Amazon OTP etc). */
 export interface Delivery {
