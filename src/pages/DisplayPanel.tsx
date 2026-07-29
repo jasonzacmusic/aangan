@@ -3,6 +3,7 @@ import { STATE_META, StudioState } from "../api/types";
 import { useStore } from "../state/store";
 import DbMeter from "../components/DbMeter";
 import NudgeBanner from "../components/NudgeBanner";
+import GuestQr from "../components/GuestQr";
 
 /**
  * Full-screen kiosk view for a wall/door display.
@@ -121,6 +122,7 @@ export default function DisplayPanel({ id }: { id: string }) {
           </div>
           <div className="mt-8 text-2xl text-paper/90">{wording.small}</div>
           <NudgeBanner variant="panel" />
+          <GuestQr />
         </PanelChrome>
       );
     }

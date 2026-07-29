@@ -6,6 +6,7 @@ import {
   DeliveryInput,
   DisplayConfig,
   Doorbell,
+  FleetDevice,
   PianoCue,
   PianoRig,
   Preflight,
@@ -116,6 +117,15 @@ export class MockAdapter implements ApiAdapter {
   private pianoPresetIx = 0;
   private delivery: Delivery | null = null;
   private sos: Sos | null = null;
+  private fleet: FleetDevice[] = [
+    { id: "mac-mini", name: "Studio Mac mini", kind: "mac", online: true, lastSeen: Date.now(), detail: "REAPER host · backup 03:00 ✓" },
+    { id: "house-pi", name: "House Pi", kind: "pi", online: true, lastSeen: Date.now(), detail: "Home Assistant · 6/6 nodes" },
+    { id: "piano-pi", name: "Piano Pi", kind: "pi", online: true, lastSeen: Date.now(), detail: "Pianoteq · black-box armed" },
+    { id: "panel-front", name: "Front-door panel", kind: "panel", online: true, lastSeen: Date.now(), detail: "door sign · kiosk" },
+    { id: "panel-studio", name: "Studio-door panel", kind: "panel", online: true, lastSeen: Date.now(), detail: "state sign · kiosk" },
+    { id: "wall-ipad", name: "Wall iPad", kind: "panel", online: true, lastSeen: Date.now(), detail: "house board" },
+    { id: "router", name: "Router", kind: "network", online: true, lastSeen: Date.now(), detail: "WAN up · 87 Mbps" },
+  ];
   private displays: DisplayConfig[] = DEFAULT_DISPLAYS.map((d) => ({ ...d }));
   private sensorsHealthy = true;
   private healthReset: ReturnType<typeof setTimeout> | null = null;
@@ -365,6 +375,27 @@ export class MockAdapter implements ApiAdapter {
       }, 12_000);
     }
 
+    // Fleet: rare device blips so the card is honest about what "down" looks like.
+    if (this.tick % 4 === 0) {
+      let changed = false;
+      this.fleet.forEach((d) => {
+        if (d.online) {
+          d.lastSeen = Date.now();
+          if (Math.random() < 0.0015) {
+            d.online = false;
+            changed = true;
+            this.addHistory({ type: "system", title: `${d.name} offline`, detail: "Stopped answering health checks", severity: "warning" });
+          }
+        } else if (Math.random() < 0.06) {
+          d.online = true;
+          d.lastSeen = Date.now();
+          changed = true;
+          this.addHistory({ type: "system", title: `${d.name} back online`, detail: "Health checks answering again", severity: "success" });
+        }
+      });
+      if (changed || this.tick % 12 === 0) this.emit({ type: "fleet", fleet: this.fleet.map((d) => ({ ...d })) });
+    }
+
     // Delivery OTPs expire on their own.
     if (this.delivery?.active && Date.now() > this.delivery.expiresAt) {
       this.delivery = null;
@@ -531,6 +562,10 @@ export class MockAdapter implements ApiAdapter {
     return piano;
   }
 
+  async getFleet() {
+    return this.fleet.map((d) => ({ ...d }));
+  }
+
   async getSos() {
     await this.hydrateState();
     return this.sos ? { ...this.sos } : null;
@@ -653,6 +688,7 @@ export class MockAdapter implements ApiAdapter {
       cb({ type: "delivery", delivery: this.delivery ? { ...this.delivery } : null });
       cb({ type: "displays", displays: this.displays.map((d) => ({ ...d })) });
       cb({ type: "sos", sos: this.sos ? { ...this.sos } : null });
+      cb({ type: "fleet", fleet: this.fleet.map((d) => ({ ...d })) });
     });
     return () => {
       this.listeners.delete(cb);

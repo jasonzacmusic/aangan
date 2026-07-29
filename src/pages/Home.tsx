@@ -5,6 +5,7 @@ import DbMeter, { Sparkline } from "../components/DbMeter";
 import { Room } from "../api/types";
 import UtilitiesPanel from "../components/UtilitiesPanel";
 import PianoRigCard from "../components/PianoRigCard";
+import FleetCard from "../components/FleetCard";
 
 export default function Home() {
   const { rooms, settings, dbHistory } = useStore();
@@ -23,6 +24,8 @@ export default function Home() {
       </div>
 
       <PianoRigCard />
+
+      <FleetCard />
 
       <UtilitiesPanel />
 

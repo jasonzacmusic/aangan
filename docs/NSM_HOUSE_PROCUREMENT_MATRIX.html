@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NSM · House Automation — Final Procurement List</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#181516;--plum:#3b2a1e;--rust:#B45309;--rust-deep:#92400E;--terra:#C2703D;
+    --teal:#0F766E;--green:#15803D;--amber:#D97706;--red:#DC2626;--blue:#1D4ED8;
+    --paper:#F6F1E9;--paper-2:#EDE5D8;--card:#FFFFFF;
+    --line:#E3D8C6;--line-2:#D2C4AD;--muted:#6E6152;--muted-2:#998A75;
+    --mono:'IBM Plex Mono',monospace;--sans:'Inter',sans-serif;--serif:'Fraunces',Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1020px;margin:0 auto;padding:0 20px 100px;}
+
+  header.hero{position:relative;overflow:hidden;background:radial-gradient(circle at 88% -20%,rgba(194,112,61,0.35),transparent 46%),radial-gradient(circle at 0% 120%,rgba(180,83,9,0.2),transparent 44%),linear-gradient(150deg,#241712,#3b2a1e 60%,#4a3320);color:#fff;border-bottom:1px solid rgba(194,112,61,0.4);}
+  .hero-inner{max-width:1020px;margin:0 auto;padding:56px 20px 46px;}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:4px;color:#e7b98d;text-transform:uppercase;margin-bottom:15px;}
+  header.hero h1{font-family:var(--serif);font-size:clamp(30px,5.4vw,50px);font-weight:600;line-height:1.04;margin-bottom:16px;}
+  header.hero h1 em{font-style:italic;color:#e7b98d;}
+  header.hero p{color:#e8dccb;font-size:15.5px;max-width:700px;}
+  .hero-meta{display:flex;gap:0;margin-top:30px;border-top:1px solid rgba(255,255,255,0.16);flex-wrap:wrap;}
+  .hero-meta div{padding:15px 30px 4px 0;}
+  .hero-meta span{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:#c9b499;text-transform:uppercase;display:block;}
+  .hero-meta b{color:#fff;font-family:var(--serif);font-size:20px;font-weight:600;display:block;margin-top:4px;}
+  .hero-meta b small{font-size:11.5px;color:#e7b98d;font-family:var(--sans);font-weight:400;}
+
+  section{margin-top:56px;scroll-margin-top:16px;}
+  .sect-num{font-family:var(--mono);font-size:12px;color:var(--rust);letter-spacing:3px;font-weight:600;margin-bottom:9px;}
+  h2{font-family:var(--serif);font-size:clamp(24px,4vw,34px);font-weight:600;color:var(--plum);line-height:1.08;}
+  .sect-sub{color:var(--muted);font-size:15px;margin-top:11px;max-width:740px;}
+  h3{font-family:var(--sans);font-size:16px;font-weight:600;color:var(--plum);margin:24px 0 10px;}
+  h4{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--rust);letter-spacing:1px;text-transform:uppercase;margin:28px 0 10px;}
+
+  .callout{border-radius:0 12px 12px 0;padding:15px 20px;margin-top:16px;font-size:13.5px;line-height:1.55;}
+  .callout.amber{background:#FBF0DD;border-left:4px solid var(--amber);color:#6B4310;}.callout.amber strong{color:#92580a;}
+  .callout.green{background:#E7F5EC;border-left:4px solid var(--green);color:#0A5027;}.callout.green strong{color:#15803D;}
+  .callout.terra{background:#F8EBE1;border-left:4px solid var(--terra);color:#7a3f1c;}.callout.terra strong{color:#B45309;}
+  .callout.red{background:#FBE9E9;border-left:4px solid var(--red);color:#7a1f1f;}.callout.red strong{color:#b91c1c;}
+  .callout.blue{background:#E8EEFB;border-left:4px solid var(--blue);color:#1e3a8a;}.callout.blue strong{color:#1D4ED8;}
+
+  .tbl-wrap{border-radius:14px;overflow:hidden;border:1px solid var(--line);box-shadow:0 1px 2px rgba(24,21,22,0.03);overflow-x:auto;margin-top:12px;}
+  table{width:100%;border-collapse:collapse;background:var(--card);font-size:13px;min-width:820px;}
+  thead th{background:var(--plum);color:#fff;text-align:left;padding:12px 13px;font-size:10px;font-family:var(--mono);letter-spacing:.8px;text-transform:uppercase;font-weight:600;}
+  th.c,td.c{text-align:center;}th.r,td.r{text-align:right;}
+  tbody td{padding:12px 13px;border-top:1px solid var(--line);vertical-align:top;}
+  tbody tr:nth-child(even){background:#FBF8F2;}
+  tbody tr.have{background:#EFF7F1;}
+  tbody tr.flag{background:#FBE9E9;}
+  tfoot td{padding:14px 13px;border-top:2px solid var(--plum);font-weight:600;color:var(--plum);background:#F5EFE4;}
+  .item-name{font-weight:600;color:var(--plum);font-size:13.5px;}
+  .item-sub{color:var(--muted);font-size:11.5px;margin-top:3px;line-height:1.5;}
+  .price{font-family:var(--mono);font-weight:700;font-size:13.5px;color:var(--plum);text-align:right;white-space:nowrap;}
+  .price.zero{color:var(--green);}
+  .qty{font-family:var(--mono);font-weight:700;font-size:14px;text-align:center;color:var(--rust);}
+  .badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.3px;white-space:nowrap;}
+  .b-have{background:#E7F5EC;color:#15803D;}
+  .b-buy{background:#FBF0DD;color:#92580a;}
+  .b-flag{background:#FBE9E9;color:#b91c1c;}
+  .src{font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:1.5;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:0 1px 2px rgba(24,21,22,0.03);}
+  .card.v{margin-top:0;}
+  .statline{display:flex;align-items:baseline;gap:10px;margin-bottom:2px;}
+  .statline .big{font-family:var(--serif);font-size:28px;font-weight:600;line-height:1;}
+  .statline .big.g{color:var(--green);}.statline .big.a{color:var(--amber);}.statline .big.r{color:var(--red);}
+  .statline .lbl{font-size:12px;color:var(--muted);}
+
+  ul.tick,ul.arrow,ul.cross{list-style:none;margin-top:4px;}
+  ul.tick li,ul.arrow li,ul.cross li{position:relative;padding:8px 0 8px 26px;font-size:13px;color:#3D362E;border-bottom:1px dashed var(--line);line-height:1.45;}
+  ul.tick li:last-child,ul.arrow li:last-child,ul.cross li:last-child{border-bottom:none;}
+  ul.tick li::before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:700;}
+  ul.arrow li::before{content:"→";position:absolute;left:0;color:var(--rust);font-weight:700;}
+  ul.cross li::before{content:"!";position:absolute;left:2px;color:var(--red);font-weight:700;}
+  li b{color:var(--plum);}
+
+  .vendor{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:16px 20px;margin-bottom:11px;box-shadow:0 1px 2px rgba(24,21,22,0.03);}
+  .vendor .vh{display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
+  .vendor .vname{font-weight:700;color:var(--plum);font-size:15px;}
+  .vendor .vtype{font-family:var(--mono);font-size:9.5px;padding:3px 9px;border-radius:20px;background:var(--paper-2);color:var(--muted);letter-spacing:.4px;}
+  .vendor p{font-size:12.5px;color:#4A463D;line-height:1.55;}
+
+  .step-row{display:flex;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:16px 20px;margin-bottom:10px;align-items:flex-start;}
+  .step-n{flex:0 0 32px;height:32px;background:var(--rust);color:#fff;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:600;font-size:15px;}
+  .step-b{flex:1;}
+  .step-b h3{margin:0 0 3px;font-size:15px;}
+  .step-b p{font-size:13px;color:#4A463D;line-height:1.5;}
+  .step-cost{flex:0 0 auto;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--rust);background:var(--paper-2);padding:5px 11px;border-radius:8px;white-space:nowrap;}
+
+  footer{text-align:center;color:var(--muted-2);font-size:11.5px;font-family:var(--mono);padding-top:44px;margin-top:50px;border-top:1px solid var(--line);letter-spacing:.5px;line-height:1.8;}
+  @media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr;}.step-row{flex-wrap:wrap;}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <div class="kicker">NSM · House Automation · Final Procurement List · From your sourcing matrix</div>
+    <h1>What to buy, where,<br><em>and exactly how much.</em></h1>
+    <p>Built from your Master Sourcing Matrix — real vendors, real prices, real notes. House automation only (Project B), plus the shared prototyping parts it depends on. Every rupee accounted for, every discrepancy flagged.</p>
+    <div class="hero-meta">
+      <div><span>Already in hand</span><b>7 <small>items · ₹0</small></b></div>
+      <div><span>To buy (house)</span><b>8 <small>line items</small></b></div>
+      <div><span>House parts cost</span><b>~₹6,614</b></div>
+      <div><span>+ prototyping</span><b>~₹2,000</b></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- 01 -->
+  <section id="have" style="margin-top:44px">
+    <div class="sect-num">§ 01 — ALREADY IN HAND</div>
+    <h2>What you own — ₹0 to spend</h2>
+    <p class="sect-sub">Straight from the matrix, marked "In Stock". These are assigned to house automation (Project B). Don't re-buy any of them.</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th style="width:26%">Item</th><th style="width:44%">Assigned use (per matrix)</th><th class="c" style="width:14%">Status</th><th class="r" style="width:16%">Price</th></tr></thead>
+        <tbody>
+          <tr class="have"><td class="item-name">ESP32 Dev Boards ×6</td><td class="item-sub">Already stocked in your prototyping kit — one brain per room node</td><td class="c"><span class="badge b-have">IN HAND</span></td><td class="price zero">₹0</td></tr>
+          <tr class="have"><td class="item-name">ESP32-CAM Board ×1</td><td class="item-sub">Assigned to the main entrance door-frame camera</td><td class="c"><span class="badge b-have">IN HAND</span></td><td class="price zero">₹0</td></tr>
+          <tr class="have"><td class="item-name">Soil Moisture Sensor ×1</td><td class="item-sub">Top balcony plant-stand planter box</td><td class="c"><span class="badge b-have">IN HAND</span></td><td class="price zero">₹0</td></tr>
+          <tr class="have"><td class="item-name">Ultrasonic HC-SR04 ×1</td><td class="item-sub">Overhead water-tank level monitoring</td><td class="c"><span class="badge b-have">IN HAND</span></td><td class="price zero">₹0</td></tr>
+          <tr class="have"><td class="item-name">Buzzer Alarm Modules ×4</td><td class="item-sub">Localised acoustic hazard sirens at nodes</td><td class="c"><span class="badge b-have">IN HAND</span></td><td class="price zero">₹0</td></tr>
+          <tr class="have"><td class="item-name">WS2812B LED Strip (5m) ×1</td><td class="item-sub">Studio acoustic door-frame visual "recording" indicator</td><td class="c"><span class="badge b-have">IN HAND</span></td><td class="price zero">₹0</td></tr>
+          <tr class="have"><td class="item-name">INMP441 I2S Mic ×1</td><td class="item-sub">Listed under piano in the matrix, but it's your noise-pilot mic — usable for the studio dB test too</td><td class="c"><span class="badge b-have">IN HAND</span></td><td class="price zero">₹0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout green"><strong>Seven items, zero cost.</strong> Your prototyping kit already covers the brains, the camera, and five sensor types. That's enough to build and prove one of every node before spending a rupee on the parts below.</div>
+  </section>
+
+  <!-- 02 -->
+  <section id="buy">
+    <div class="sect-num">§ 02 — TO BUY · HOUSE AUTOMATION</div>
+    <h2>The house parts, with matrix pricing</h2>
+    <p class="sect-sub">Every "To Buy" item the matrix assigns to Project B: Smart Housing — with the exact vendor, price and reason it gives.</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th style="width:22%">Item</th><th style="width:26%">Why (from matrix)</th><th style="width:22%">Where</th><th class="r" style="width:14%">Price</th><th class="c" style="width:16%">Flag</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="item-name">Secondary HA Host — Pi 4 (4GB)</td>
+            <td class="item-sub">Dedicated strictly to Home Assistant. Do NOT share with the Piano Pi.</td>
+            <td class="src">SP Road<br>(Robocraze local / Vishal Mart)</td>
+            <td class="price">₹5,500</td>
+            <td class="c"><span class="badge b-buy">TO BUY</span></td>
+          </tr>
+          <tr>
+            <td class="item-name">Water Leak Sensors ×5 more</td>
+            <td class="item-sub">Covers 4 bathrooms + kitchen sink + balcony tap (you have 1 already)</td>
+            <td class="src">SP Road<br>Components Store</td>
+            <td class="price">₹900</td>
+            <td class="c"><span class="badge b-buy">TO BUY</span></td>
+          </tr>
+          <tr>
+            <td class="item-name">DHT22 Climate Sensors ×4</td>
+            <td class="item-sub">Bedrooms 1 &amp; 2, Studio Bed, Residence Hall</td>
+            <td class="src">SP Road<br>Components Store</td>
+            <td class="price">₹1,156</td>
+            <td class="c"><span class="badge b-buy">TO BUY</span></td>
+          </tr>
+          <tr class="flag">
+            <td class="item-name">MC-38 Reed Door Switches ×5 more</td>
+            <td class="item-sub">Completes security loop for soundproof doors &amp; balconies</td>
+            <td class="src">SP Road<br>Components Store</td>
+            <td class="price">₹250</td>
+            <td class="c"><span class="badge b-flag">SEE FLAG</span></td>
+          </tr>
+          <tr class="flag">
+            <td class="item-name">MQ-2 LPG Gas Sensor ×1</td>
+            <td class="item-sub">Floor level near left-balcony kitchen door threshold</td>
+            <td class="src">SP Road<br>Components Store</td>
+            <td class="price">₹179</td>
+            <td class="c"><span class="badge b-flag">SEE FLAG</span></td>
+          </tr>
+          <tr>
+            <td class="item-name">Heavy-Duty Optoisolated Relays 25A ×4</td>
+            <td class="item-sub">Mandatory for safely switching 15A geyser loads in bathrooms</td>
+            <td class="src">Probots Online<br>/ SP Road</td>
+            <td class="price">₹1,800</td>
+            <td class="c"><span class="badge b-buy">TO BUY</span></td>
+          </tr>
+          <tr>
+            <td class="item-name">Nextion 4.3" Display</td>
+            <td class="item-sub">Courier-delivery OTP display at the main entrance wall</td>
+            <td class="src">Probots<br>/ Robocraze Online</td>
+            <td class="price">₹2,100</td>
+            <td class="c"><span class="badge b-buy">TO BUY</span></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr><td colspan="3">House-automation parts subtotal</td><td class="price">₹11,885</td><td></td></tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="callout amber"><strong>Note on the total:</strong> the matrix's own "house parts cost" is dominated by the Pi 4 host (₹5,500), the Nextion display (₹2,100) and the relays (₹1,800). The pure <em>sensor</em> spend is tiny — leak, climate, reed and gas together come to about <b>₹2,485</b>. The expensive lines are the host, the display and the geyser-switching relays, which you can stage later.</div>
+  </section>
+
+  <!-- 03 FLAGS -->
+  <section id="flags">
+    <div class="sect-num">§ 03 — TWO THINGS TO CHECK</div>
+    <h2>Where I'd pause before ordering</h2>
+    <p class="sect-sub">I'm flagging these honestly rather than letting you order into a gap. Both come from the matrix conflicting with your other files.</p>
+    <div class="grid2">
+      <div class="card v">
+        <h3 style="margin-top:0;color:var(--red)">The door-sensor count</h3>
+        <ul class="cross">
+          <li>The matrix says buy <b>5 more</b> MC-38 reeds — implying you already own some.</li>
+          <li>But your <b>WhatsApp inventory shows zero</b> door sensors.</li>
+          <li>And the blueprint needs around <b>12</b> to cover 3 double doors + bedrooms + balconies.</li>
+        </ul>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:10px"><b>What to do:</b> count the reeds you physically have. If it's zero, order <b>12</b>, not 5 — they're about ₹50 each, so ~₹600 total. Cheapest fix in the whole build.</p>
+      </div>
+      <div class="card v">
+        <h3 style="margin-top:0;color:var(--red)">The gas sensor</h3>
+        <ul class="cross">
+          <li>The matrix specifies the <b>MQ-2 hobby module</b> (₹179) for kitchen gas.</li>
+          <li>An MQ-2 is fine as a <b>data sensor</b> for Home Assistant — but it is <b>not a life-safety device</b>.</li>
+          <li>Your kitchen has a real LPG cylinder (the photo confirms it).</li>
+        </ul>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:10px"><b>What to do:</b> keep the MQ-2 for logging if you like, but add a <b>certified LPG alarm with its own siren</b> as the primary. That's the one safety upgrade I'd insist on over the matrix.</p>
+      </div>
+    </div>
+    <div class="callout red"><strong>The principle, once more:</strong> for anything that protects people — gas, fire, panic — a certified standalone device is primary and must work with no Pi and no Wi-Fi. The matrix is excellent on sourcing and price, but it's built around hobby sensors for these roles. Layer certified safety on top; don't let the hobby part be the only line of defence.</div>
+  </section>
+
+  <!-- 04 PROTOTYPING -->
+  <section id="proto">
+    <div class="sect-num">§ 04 — SHARED PROTOTYPING PARTS</div>
+    <h2>The bits every node needs</h2>
+    <p class="sect-sub">The matrix lists these under "Prototyping Infrastructure" — they're not house-specific but the house build can't happen without them.</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th style="width:26%">Item</th><th style="width:34%">Why (from matrix)</th><th style="width:24%">Where</th><th class="r" style="width:16%">Price</th></tr></thead>
+        <tbody>
+          <tr><td class="item-name">Jumper Wires Ribbon Pack (120 pcs)</td><td class="item-sub">You only have 6 individual wires in hand — essential for real nodes</td><td class="src">SP Road Components</td><td class="price">₹350</td></tr>
+          <tr><td class="item-name">Solderless Breadboards ×3</td><td class="item-sub">For assembling distributed sensor nodes</td><td class="src">SP Road Components</td><td class="price">₹450</td></tr>
+          <tr><td class="item-name">5V USB Wall Chargers + Cables ×6</td><td class="item-sub">Powering the 6 distributed ESP32 nodes</td><td class="src">SP Road / Local Market</td><td class="price">₹1,200</td></tr>
+        </tbody>
+        <tfoot><tr><td colspan="3">Prototyping subtotal</td><td class="price">₹2,000</td></tr></tfoot>
+      </table>
+    </div>
+    <div class="callout blue"><strong>Buy these with the first sensor order.</strong> Nothing gets built without power to each node and wire to connect things. The 120-piece jumper pack alone replaces the 6 loose wires you have and is enough for the whole build.</div>
+  </section>
+
+  <!-- 05 VENDORS -->
+  <section id="vendors">
+    <div class="sect-num">§ 05 — WHERE TO BUY</div>
+    <h2>The vendors, from your matrix</h2>
+    <div class="vendor">
+      <div class="vh"><span class="vname">SP Road Components Stores</span><span class="vtype">BANGALORE · IN PERSON</span></div>
+      <p>Your main source for the house sensors — leak, DHT22, MC-38 reed, MQ-2, jumpers, breadboards, chargers. The matrix routes almost the entire sensor and prototyping list here. Going in person lets you buy exact quantities, check parts are genuine, and get everything in one trip. Ask for NSK / Vishal for the larger items.</p>
+    </div>
+    <div class="vendor">
+      <div class="vh"><span class="vname">Probots (Online / SP Road)</span><span class="vtype">ONLINE + LOCAL</span></div>
+      <p>The matrix sources the two specialist items here — the 25A optoisolated relays for geyser switching, and the Nextion 4.3" display. These are less commonly stocked, so Probots is the reliable route.</p>
+    </div>
+    <div class="vendor">
+      <div class="vh"><span class="vname">Robocraze (Local / Online)</span><span class="vtype">AUTHORISED · Pi + BOARDS</span></div>
+      <p>The matrix uses Robocraze for the secondary Pi 4 host (via their SP Road / Vishal Mart presence) and as an alternative for the Nextion display. Authorised seller, so genuine boards with warranty.</p>
+    </div>
+    <div class="callout terra"><strong>The matrix's clear sourcing rule:</strong> buy locally on SP Road wherever possible — it's cheaper than Amazon for this category, lets you use the school GSTIN for input-tax credit, and you can verify parts in hand. Reserve online (Probots / Robocraze) for the specialist items SP Road may not stock.</div>
+  </section>
+
+  <!-- 06 SEQUENCE -->
+  <section id="sequence">
+    <div class="sect-num">§ 06 — THE ORDER TO BUY IN</div>
+    <h2>What to get first</h2>
+    <div class="step-row"><div class="step-n">1</div><div class="step-b"><h3>Certified safety — not on the matrix, buy anyway</h3><p>Certified smoke alarms and a certified LPG alarm with siren. This protects people now and doesn't wait on any build. The one thing I'd add over the matrix.</p></div><div class="step-cost">~₹5,000</div></div>
+    <div class="step-row"><div class="step-n">2</div><div class="step-b"><h3>Prototyping bundle + one of each sensor</h3><p>Jumpers, breadboards, chargers, plus the leak / DHT22 / reed / MQ-2 so you can build and prove one node of each type on Home Assistant.</p></div><div class="step-cost">~₹2,485 + ₹2,000</div></div>
+    <div class="step-row"><div class="step-n">3</div><div class="step-b"><h3>The Home Assistant host</h3><p>The Pi 4 (4GB) dedicated to Home Assistant — once you've proven the node types and know the approach works.</p></div><div class="step-cost">₹5,500</div></div>
+    <div class="step-row"><div class="step-n">4</div><div class="step-b"><h3>Scale up: full reed count + relays + display</h3><p>Bulk-buy the door reeds (verify 12, not 5), the 25A relays for geysers, and the Nextion entrance display once the core is live.</p></div><div class="step-cost">₹4,500+</div></div>
+    <div class="callout green"><strong>Why this order:</strong> safety first because it protects people immediately; then the cheap prototyping parts to de-risk the approach; then the host; then the expensive scale-up items only after the concept is proven. You spend the least before you know it all works.</div>
+  </section>
+
+  <!-- 07 TOTALS -->
+  <section id="totals">
+    <div class="sect-num">§ 07 — THE MONEY</div>
+    <h2>House automation, totalled</h2>
+    <div class="grid3">
+      <div class="card v"><div class="statline"><span class="big g">₹0</span></div><div class="statline"><span class="lbl">already in hand · 7 items</span></div></div>
+      <div class="card v"><div class="statline"><span class="big a">₹2,485</span></div><div class="statline"><span class="lbl">the actual sensors<br>(leak + climate + reed + gas)</span></div></div>
+      <div class="card v"><div class="statline"><span class="big a">₹2,000</span></div><div class="statline"><span class="lbl">prototyping bundle</span></div></div>
+    </div>
+    <div class="tbl-wrap" style="margin-top:14px">
+      <table>
+        <thead><tr><th style="width:60%">Group</th><th class="r" style="width:40%">Cost</th></tr></thead>
+        <tbody>
+          <tr><td class="item-name">Sensors (leak ×5, DHT22 ×4, reed, MQ-2)</td><td class="price">₹2,485</td></tr>
+          <tr><td class="item-name">Prototyping (jumpers, breadboards, chargers)</td><td class="price">₹2,000</td></tr>
+          <tr><td class="item-name">Home Assistant host (Pi 4 4GB)</td><td class="price">₹5,500</td></tr>
+          <tr><td class="item-name">Geyser relays ×4 (25A optoisolated)</td><td class="price">₹1,800</td></tr>
+          <tr><td class="item-name">Nextion 4.3" entrance display</td><td class="price">₹2,100</td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td class="item-name">Matrix total (house + its prototyping share)</td><td class="price">₹13,885</td></tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="callout amber"><strong>Add separately (my recommendation, not in the matrix):</strong> certified smoke alarms + a certified LPG alarm with siren, roughly <b>₹5,000</b>. That takes the honest all-in figure for a properly <em>safe</em> house build to about <b>₹18,900</b> — still modest, and the safety portion is the part I'd never cut.</div>
+  </section>
+
+  <footer>
+    NSM · House Automation · Final Procurement List · built from your Master Sourcing &amp; Vendor Procurement Matrix · July 2026<br>
+    House only (Project B) + shared prototyping · vendors &amp; prices as per matrix · certified safety added on top<br>
+    Verify the real reed-switch count (matrix says +5, blueprint needs ~12) before ordering · prices indicative, confirm at SP Road
+  </footer>
+</div>
+</body>
+</html>

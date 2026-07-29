@@ -196,6 +196,16 @@ export const DEFAULT_DISPLAYS: DisplayConfig[] = [
   { id: "wall-ipad", name: "Wall iPad", content: "house", message: "" },
 ];
 
+/** One machine in the school fleet — Macs, Pis, panels, network gear. */
+export interface FleetDevice {
+  id: string;
+  name: string;
+  kind: "mac" | "pi" | "panel" | "network" | "other";
+  online: boolean;
+  lastSeen: number; // epoch ms
+  detail: string; // e.g. "Home Assistant · CPU 12%" or "last backup 03:00"
+}
+
 export type StreamEvent =
   | { type: "state"; state: StudioStateInfo }
   | { type: "rooms"; rooms: Room[] }
@@ -208,6 +218,7 @@ export type StreamEvent =
   | { type: "delivery"; delivery: Delivery | null }
   | { type: "displays"; displays: DisplayConfig[] }
   | { type: "sos"; sos: Sos | null }
+  | { type: "fleet"; fleet: FleetDevice[] }
   | { type: "connection"; status: ConnectionState };
 
 export interface SceneDef {
@@ -237,6 +248,8 @@ export interface ApiAdapter {
   /** The Pianoteq rig (PIANO Pi). Cues are one-way and never touch its audio thread. */
   getPianoRig(): Promise<PianoRig>;
   pianoCue(cue: PianoCue): Promise<PianoRig>;
+  /** Fleet health — every machine in the school, one glance. */
+  getFleet(): Promise<FleetDevice[]>;
   /** Family SOS — one tap from any phone raises the whole house. */
   getSos(): Promise<Sos | null>;
   triggerSos(who: string, message: string): Promise<Sos>;

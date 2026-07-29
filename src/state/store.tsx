@@ -7,6 +7,7 @@ import {
   DeliveryInput,
   DisplayConfig,
   Doorbell,
+  FleetDevice,
   PianoCue,
   PianoRig,
   Preflight,
@@ -56,6 +57,7 @@ interface Store {
   preflightPrep: PreflightPrep | null;
   safety: Safety | null;
   sos: Sos | null;
+  fleet: FleetDevice[];
   doorbell: Doorbell | null;
   utilities: Utilities | null;
   pianoRig: PianoRig | null;
@@ -127,6 +129,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [preflightPrep, setPreflightPrep] = useState<PreflightPrep | null>(null);
   const [safety, setSafety] = useState<Safety | null>(null);
   const [sos, setSos] = useState<Sos | null>(null);
+  const [fleet, setFleet] = useState<FleetDevice[]>([]);
   const [doorbell, setDoorbell] = useState<Doorbell | null>(null);
   const [utilities, setUtilities] = useState<Utilities | null>(null);
   const [pianoRig, setPianoRig] = useState<PianoRig | null>(null);
@@ -181,7 +184,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       while (!cancelled) {
         setConnectionStatus(attempt === 0 ? "connecting" : "reconnecting");
         try {
-          const [st, rm, pf, prep, sf, db, events, util, piano, del, disp, sosNow] = await Promise.all([
+          const [st, rm, pf, prep, sf, db, events, util, piano, del, disp, sosNow, fleetNow] = await Promise.all([
             api.getState(),
             api.getRooms(),
             api.getPreflight(),
@@ -194,6 +197,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             api.getDelivery(),
             api.getDisplays(),
             api.getSos(),
+            api.getFleet(),
           ]);
           if (cancelled) return;
           setStateInfo(st);
@@ -209,6 +213,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           setDeliveryState(del);
           setDisplays(disp);
           setSos(sosNow);
+          setFleet(fleetNow);
           const music = rm.find((room) => room.id === "music");
           if (music?.dbLevel != null) setDbHistory([music.dbLevel]);
           setConnected(true);
@@ -231,6 +236,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             if (ev.type === "delivery") setDeliveryState(ev.delivery);
             if (ev.type === "displays") setDisplays(ev.displays);
             if (ev.type === "sos") setSos(ev.sos);
+            if (ev.type === "fleet") setFleet(ev.fleet);
             if (ev.type === "preflight") {
               setPreflight(ev.preflight);
               setPreflightPrep(ev.prep);
@@ -487,6 +493,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       preflightPrep,
       safety,
       sos,
+      fleet,
       doorbell,
       utilities,
       pianoRig,
@@ -523,7 +530,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       requestNotificationPermission,
       clearError,
     }),
-    [stateInfo, rooms, preflight, preflightPrep, safety, sos, doorbell, utilities, pianoRig, delivery, displays, history, settings, dbHistory, connected, connectionStatus, committing, sceneRunning, lastError, notificationPermission, setStudioState, runScene, triggerPanic, triggerSos, clearSos, updateSettings, refreshDoorbell, prepareStudio, restoreStudio, runUtilityAction, playTone, sendPianoCue, postDelivery, clearDelivery, updateDisplay, addDisplay, removeDisplay, triggerSafetyDemo, requestNotificationPermission, clearError]
+    [stateInfo, rooms, preflight, preflightPrep, safety, sos, fleet, doorbell, utilities, pianoRig, delivery, displays, history, settings, dbHistory, connected, connectionStatus, committing, sceneRunning, lastError, notificationPermission, setStudioState, runScene, triggerPanic, triggerSos, clearSos, updateSettings, refreshDoorbell, prepareStudio, restoreStudio, runUtilityAction, playTone, sendPianoCue, postDelivery, clearDelivery, updateDisplay, addDisplay, removeDisplay, triggerSafetyDemo, requestNotificationPermission, clearError]
   );
 
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;

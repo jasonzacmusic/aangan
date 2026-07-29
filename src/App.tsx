@@ -14,18 +14,20 @@ import Preflight from "./pages/Preflight";
 import Safety from "./pages/Safety";
 import Settings from "./pages/Settings";
 import SosPage from "./pages/SosPage";
+import GuestPage from "./pages/GuestPage";
 import { startEmergencySiren } from "./state/audio";
 import { useStore } from "./state/store";
 
 type PendingCommand = { state: StudioState; scene?: SceneDef };
 
-type Route = { kind: "app" } | { kind: "panel"; id: string } | { kind: "sos" };
+type Route = { kind: "app" } | { kind: "panel"; id: string } | { kind: "sos" } | { kind: "guest" };
 
 function useRoute(): Route {
   const read = (): Route => {
     const m = /^#\/display\/(.+)$/.exec(window.location.hash);
     if (m) return { kind: "panel", id: decodeURIComponent(m[1]) };
     if (/^#\/sos\/?$/.test(window.location.hash)) return { kind: "sos" };
+    if (/^#\/guest\/?$/.test(window.location.hash)) return { kind: "guest" };
     return { kind: "app" };
   };
   const [route, setRoute] = useState<Route>(read);
@@ -78,6 +80,19 @@ export default function App() {
           <SosPage />
         </div>
         <PwaUpdatePrompt />
+      </div>
+    );
+  }
+
+  // The visitor page reached from the door display's QR — read-only.
+  if (route.kind === "guest") {
+    const meta = stateInfo ? STATE_META[stateInfo.state] : STATE_META.available;
+    return (
+      <div className="relative min-h-dvh" style={{ ["--state-rgb" as string]: meta.rgb }}>
+        <div className="living-bg" />
+        <div className="relative z-10">
+          <GuestPage />
+        </div>
       </div>
     );
   }

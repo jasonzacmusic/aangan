@@ -4,13 +4,14 @@
 <meta charset="UTF-8">
 <title>Aangan · Buy List — click every link</title>
 <style>
-  :root{--plum:#2a1e4d;--rasp:#C51A4A;--gold:#8a6d1f;--teal:#077857;--paper:#faf8f4;--line:#e2dccb;--muted:#6B6456;}
+  :root{--plum:#2a1e4d;--rasp:#C51A4A;--gold:#8a6d1f;--teal:#077857;--blue:#1D4ED8;--viol:#6D28D9;--paper:#faf8f4;--line:#e2dccb;--muted:#6B6456;}
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:-apple-system,'Inter',sans-serif;background:#fff;color:#1a1822;line-height:1.5;font-size:13px;padding:34px 40px;}
   h1{font-size:26px;color:var(--plum);margin-bottom:4px;}
   .sub{color:var(--muted);font-size:12.5px;margin-bottom:6px;}
-  .rule{font-size:12px;background:#FDF6E9;border-left:4px solid #F59E0B;padding:9px 13px;border-radius:0 8px 8px 0;margin:14px 0;color:#6B4D08;}
-  h2{font-size:17px;color:#fff;background:var(--plum);padding:9px 14px;border-radius:9px;margin:26px 0 4px;}
+  .rule{font-size:12px;background:#FDF6E9;border-left:4px solid #F59E0B;padding:9px 13px;border-radius:0 8px 8px 0;margin:12px 0;color:#6B4D08;}
+  .verify{font-size:12px;background:#FBE9E9;border-left:4px solid #DC2626;padding:9px 13px;border-radius:0 8px 8px 0;margin:12px 0;color:#7a1f1f;}
+  h2{font-size:17px;color:#fff;background:var(--plum);padding:9px 14px;border-radius:9px;margin:24px 0 4px;}
   h2 small{font-weight:400;font-size:11px;opacity:.85;}
   h3{font-size:13px;color:var(--rasp);text-transform:uppercase;letter-spacing:1px;margin:16px 0 6px;}
   table{width:100%;border-collapse:collapse;font-size:12.5px;}
@@ -18,53 +19,90 @@
   td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
   td.q{text-align:center;font-weight:700;color:var(--rasp);white-space:nowrap;}
   td.p{white-space:nowrap;color:var(--muted);}
+  tr.alt td{background:#EFF4FD;}
+  tr.opt td{background:#F4F0FB;}
   a{color:#0b57d0;text-decoration:none;font-weight:600;}
   a:hover{text-decoration:underline;}
   .note{color:var(--muted);font-size:11px;}
+  .tag{display:inline-block;font-size:8.5px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:20px;margin-left:6px;white-space:nowrap;vertical-align:middle;}
+  .t-core{background:#FDF6E9;color:#92580a;}
+  .t-alt{background:#E8EEFB;color:#1D4ED8;}
+  .t-opt{background:#F3EEFB;color:#6D28D9;}
   .own{background:#EAF8F1;border-left:4px solid #10B981;padding:9px 13px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px;color:#0A5840;}
   .skip{background:#F1F5F9;border-left:4px solid #94A3B8;padding:9px 13px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px;color:#475569;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:10px 0 2px;align-items:center;}
   .foot{margin-top:26px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:10.5px;}
-  @media print{body{padding:10mm 12mm;} a{color:#0b57d0;} h2{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+  @media print{body{padding:10mm 12mm;} a{color:#0b57d0;} h2,tr.alt td,tr.opt td,.tag{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
 </style>
 </head>
 <body>
 <h1>Aangan — Buy List</h1>
-<div class="sub">Nathaniel School of Music · house + studio Raspberry Pi system · 29 Jul 2026 · every item is a clickable link</div>
-<div class="rule"><b>How to use this:</b> buy <b>BOTH projects now, as two SEPARATE orders</b> — one cart/invoice for Project 1 (Studio &amp; House), one for Project 2 (Music rig) — so each project stays independent and trackable. Before the Silverline trip, WhatsApp <b>+91 70909 39819</b> and confirm stock (139/5 VT Complex, opp. Karthik Plaza, Nagarathpete, SP Road, Bangalore). If a search link shows several options, pick the exact name written here. Prices are rough estimates for budgeting only.</div>
+<div class="sub">Nathaniel School of Music · house + studio Raspberry Pi system · rev 2 · every item is a clickable link</div>
 
-<div class="own"><b>Already owned — do NOT buy:</b> Raspberry Pi 5 8GB · Pianoteq Pro licence · ESP32 ×6 · ESP32-CAM · MC-38 door sensors ×9 · water-leak sensors ×6 · WS2812B LED strip · DHT22 · PIR ×4 · MQ-2 · INMP441 · jumper wires/PCBs/enclosures · acoustic weatherstrip · old iPad · certified smoke + LPG alarms · <b>USB A→B keyboard cable · XLR cables · USB-C 100W cables · USB SSD · gaffer tape + velcro ties · studio UPS/power backup (no APC needed)</b>.</div>
+<div class="legend">
+  <span><span class="tag t-core" style="margin-left:0">CORE</span> buy this — the build needs it</span>
+  <span><span class="tag t-alt" style="margin-left:0">CHEAPER ALT</span> blue rows — swap to save money, same job</span>
+  <span><span class="tag t-opt" style="margin-left:0">OPTIONAL</span> purple rows — nice-to-have / go-for-broke / later phase. Do NOT buy without asking Jason</span>
+</div>
+
+<div class="rule"><b>How to use this:</b> buy <b>BOTH projects now, as two SEPARATE orders</b> (one cart/invoice each) so the projects stay independent. Buy CORE items only, unless Jason approves an ALT/OPTIONAL row. SP Road first where marked — cheaper than Amazon and the school GSTIN gets input-tax credit. Before the Silverline trip WhatsApp <b>+91 70909 39819</b> to confirm stock (139/5 VT Complex, opp. Karthik Plaza, Nagarathpete, SP Road). Prices are estimates for budgeting.</div>
+
+<div class="own"><b>Already owned — do NOT rebuy (₹0):</b> Raspberry Pi 5 8GB · Pianoteq Pro licence · ESP32 dev boards ×6 · ESP32-CAM ×1 (assigned: main-entrance door-frame camera) · soil-moisture sensor ×1 (balcony planter) · ultrasonic HC-SR04 ×1 (overhead water tank) · buzzer alarm modules ×4 (node sirens) · WS2812B LED strip 5m · INMP441 I2S mic · DHT22 ×1 · PIR ×4 · MQ-2 ×1 · MC-38 reed sensors (count unclear — see red box) · water-leak sensors (count unclear — see red box) · jumper wires (only ~6 loose) · PCBs/enclosures · acoustic weatherstrip · old iPad (3rd panel) · certified smoke + LPG alarms · USB A→B keyboard cable · XLR cables · USB-C 100W cables · USB SSD · gaffer + velcro · studio UPS power backup.</div>
+
+<div class="verify"><b>⚠ COUNT BEFORE ORDERING — the two inventories disagree:</b> one list says <b>9 reed door sensors and 6 water-leak sensors</b> are owned; the sourcing matrix says <b>zero reeds and 1 leak sensor</b>. Physically count both boxes first. Then: reeds — the house needs <b>12</b> (4 double doors get 1 each at the meeting stiles + front door + bedrooms/balconies), buy only the shortfall (~₹50 each). Leak sensors — the house needs <b>10</b> (4–6 sinks, stove lines, 2 bathrooms, balcony tap), buy only the shortfall (~₹80 each).</div>
 
 <!-- ════════ PROJECT 1 ════════ -->
-<h2>PROJECT 1 — Studio &amp; House Pi &nbsp;<small>ORDER NOW · one Silverline visit + one robu.in cart + one Amazon order</small></h2>
+<h2>PROJECT 1 — Studio &amp; House Pi &nbsp;<small>ORDER NOW · Silverline visit + one robu.in/SP-Road run</small></h2>
 
-<h3>A · Silverline Electronics (SP Road / silverlineelectronics.in)</h3>
+<h3>A · The brain + panel drivers (Silverline)</h3>
 <table>
 <tr><th>Item</th><th>Qty</th><th>Est.</th><th>Link</th></tr>
-<tr><td><b>Raspberry Pi 5 — 8GB</b><div class="note">the House brain</div></td><td class="q">1</td><td class="p">₹8,000</td><td><a href="https://www.silverlineelectronics.in/products/raspberry-pi-5-model-b-8gb-ram">silverline — Pi 5 8GB</a></td></tr>
-<tr><td><b>Official Raspberry Pi 27W USB-C Power Supply</b><div class="note">never a phone charger</div></td><td class="q">1</td><td class="p">₹1,300</td><td><a href="https://www.silverlineelectronics.in/search?q=27W+USB-C+power+supply">silverline — search 27W PSU</a></td></tr>
-<tr><td><b>Raspberry Pi Zero 2 W</b><div class="note">drives the two door screens</div></td><td class="q">2</td><td class="p">₹1,800 ea</td><td><a href="https://www.silverlineelectronics.in/search?q=zero+2+w">silverline — search Zero 2 W</a> · <a href="https://robu.in/?s=raspberry+pi+zero+2+w">robu fallback</a></td></tr>
-<tr><td><b>Official Raspberry Pi Zero 2 W PSU (or any good 5V/2.5A micro-USB)</b></td><td class="q">2</td><td class="p">₹500 ea</td><td><a href="https://www.silverlineelectronics.in/search?q=power+supply">silverline — search PSU</a></td></tr>
+<tr><td><b>Raspberry Pi 5 — 8GB</b><span class="tag t-core">CORE</span><div class="note">the House brain — 8GB gives headroom for the doorbell-camera person detection later</div></td><td class="q">1</td><td class="p">₹8,000</td><td><a href="https://www.silverlineelectronics.in/products/raspberry-pi-5-model-b-8gb-ram">silverline — Pi 5 8GB</a></td></tr>
+<tr class="alt"><td><b>Raspberry Pi 4 — 4GB</b><span class="tag t-alt">CHEAPER ALT</span><div class="note">the matrix's pick, saves ₹2,500 — runs Home Assistant fine, but no headroom for camera AI later. Ask Jason before swapping.</div></td><td class="q">(1)</td><td class="p">₹5,500</td><td><a href="https://www.silverlineelectronics.in/search?q=raspberry+pi+4">silverline — Pi 4</a></td></tr>
+<tr><td><b>Official Raspberry Pi 27W USB-C PSU</b><span class="tag t-core">CORE</span></td><td class="q">1</td><td class="p">₹1,300</td><td><a href="https://www.silverlineelectronics.in/search?q=27W+USB-C+power+supply">silverline — 27W PSU</a></td></tr>
+<tr><td><b>Raspberry Pi Zero 2 W</b><span class="tag t-core">CORE</span><div class="note">drives the two door screens</div></td><td class="q">2</td><td class="p">₹1,800 ea</td><td><a href="https://www.silverlineelectronics.in/search?q=zero+2+w">silverline</a> · <a href="https://robu.in/?s=raspberry+pi+zero+2+w">robu fallback</a></td></tr>
+<tr><td><b>5V/2.5A micro-USB PSU for the Zeros</b><span class="tag t-core">CORE</span></td><td class="q">2</td><td class="p">₹500 ea</td><td><a href="https://www.silverlineelectronics.in/search?q=power+supply">silverline — PSU</a></td></tr>
 </table>
 
-<h3>B · robu.in — put everything in ONE cart</h3>
+<h3>B · The two door screens</h3>
 <table>
 <tr><th>Item</th><th>Qty</th><th>Est.</th><th>Link</th></tr>
-<tr><td><b>Waveshare 10.1" HD Capacitive Touch LCD (G), 1920×1200, toughened glass</b><div class="note">the two door screens — must be the “(G)” model</div></td><td class="q">2</td><td class="p">₹14,000 ea</td><td><a href="https://robu.in/product/waveshare-10-1inch-hd-capacitive-touch-screen-lcd-g-1920x1200-hdmi-supports-raspberry-pi-jetson-nano-pc/">robu — Waveshare 10.1 (G)</a></td></tr>
-<tr><td><b>Micro-HDMI to HDMI cable, 1.5m</b><div class="note">Pi Zero → screen (Zero uses <i>mini</i>-HDMI — buy 2× <b>mini</b>-HDMI to HDMI)</div></td><td class="q">2</td><td class="p">₹250 ea</td><td><a href="https://robu.in/?s=mini+hdmi+to+hdmi+cable">robu — mini-HDMI cable</a></td></tr>
-<tr><td><b>MQ-6 LPG gas sensor module</b><div class="note">one per stove point — MQ-6, not MQ-2</div></td><td class="q">4</td><td class="p">₹120 ea</td><td><a href="https://robu.in/?s=MQ-6+gas+sensor">robu — MQ-6</a></td></tr>
-<tr><td><b>Water leak / rain drop sensor module</b><div class="note">adds to the 6 owned → covers every sink + stove line</div></td><td class="q">6</td><td class="p">₹80 ea</td><td><a href="https://robu.in/?s=water+level+sensor+leak">robu — water sensor</a></td></tr>
-<tr><td><b>DFRobot Gravity SEN0232 sound level meter</b><div class="note">the real dBA meter — studio + teaching room</div></td><td class="q">2</td><td class="p">₹3,500 ea</td><td><a href="https://robu.in/?s=SEN0232">robu — SEN0232</a></td></tr>
-<tr><td><b>HLK-LD2410 mmWave presence sensor</b></td><td class="q">1</td><td class="p">₹350</td><td><a href="https://robu.in/?s=LD2410">robu — LD2410</a></td></tr>
-<tr><td><b>SW-420 vibration sensor module</b></td><td class="q">5</td><td class="p">₹70 ea</td><td><a href="https://robu.in/?s=SW-420">robu — SW-420</a></td></tr>
-<tr><td><b>IR flame sensor module</b></td><td class="q">4</td><td class="p">₹70 ea</td><td><a href="https://robu.in/?s=flame+sensor+module">robu — flame sensor</a></td></tr>
-<tr><td><b>JSN-SR04T waterproof ultrasonic sensor</b><div class="note">water tanks — sump + overhead</div></td><td class="q">2</td><td class="p">₹450 ea</td><td><a href="https://robu.in/?s=JSN-SR04T">robu — JSN-SR04T</a></td></tr>
-<tr><td><b>HX711 + 50kg load cells (set of 4)</b><div class="note">LPG cylinder weight scale</div></td><td class="q">1 set</td><td class="p">₹400</td><td><a href="https://robu.in/?s=HX711+50kg+load+cell">robu — HX711 set</a></td></tr>
-<tr><td><b>SanDisk Extreme A2 microSD 64GB</b><div class="note">1 for House Pi + 2 spares for panels</div></td><td class="q">3</td><td class="p">₹700 ea</td><td><a href="https://robu.in/?s=sandisk+extreme+64gb+microsd">robu — SanDisk 64GB</a></td></tr>
-<tr><td><b>Reolink Video Doorbell PoE — 2K</b><div class="note">the go-for-broke doorbell camera: sharp 2K, works LOCALLY with our system (no cloud needed), person detection later via Frigate. PoE version preferred if an ethernet run to the door is possible; otherwise the Wi-Fi version of the same model.</div></td><td class="q">1</td><td class="p">₹11,000</td><td><a href="https://www.amazon.in/s?k=Reolink+video+doorbell+PoE+2K">amazon — Reolink doorbell</a></td></tr>
-<tr><td><b>PoE injector 48V (Reolink-compatible)</b><div class="note">only if the PoE doorbell version is bought</div></td><td class="q">1</td><td class="p">₹900</td><td><a href="https://www.amazon.in/s?k=48V+PoE+injector+gigabit">amazon — PoE injector</a></td></tr>
+<tr><td><b>Waveshare 10.1" HD (G), 1920×1200, toughened glass</b><span class="tag t-core">CORE</span><div class="note">FRONT DOOR — the OTP/visitor display, the one screen guests actually read up close</div></td><td class="q">1</td><td class="p">₹14,000</td><td><a href="https://robu.in/product/waveshare-10-1inch-hd-capacitive-touch-screen-lcd-g-1920x1200-hdmi-supports-raspberry-pi-jetson-nano-pc/">robu — Waveshare (G)</a></td></tr>
+<tr><td><b>Waveshare 10.1" (E), 1024×600, optical bonding</b><span class="tag t-core">CORE</span><div class="note">STUDIO DOOR — a big ON-AIR sign read from a distance doesn't need full-HD. Saves ₹7,500 vs a second (G).</div></td><td class="q">1</td><td class="p">₹6,500</td><td><a href="https://robu.in/product/waveshare-10-1inch-capacitive-touch-screen-lcd-e-1024x600-hdmi-ips-optical-bonding-screen-supports-raspberry-pi-jetson-nano-and-pc/">robu — Waveshare (E)</a></td></tr>
+<tr class="opt"><td><b>Upgrade: second Waveshare (G) for the studio door</b><span class="tag t-opt">OPTIONAL</span><div class="note">only if Jason wants both doors full-HD</div></td><td class="q">(1)</td><td class="p">+₹7,500</td><td class="note">same (G) link</td></tr>
+<tr><td><b>Mini-HDMI → HDMI cable, 1.5m</b><span class="tag t-core">CORE</span><div class="note">Pi Zero uses MINI-HDMI — not micro</div></td><td class="q">2</td><td class="p">₹250 ea</td><td><a href="https://robu.in/?s=mini+hdmi+to+hdmi+cable">robu — mini-HDMI</a></td></tr>
 </table>
 
-<div class="skip"><b>NOT intern items (the electrician sources these):</b> latching panic switches ×4, NC loop cable, battery-backed sounder, volt-free relay modules, motor contactor + float switches. A <b>low-voltage / fire-alarm technician</b> does this wiring — booked separately.</div>
+<h3>C · Doorbell camera — the affordable solution</h3>
+<table>
+<tr><th>Item</th><th>Qty</th><th>Est.</th><th>Link</th></tr>
+<tr><td><b>v1 = the owned ESP32-CAM (₹0)</b><span class="tag t-core">CORE</span><div class="note">already assigned to the main-entrance door frame in the sourcing matrix — snapshots to the app + panels. Buy only a momentary doorbell push button.</div></td><td class="q">1 btn</td><td class="p">₹30</td><td><a href="https://robu.in/?s=momentary+push+button+panel">robu — push button</a></td></tr>
+<tr class="alt"><td><b>v2 = TP-Link Tapo C210 (3MP, local RTSP)</b><span class="tag t-alt">CHEAPER ALT to Reolink</span><div class="note">a real, sharp camera feed into our system for a quarter of the Reolink's price — the sensible upgrade when v1 feels grainy</div></td><td class="q">(1)</td><td class="p">₹2,800</td><td><a href="https://www.amazon.in/s?k=tapo+c210">amazon — Tapo C210</a></td></tr>
+<tr class="opt"><td><b>Reolink Video Doorbell PoE 2K + injector</b><span class="tag t-opt">OPTIONAL · go-for-broke</span><div class="note">the premium route — only with Jason's explicit OK</div></td><td class="q">(1)</td><td class="p">₹12,000</td><td><a href="https://www.amazon.in/s?k=Reolink+video+doorbell+PoE+2K">amazon — Reolink</a></td></tr>
+</table>
+
+<h3>D · Sensors + node prototyping (one robu/SP Road run)</h3>
+<table>
+<tr><th>Item</th><th>Qty</th><th>Est.</th><th>Link</th></tr>
+<tr><td><b>MC-38 reed door sensors</b><span class="tag t-core">CORE</span><div class="note">only the SHORTFALL after counting (need 12 total — see red box)</div></td><td class="q">to 12</td><td class="p">₹50 ea</td><td><a href="https://robu.in/?s=MC-38+door+sensor">robu — MC-38</a></td></tr>
+<tr><td><b>Water-leak sensor modules</b><span class="tag t-core">CORE</span><div class="note">only the SHORTFALL after counting (need 10 total)</div></td><td class="q">to 10</td><td class="p">₹80 ea</td><td><a href="https://robu.in/?s=water+leak+sensor+module">robu — leak sensor</a></td></tr>
+<tr><td><b>DHT22 climate sensors</b><span class="tag t-core">CORE</span><div class="note">bedrooms ×2, studio bed, residence hall (1 already owned = music room)</div></td><td class="q">4</td><td class="p">₹290 ea</td><td><a href="https://robu.in/?s=DHT22">robu — DHT22</a></td></tr>
+<tr><td><b>MQ-6 LPG gas sensor modules</b><span class="tag t-core">CORE</span><div class="note">one per stove point; LPG-specific (owned MQ-2 becomes a spare/logger). Certified LPG alarm stays PRIMARY.</div></td><td class="q">4</td><td class="p">₹120 ea</td><td><a href="https://robu.in/?s=MQ-6+gas+sensor">robu — MQ-6</a></td></tr>
+<tr><td><b>IR flame sensor modules</b><span class="tag t-core">CORE</span></td><td class="q">4</td><td class="p">₹70 ea</td><td><a href="https://robu.in/?s=flame+sensor+module">robu — flame</a></td></tr>
+<tr><td><b>SW-420 vibration modules</b><span class="tag t-core">CORE</span><div class="note">perimeter + washing-machine-done</div></td><td class="q">5</td><td class="p">₹70 ea</td><td><a href="https://robu.in/?s=SW-420">robu — SW-420</a></td></tr>
+<tr><td><b>HLK-LD2410 mmWave presence</b><span class="tag t-core">CORE</span></td><td class="q">1</td><td class="p">₹350</td><td><a href="https://robu.in/?s=LD2410">robu — LD2410</a></td></tr>
+<tr><td><b>DFRobot SEN0232 sound level meter</b><span class="tag t-core">CORE</span><div class="note">STUDIO only — this is the meter that gates recording. The teaching room uses the owned INMP441 for now.</div></td><td class="q">1</td><td class="p">₹3,500</td><td><a href="https://robu.in/?s=SEN0232">robu — SEN0232</a></td></tr>
+<tr class="opt"><td><b>Second SEN0232 for the teaching room</b><span class="tag t-opt">OPTIONAL</span><div class="note">upgrade later if the INMP441 pilot isn't accurate enough</div></td><td class="q">(1)</td><td class="p">₹3,500</td><td class="note">same link</td></tr>
+<tr><td><b>JSN-SR04T waterproof ultrasonic</b><span class="tag t-core">CORE</span><div class="note">SUMP tank only — the owned HC-SR04 covers the overhead tank</div></td><td class="q">1</td><td class="p">₹450</td><td><a href="https://robu.in/?s=JSN-SR04T">robu — JSN-SR04T</a></td></tr>
+<tr><td><b>HX711 + 50kg load cells (set)</b><span class="tag t-core">CORE</span><div class="note">LPG cylinder scale</div></td><td class="q">1</td><td class="p">₹400</td><td><a href="https://robu.in/?s=HX711+50kg+load+cell">robu — HX711</a></td></tr>
+<tr><td><b>Jumper wire ribbon pack (120 pc)</b><span class="tag t-core">CORE</span><div class="note">only ~6 loose wires owned — nodes can't be built without this</div></td><td class="q">1</td><td class="p">₹350</td><td><a href="https://robu.in/?s=jumper+wires+120">robu — jumpers</a></td></tr>
+<tr><td><b>Solderless breadboards</b><span class="tag t-core">CORE</span></td><td class="q">3</td><td class="p">₹150 ea</td><td><a href="https://robu.in/?s=breadboard+840">robu — breadboards</a></td></tr>
+<tr><td><b>5V USB wall chargers + cables (node power)</b><span class="tag t-core">CORE</span><div class="note">one per ESP32 node — SP Road/local is cheapest</div></td><td class="q">6</td><td class="p">₹200 ea</td><td><a href="https://robu.in/?s=5V+2A+power+adapter">robu — 5V adapters</a></td></tr>
+<tr><td><b>SanDisk Extreme A2 microSD 64GB</b><span class="tag t-core">CORE</span><div class="note">House Pi + 2 panel Zeros</div></td><td class="q">3</td><td class="p">₹700 ea</td><td><a href="https://robu.in/?s=sandisk+extreme+64gb+microsd">robu — SanDisk</a></td></tr>
+<tr class="opt"><td><b>25A optoisolated relays (geyser switching)</b><span class="tag t-opt">OPTIONAL · later phase</span><div class="note">only when the electrician does the geyser work — he fits them</div></td><td class="q">(4)</td><td class="p">₹450 ea</td><td><a href="https://robu.in/?s=25A+relay+optocoupler">robu — 25A relay</a></td></tr>
+</table>
+
+<div class="skip"><b>NOT intern items (the electrician sources these):</b> latching panic switches ×4, NC loop cable, battery-backed sounder, volt-free relay modules, motor contactor + float switches. A <b>low-voltage / fire-alarm technician</b> does this wiring.</div>
 
 <!-- ════════ PROJECT 2 ════════ -->
 <h2>PROJECT 2 — Music Pi (the piano rig) &nbsp;<small>ORDER NOW · separate cart &amp; invoice · uses the Pi 5 already owned</small></h2>
@@ -72,38 +110,39 @@
 <h3>A · The audio core</h3>
 <table>
 <tr><th>Item</th><th>Qty</th><th>Est.</th><th>Link</th></tr>
-<tr><td><b>Raspberry Pi DAC Pro</b> (IQaudio DAC Pro — PCM5242)<div class="note">THE sound board · powered by the Pi, no soldering</div></td><td class="q">1</td><td class="p">₹2,500</td><td><a href="https://robu.in/product/raspberry-pi-iqaudio-dac-pro">robu — DAC Pro</a> · <a href="https://robu.in/?s=IQaudio+DAC+Pro">search</a></td></tr>
-<tr><td><b>XLR Board for IQaudio DAC Pro</b><div class="note">gives balanced XLR sockets · <b>ask robu first if they can order it in</b>; otherwise import</div></td><td class="q">1</td><td class="p">₹2,000 + ship</td><td><a href="https://robu.in/?s=IQaudio+XLR">robu — ask/search</a> · <a href="https://www.pishop.us/product/xlr-board-for-iqaudio-dac-pro/">pishop.us — import</a></td></tr>
-<tr><td><b>Fallback if XLR board unavailable:</b> Behringer DI400P passive stereo DI ×2 (or one DI20)<div class="note">DAC Pro RCA → DI → balanced XLR. Only buy if the XLR board can't be sourced.</div></td><td class="q">—</td><td class="p">₹2,000</td><td><a href="https://www.amazon.in/s?k=Behringer+DI400P">amazon — DI400P</a></td></tr>
-<tr><td><b>6-pin female header (2.54mm)</b><div class="note">only needed if the DAC Pro arrives with bare P7/P9 pads — ask the seller which revision</div></td><td class="q">2</td><td class="p">₹30</td><td><a href="https://robu.in/?s=6+pin+female+header+2.54mm">robu — header</a></td></tr>
+<tr><td><b>Raspberry Pi DAC Pro</b> (IQaudio DAC Pro — PCM5242)<span class="tag t-core">CORE</span><div class="note">THE sound board · powered by the Pi, no soldering</div></td><td class="q">1</td><td class="p">₹2,500</td><td><a href="https://robu.in/product/raspberry-pi-iqaudio-dac-pro">robu — DAC Pro</a> · <a href="https://robu.in/?s=IQaudio+DAC+Pro">search</a></td></tr>
+<tr><td><b>XLR Board for IQaudio DAC Pro</b><span class="tag t-core">CORE</span><div class="note">balanced XLR sockets · <b>ask robu first if they can order it in</b>; otherwise import</div></td><td class="q">1</td><td class="p">₹2,000 + ship</td><td><a href="https://robu.in/?s=IQaudio+XLR">robu — ask</a> · <a href="https://www.pishop.us/product/xlr-board-for-iqaudio-dac-pro/">pishop.us — import</a></td></tr>
+<tr class="alt"><td><b>Fallback: Behringer DI400P passive DI ×2</b><span class="tag t-alt">ONLY IF the XLR board can't be sourced</span><div class="note">DAC Pro RCA → DI → balanced XLR</div></td><td class="q">(2)</td><td class="p">₹1,000 ea</td><td><a href="https://www.amazon.in/s?k=Behringer+DI400P">amazon — DI400P</a></td></tr>
+<tr><td><b>6-pin female header (2.54mm)</b><span class="tag t-core">CORE</span><div class="note">only if the DAC Pro ships with bare P7/P9 pads — ask the seller which revision</div></td><td class="q">2</td><td class="p">₹30</td><td><a href="https://robu.in/?s=6+pin+female+header+2.54mm">robu — header</a></td></tr>
 </table>
 
-<h3>B · Control, cooling, power</h3>
+<h3>B · Control, cooling, power, storage</h3>
 <table>
 <tr><th>Item</th><th>Qty</th><th>Est.</th><th>Link</th></tr>
-<tr><td><b>Raspberry Pi Touch Display 2 (7")</b><div class="note">on-rig screen for switching pianos</div></td><td class="q">1</td><td class="p">₹5,500</td><td><a href="https://www.silverlineelectronics.in/products/raspberry-pi-official-touch-display-2-silverline-india">silverline — Touch Display 2</a></td></tr>
-<tr><td><b>Official Raspberry Pi 5 Active Cooler</b><div class="note">fit BEFORE the DAC goes on</div></td><td class="q">1</td><td class="p">₹500</td><td><a href="https://www.silverlineelectronics.in/search?q=active+cooler">silverline — Active Cooler</a> · <a href="https://robu.in/?s=raspberry+pi+5+active+cooler">robu</a></td></tr>
-<tr><td><b>Official 27W USB-C PSU</b></td><td class="q">1</td><td class="p">₹1,300</td><td><a href="https://www.silverlineelectronics.in/search?q=27W+USB-C+power+supply">silverline — 27W PSU</a></td></tr>
-<tr><td><b>100W USB-C PD power bank</b> (e.g. Anker 737 / 20,000mAh+ with 100W PD)<div class="note">stage power with no wall socket</div></td><td class="q">1</td><td class="p">₹10,000</td><td><a href="https://www.amazon.in/s?k=100W+PD+power+bank+20000mah">amazon — 100W PD bank</a></td></tr>
-<tr><td><b>SanDisk Extreme A2 microSD 64GB</b><div class="note">one runs the rig, one is the cloned spare in the case</div></td><td class="q">2</td><td class="p">₹700 ea</td><td><a href="https://www.amazon.in/s?k=sandisk+extreme+64gb+microsd+A2">amazon — SanDisk 64GB</a></td></tr>
+<tr><td><b>Raspberry Pi Touch Display 2 (7")</b><span class="tag t-core">CORE</span><div class="note">on-rig screen for switching pianos</div></td><td class="q">1</td><td class="p">₹5,500</td><td><a href="https://www.silverlineelectronics.in/products/raspberry-pi-official-touch-display-2-silverline-india">silverline — Touch Display 2</a></td></tr>
+<tr><td><b>Official Pi 5 Active Cooler</b><span class="tag t-core">CORE</span><div class="note">fit BEFORE the DAC goes on</div></td><td class="q">1</td><td class="p">₹500</td><td><a href="https://www.silverlineelectronics.in/search?q=active+cooler">silverline</a> · <a href="https://robu.in/?s=raspberry+pi+5+active+cooler">robu</a></td></tr>
+<tr><td><b>Official 27W USB-C PSU</b><span class="tag t-core">CORE</span></td><td class="q">1</td><td class="p">₹1,300</td><td><a href="https://www.silverlineelectronics.in/search?q=27W+USB-C+power+supply">silverline — 27W PSU</a></td></tr>
+<tr><td><b>SanDisk Extreme A2 microSD 64GB</b><span class="tag t-core">CORE</span><div class="note">one runs the rig, one is the cloned spare in the case</div></td><td class="q">2</td><td class="p">₹700 ea</td><td><a href="https://www.amazon.in/s?k=sandisk+extreme+64gb+microsd+A2">amazon — SanDisk</a></td></tr>
+<tr class="opt"><td><b>100W USB-C PD power bank</b><span class="tag t-opt">OPTIONAL · stage only</span><div class="note">the studio has UPS + mains — this is only for gigs with no wall socket</div></td><td class="q">(1)</td><td class="p">₹10,000</td><td><a href="https://www.amazon.in/s?k=100W+PD+power+bank+20000mah">amazon — PD bank</a></td></tr>
 </table>
 
-<h3>C · MIDI in every form <span style="font-weight:400;color:var(--muted)">(USB is native on the Pi — the owned A→B cable covers it)</span></h3>
+<h3>C · MIDI in every form <span style="font-weight:400;color:var(--muted)">(USB is native — the owned A→B cable covers today's keyboard)</span></h3>
 <table>
 <tr><th>Item</th><th>Qty</th><th>Est.</th><th>Link</th></tr>
-<tr><td><b>Roland UM-ONE mk2 USB-MIDI interface</b><div class="note">classic 5-pin DIN MIDI in/out — the reliable one, not a generic clone</div></td><td class="q">1</td><td class="p">₹4,000</td><td><a href="https://www.amazon.in/s?k=Roland+UM-ONE+mk2">amazon — UM-ONE mk2</a></td></tr>
-<tr><td><b>CME WIDI Master</b><div class="note">wireless Bluetooth MIDI for any 5-pin DIN instrument — go-for-broke wireless. (Keyboards with built-in Bluetooth MIDI pair straight to the Pi for free.)</div></td><td class="q">1</td><td class="p">₹9,000</td><td><a href="https://www.amazon.in/s?k=CME+WIDI+Master">amazon — WIDI Master</a></td></tr>
+<tr class="opt"><td><b>Roland UM-ONE mk2 USB-MIDI interface</b><span class="tag t-opt">OPTIONAL</span><div class="note">only needed to connect 5-pin DIN instruments — the current keyboard is USB</div></td><td class="q">(1)</td><td class="p">₹4,000</td><td><a href="https://www.amazon.in/s?k=Roland+UM-ONE+mk2">amazon — UM-ONE</a></td></tr>
+<tr class="opt"><td><b>CME WIDI Master (wireless MIDI)</b><span class="tag t-opt">OPTIONAL · go-for-broke</span><div class="note">Bluetooth-MIDI keyboards pair to the Pi for FREE — buy WIDI only for wireless DIN gear</div></td><td class="q">(1)</td><td class="p">₹9,000</td><td><a href="https://www.amazon.in/s?k=CME+WIDI+Master">amazon — WIDI Master</a></td></tr>
 </table>
 
 <h3>D · Transport</h3>
 <table>
 <tr><th>Item</th><th>Qty</th><th>Est.</th><th>Link</th></tr>
-<tr><td><b>Hard foam-lined case</b><div class="note">⚠ DO NOT buy yet — the stack must be measured first (the XLR board sits above the Pi's ports; normal Pi cases don't close). Cables (keyboard USB, XLR, USB-C) are already owned.</div></td><td class="q">1</td><td class="p">₹3,000</td><td class="note">buy after assembly</td></tr>
+<tr class="opt"><td><b>Hard foam-lined case</b><span class="tag t-opt">OPTIONAL · buy after assembly</span><div class="note">the stack must be measured first — the XLR board sits above the Pi's ports, normal cases don't close. Cables already owned.</div></td><td class="q">(1)</td><td class="p">₹3,000</td><td class="note">measure, then buy</td></tr>
 </table>
 
 <div class="foot">
-Aangan · Nathaniel School of Music · prepared 29 Jul 2026 · Project 1 ≈ ₹50k (the two screens are most of it) · Project 2 ≈ ₹23–25k ·
-Full step-by-step builds: “Aangan — Install Guide” PDF (house) and PIANO_PI_BUILD_PLAN.html (music) in the aangan repo.
+Aangan · Nathaniel School of Music · rev 2 (29 Jul 2026) — reconciled with the Master Sourcing Matrix ·
+<b>CORE totals: Project 1 ≈ ₹47k</b> (₹20.5k of it is the two door screens; sensors themselves ≈ ₹8k) · <b>Project 2 ≈ ₹13.5k</b> ·
+optional/go-for-broke rows add ₹40k+ ONLY if approved · full builds: “Aangan — Install Guide” + PIANO_PI_BUILD_PLAN.html in the aangan repo.
 </div>
 </body>
 </html>

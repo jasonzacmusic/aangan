@@ -6,6 +6,7 @@ import {
   DeliveryInput,
   DisplayConfig,
   Doorbell,
+  FleetDevice,
   PianoCue,
   PianoRig,
   Preflight,
@@ -59,6 +60,11 @@ import {
  *   server includes it in /status; the wrapper passes it through untouched.
  *   The wrapper forwards cues to the piano Pi's status server over HTTP and
  *   must tolerate the rig being offline (return online:false, never block).
+ *
+ * Fleet health (fed by nsm-health on the LAN)
+ *   GET  /api/fleet                 -> FleetDevice[]
+ *   The wrapper pings each machine (Macs, Pis, panels, router) or reads the
+ *   nsm-health snapshot; emit a fleet SSE frame whenever a device changes.
  *
  * Family SOS (raised from any phone's #/sos page)
  *   GET  /api/sos                   -> Sos | null
@@ -173,6 +179,9 @@ export class LiveAdapter implements ApiAdapter {
   pianoCue(cue: PianoCue) {
     return this.post<PianoRig>("/api/piano/cue", { cue });
   }
+  getFleet() {
+    return this.get<FleetDevice[]>("/api/fleet");
+  }
   getSos() {
     return this.get<Sos | null>("/api/sos");
   }
@@ -224,7 +233,7 @@ export class LiveAdapter implements ApiAdapter {
 
   private async pollOnce() {
     try {
-      const [state, rooms, safety, preflight, prep, utilities, piano, delivery, displays, sos] = await Promise.all([
+      const [state, rooms, safety, preflight, prep, utilities, piano, delivery, displays, sos, fleet] = await Promise.all([
         this.getState(),
         this.getRooms(),
         this.getSafety(),
@@ -235,6 +244,7 @@ export class LiveAdapter implements ApiAdapter {
         this.getDelivery(),
         this.getDisplays(),
         this.getSos(),
+        this.getFleet(),
       ]);
       this.emit({ type: "state", state });
       this.emit({ type: "rooms", rooms });
@@ -245,6 +255,7 @@ export class LiveAdapter implements ApiAdapter {
       this.emit({ type: "delivery", delivery });
       this.emit({ type: "displays", displays });
       this.emit({ type: "sos", sos });
+      this.emit({ type: "fleet", fleet });
       this.setConnection("online");
     } catch {
       this.setConnection("offline");
@@ -281,6 +292,7 @@ export class LiveAdapter implements ApiAdapter {
         delivery: "delivery",
         displays: "displays",
         sos: "sos",
+        fleet: "fleet",
       };
       (Object.keys(keys) as Array<keyof typeof keys>).forEach((name) => {
         es.addEventListener(name, (raw) => {

@@ -13,6 +13,8 @@ Every state recolors the five room signs, changes the house behavior, protects t
 - **Pre-flight** — an exact go/no-go verdict. “Silence the room” mutes the doorbell, switches off AC and fan, watches the dB meter fall, and restores those devices after the studio returns to Available.
 - **Safety** — gas/leak status, live doorbell image, device notifications, guarded emergency trigger, and a full-screen emergency takeover with an optional repeating siren. The **Family SOS** lives here too: `/#/sos` is a home-screen bookmark on every family phone — pick who, hold once, and every phone rings, all signs flash, and every wall panel shows who needs help until "I'm OK" stands the house down.
 - **Close-the-door nudge** — when any monitored door is open while the room is above the recording-quiet threshold, phones and wall panels ask (with hysteresis, no flicker) for the door to be closed.
+- **Fleet card** (on Home) — every machine in the school (Macs, Pis, panels, router) with live up/down status; fed by `/api/fleet` (nsm-health on the LAN).
+- **Guest QR** — door displays carry a small QR to `/#/guest`, a read-only live visitor page: what's happening inside, how to behave, and delivery guidance. Nothing to install.
 - **Displays** — every wall/door screen is a generic panel: assign it Door sign, Studio state, House board, Doorbell cam, Custom message, or Clock, open it full-screen at `/#/display/<id>`, and add/remove panels freely. The **delivery OTP hand-off** lives here too: pick Swiggy/Zomato/Amazon/etc., type the OTP, and the door display shows it big to the delivery partner (with a note like "Leave it at the door") until it expires — nobody opens the door mid-take.
 - **Piano Rig** (on Home) — live status of the PIANO Pi (Pianoteq preset, CPU, temperature, buffer/latency) with preset next/prev cues; arming a Rec state cues the rig's tally automatically. Cues are one-way and can never glitch the audio.
 - **Settings** — dB threshold, family notifications, chimes/siren, device-alert permission, and a scene editor that can add, remove, rename, recolor, and re-icon scenes.
@@ -52,6 +54,7 @@ The TypeScript shapes in [src/api/types.ts](src/api/types.ts) and the comments i
 | POST | `/api/preflight/prepare` | — | `PreflightPrep` |
 | POST | `/api/preflight/restore` | — | `PreflightPrep` |
 | POST | `/api/settings/db-threshold` | `{ "value": 45 }` | `{ "ok": true }` |
+| GET | `/api/fleet` | — | `FleetDevice[]` (wrapper pings machines / reads nsm-health) |
 | GET | `/api/sos` | — | `Sos \| null` |
 | POST | `/api/sos` | `{ "who": string, "message": string }` | `Sos` (also sets state to `emergency`, setBy `SOS · <who>`) |
 | POST | `/api/sos/clear` | — | `{ "ok": true }` (never changes the studio state by itself) |
@@ -145,6 +148,7 @@ interface PreflightPrep {
 | `delivery` | `Delivery` or JSON `null` |
 | `displays` | `DisplayConfig[]` |
 | `sos` | `Sos` or JSON `null` |
+| `fleet` | `FleetDevice[]` |
 
 Send an initial `safety`, `utilities`, and `preflight` frame as soon as a client subscribes. Heartbeat comments such as `: keepalive` are welcome. If SSE drops, Studio Command polls the state, rooms, safety, pre-flight, and utilities every three seconds while retrying SSE every ten seconds.
 
