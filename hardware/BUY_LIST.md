@@ -16,7 +16,13 @@ Pi 5 8GB (becomes the **PIANO Pi**) · **Pianoteq Pro licence** · ESP32 ×6 · 
 MC-38 reed ×9 · water-leak ×6 · WS2812B strip + aluminium LED channel · 74AHCT level
 shifters · 5V SMPS · DHT22 · PIR HC-SR501 ×4 · MQ-2 · INMP441 · jumper/PCB/adapters/
 enclosures · acoustic weatherstrip ×4 · old iPad (Wall iPad panel) ·
-certified smoke alarms + LPG detector (Amazon).
+certified smoke alarms + LPG detector (Amazon) · **USB A→B keyboard cable · XLR cables ·
+USB-C 100W cables · USB SSD · gaffer tape + velcro ties · studio UPS/power backup
+(no APC purchase needed)** (confirmed 29 Jul).
+
+**Ordering rule (29 Jul): BOTH projects are ordered NOW as two separate carts/invoices,
+and both Pis are built in parallel.** The intern PDF (`docs/AANGAN_BUY_LIST.html`) is the
+canonical clickable list.
 
 ## 🎹 PIANO Pi build (the music machine — owned Pi 5 8GB)
 
@@ -30,11 +36,10 @@ certified smoke alarms + LPG detector (Amazon).
 | A2 microSD 64GB (SanDisk Extreme) | 2 | any reputable | one is the cloned spare that lives in the case |
 | Official 27W USB-C PSU | 1 | Silverline | studio power |
 | 100W USB-C PD power bank | 1 | Amazon.in | stage power |
-| USB-C cable 5A/100W e-marked, 1m | 2 | Amazon.in | weak cables = under-voltage crashes |
-| USB-A → USB-B cable | 1 | SP Road | check the keyboard's socket first (B vs C vs DIN) |
-| XLR cables M→F | 2 | pro-audio dealer | rig → console |
 | Hard foam-lined transport case | 1 | music store | buy AFTER the boards arrive and are measured — no closed Pi case clears the XLR board |
-| Velcro ties, standoffs, label tape, black 3M gaffer 48mm | kit | SP Road / Amazon | strain relief + L/R/power labels |
+
+(Cables — keyboard USB A→B, XLR, USB-C 100W — plus USB SSD, gaffer and velcro are
+already owned; nothing to buy there.)
 
 ## 🏠 HOUSE Pi (buy tomorrow at Silverline)
 

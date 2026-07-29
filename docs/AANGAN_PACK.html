@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Aangan · Install Guide + Idea Menu</title>
+<style>
+  :root{--plum:#2a1e4d;--rasp:#C51A4A;--violet:#6D28D9;--teal:#077857;--amber:#92580a;--line:#e2dccb;--muted:#6B6456;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,'Inter',sans-serif;background:#fff;color:#1a1822;line-height:1.55;font-size:13px;padding:34px 40px;max-width:980px;margin:0 auto;}
+  h1{font-size:26px;color:var(--plum);}
+  .sub{color:var(--muted);font-size:12.5px;margin:4px 0 14px;}
+  h2{font-size:17px;color:#fff;background:var(--plum);padding:9px 14px;border-radius:9px;margin:28px 0 10px;}
+  h2 small{font-weight:400;font-size:11px;opacity:.85;}
+  h3{font-size:14px;color:var(--rasp);margin:18px 0 6px;}
+  p{margin:6px 0;}
+  .step{display:flex;gap:12px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:8px 0;}
+  .n{flex:0 0 26px;height:26px;background:var(--rasp);color:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;}
+  .step b{color:var(--plum);}
+  .step p{font-size:12.5px;color:#3D3A33;}
+  code,pre{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;background:#f4f1ea;border-radius:6px;}
+  code{padding:1px 6px;}
+  pre{padding:10px 12px;margin:6px 0;white-space:pre-wrap;border:1px solid var(--line);}
+  .call{border-radius:0 10px 10px 0;padding:10px 14px;margin:10px 0;font-size:12.5px;}
+  .call.red{background:#FDECEC;border-left:4px solid #EF4444;color:#7a2020;}
+  .call.green{background:#EAF8F1;border-left:4px solid #10B981;color:#0A5840;}
+  .call.amber{background:#FDF6E9;border-left:4px solid #F59E0B;color:#6B4D08;}
+  table{width:100%;border-collapse:collapse;font-size:12.3px;margin:8px 0;}
+  th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);border-bottom:2px solid var(--line);padding:6px 8px;}
+  td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top;}
+  .tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.4px;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+  .t-ship{background:#EAF8F1;color:#077857;}
+  .t-next{background:#F3EEFB;color:#6D28D9;}
+  .t-idea{background:#FDF6E9;color:#92580a;}
+  a{color:#0b57d0;text-decoration:none;font-weight:600;}
+  .foot{margin-top:26px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:10.5px;}
+  @media print{body{padding:10mm 12mm;} h2,.n{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+</style>
+</head>
+<body>
+<h1>Aangan — Install Guide &amp; Idea Menu</h1>
+<div class="sub">Nathaniel School of Music · 29 Jul 2026 · Part 1: House Pi from scratch · Part 2: the two door screens · Part 3: Music Pi pointer · Part 4: every creative idea, studio + music, with what it becomes in the app</div>
+
+<div class="call green"><b>Status:</b> the Aangan app is LIVE at <a href="https://studio-command.vercel.app">studio-command.vercel.app</a> with the state dial, Pre-flight, Displays + delivery OTP, Family SOS (<a href="https://studio-command.vercel.app/#/sos">/#/sos</a>) and the close-the-door nudge — running in simulation until the House Pi below goes live. Repo: <a href="https://github.com/jasonzacmusic/aangan">github.com/jasonzacmusic/aangan</a>.</div>
+
+<!-- ─────────────── PART 1 ─────────────── -->
+<h2>PART 1 — House Pi from scratch <small>Home Assistant OS · ~2 hours hands-on, sensors over a weekend</small></h2>
+
+<div class="step"><div class="n">1</div><div><b>Flash Home Assistant OS.</b><p>On the Mac: install <a href="https://www.raspberrypi.com/software/">Raspberry Pi Imager</a> → CHOOSE OS → <i>Other specific-purpose OS → Home assistants and home automation → Home Assistant</i> → pick Raspberry Pi 5 → write to a 64GB A2 card. No settings needed — HA configures itself.</p></div></div>
+<div class="step"><div class="n">2</div><div><b>First boot.</b><p>Card into the new Pi 5, Ethernet cable to the router if possible, power with the official 27W PSU. Wait ~5 minutes, then open <code>http://homeassistant.local:8123</code> on the Mac. Create the admin account, name the home <b>Aangan</b>, set location Bangalore.</p></div></div>
+<div class="step"><div class="n">3</div><div><b>Install the ESPHome add-on.</b><p>Settings → Add-ons → Add-on store → <b>ESPHome Device Builder</b> → Install → Start (turn on “Show in sidebar”).</p></div></div>
+<div class="step"><div class="n">4</div><div><b>Flash the six ESP32 zone nodes.</b><p>The six YAML files live in the repo at <code>pi/house/esphome/</code>. Copy <code>secrets.example.yaml</code> → <code>secrets.yaml</code> (Wi-Fi name/password + one generated key per node). First time: plug each ESP32 into the Mac by USB and flash from the ESPHome page; after that all updates are over Wi-Fi. Adopt each node under Settings → Devices &amp; Services.</p></div></div>
+<div class="step"><div class="n">5</div><div><b>Install the Aangan package.</b><p>Copy <code>pi/house/homeassistant/packages/studio_command.yaml</code> to <code>/config/packages/</code> (use the File editor add-on), add the <code>packages:</code> include to <code>configuration.yaml</code> as written in <code>pi/house/README.md</code>, fix any entity names that adopted differently, restart HA. This creates <b>binary_sensor.studio_ready</b> — the one authoritative go/no-go verdict.</p></div></div>
+<div class="step"><div class="n">6</div><div><b>Family phones.</b><p>Everyone (Amma, Jason, brother) installs the <b>Home Assistant Companion</b> app and logs into <code>http://homeassistant.local:8123</code> on the home Wi-Fi. iPhones: when asked, ALLOW <b>Critical Alerts</b> — that is what makes SOS ring through silent mode. Add each phone to the <code>notify:</code> group in the package.</p></div></div>
+<div class="step"><div class="n">7</div><div><b>The wrapper (feeds the app).</b><p>Run <code>pi/house/wrapper/studio_wrapper.py</code> on any always-on LAN machine (the Piano Pi is fine) on port <b>8126</b>, with a long-lived HA token. Then in the app repo set <code>USE_MOCK = false</code> and the wrapper URL in <code>src/config.ts</code>. Claude does this step.</p><p>The wrapper now also implements the <b>/api/sos</b> endpoints (contract in the repo README) so the Family SOS is real: hold on any phone → HA critical alerts + signs flash + panels take over.</p></div></div>
+<div class="step"><div class="n">8</div><div><b>Sensors, safety-first order.</b><p>① Certified smoke + LPG alarms mounted and tested standalone FIRST. ② Door reeds on the 4 double doors — at the <b>meeting stiles (middle)</b>: switch on one leaf, magnet on the other, so either leaf opening trips it. ③ MQ-6 near each stove, flame sensors, leak probes at every sink/stove line. ④ The panic-loop and any mains wiring is ONLY done by the low-voltage/fire-alarm technician; ESP32s just read volt-free contacts.</p></div></div>
+<div class="step"><div class="n">9</div><div><b>Commission.</b><p>Run every line of <code>docs/TEST_CHECKLIST.md</code>: trip each sensor for real, pull a node's power and watch studio_ready hold, test SOS from Amma's phone, test a delivery OTP on the door screen. Not “done” until every box ticks.</p></div></div>
+
+<!-- ─────────────── PART 2 ─────────────── -->
+<h2>PART 2 — The two door screens <small>Waveshare 10.1" + Pi Zero 2 W kiosk · ~40 min each</small></h2>
+
+<div class="step"><div class="n">1</div><div><b>Flash the Pi Zero 2 W.</b><p>Raspberry Pi Imager → <b>Raspberry Pi OS (64-bit) Desktop</b> → gear icon: hostname <code>door-panel-1</code> (and <code>-2</code>), user + password, Wi-Fi, SSH on.</p></div></div>
+<div class="step"><div class="n">2</div><div><b>Connect.</b><p>Mini-HDMI → the Waveshare's HDMI; the Waveshare's touch USB → the Zero's USB port; power both. The screen works out of the box at 1920×1200.</p></div></div>
+<div class="step"><div class="n">3</div><div><b>Kiosk mode.</b><p>Autostart Chromium full-screen on the panel URL (Claude runs this over SSH):</p><pre>mkdir -p ~/.config/autostart && cat > ~/.config/autostart/panel.desktop &lt;&lt;'EOF'
+[Desktop Entry]
+Type=Application
+Name=AanganPanel
+Exec=chromium-browser --kiosk --noerrdialogs --disable-session-crashed-bubble https://studio-command.vercel.app/#/display/front-house
+EOF</pre><p>Panel 2 uses <code>/#/display/front-studio</code>. Disable screen blanking in <code>raspi-config</code> → Display. Once the House Pi is live, the same app served on the LAN keeps panels working even when internet is down.</p></div></div>
+<div class="step"><div class="n">4</div><div><b>Mount.</b><p>Front door: the Displays page assigns it “Door sign” — it shows COME ON IN / RECORDING and takes over with the delivery OTP + your standing directions. Studio door: “Studio state” — ON AIR sign + the close-the-door nudge. The old iPad remains the third, in-house panel.</p></div></div>
+
+<!-- ─────────────── PART 3 ─────────────── -->
+<h2>PART 3 — Music Pi <small>built in PARALLEL with the house · separate order &amp; invoice</small></h2>
+<p>The complete order-to-first-note build (Raspberry Pi DAC Pro + XLR board + Pianoteq Pro, every connection, every command, 16-point test) is its own document: <b>PIANO_PI_BUILD_PLAN.html</b> in the repo's <code>docs/</code>. Both projects run together: while robu ships the sensors and boards, the House Pi gets Home Assistant (Part 1) and the owned Pi 5 gets its OS flashed and Pianoteq activated — the DAC Pro just slots on when it arrives. One correction Claude will make at build time: the repo's setup script still writes the old HiFiBerry overlay — it changes to the DAC Pro (<code>iqaudio-dacplus</code>) family.</p>
+
+<!-- ─────────────── PART 4 ─────────────── -->
+<h2>PART 4 — The Idea Menu <small>everything the two Pis (+ Apple TV) can become · tick what you want, Claude builds it into the app</small></h2>
+
+<h3>Studio &amp; House</h3>
+<table>
+<tr><th>Idea</th><th>What it does</th><th>Needs</th><th>In the app</th><th>Status</th></tr>
+<tr><td><b>Family SOS</b></td><td>One hold on any phone raises the whole house; wall panels show who needs help</td><td>nothing new</td><td>/#/sos + Safety page</td><td><span class="tag t-ship">SHIPPED</span></td></tr>
+<tr><td><b>Delivery OTP + directions</b></td><td>2-tap hand-off; OTP huge on the door screen with standing directions</td><td>door screens</td><td>Displays page</td><td><span class="tag t-ship">SHIPPED</span></td></tr>
+<tr><td><b>Close-the-door nudge</b></td><td>Door open + room loud → panels and phones ask for the door</td><td>door reeds + dB meter</td><td>banner everywhere</td><td><span class="tag t-ship">SHIPPED</span></td></tr>
+<tr><td><b>Apple TV = HomeKit hub</b></td><td>HA's HomeKit Bridge exposes Aangan to iOS: “Hey Siri, is the studio ready?”, states as scenes in the Home app, family presence automations — the Apple TV is the always-home hub that makes Siri work from anywhere</td><td>Apple TV (owned)</td><td>works alongside the app</td><td><span class="tag t-next">NEXT</span></td></tr>
+<tr><td><b>Calendar-driven states</b></td><td>Class slots in Google Calendar auto-set the dial to Class and back — no human forgets the sign</td><td>nothing</td><td>Command page automation</td><td><span class="tag t-next">NEXT</span></td></tr>
+<tr><td><b>Tarang on the studio TV</b></td><td>MIDI-reactive visuals (the existing Tarang engine) on a wall TV during classes and tours; the dial's Class state turns it on</td><td>HDMI from a Pi to the TV</td><td>a “Visuals” toggle on Command</td><td><span class="tag t-idea">IDEA</span></td></tr>
+<tr><td><b>Fleet health card</b></td><td>One card answers “is everything in the school alive?” — Macs, Pis, printers, router (nsm-health feeds it)</td><td>nothing</td><td>new Home card</td><td><span class="tag t-idea">IDEA</span></td></tr>
+<tr><td><b>Voice paging</b></td><td>“Class starting in 5” spoken/shown on the wall panels from the app</td><td>panel speakers optional</td><td>Displays page button</td><td><span class="tag t-idea">IDEA</span></td></tr>
+<tr><td><b>Guest QR at the door</b></td><td>Visitor scans a QR on the door screen → their phone shows live wait status + “come in softly” etiquette</td><td>nothing</td><td>door panel + tiny page</td><td><span class="tag t-idea">IDEA</span></td></tr>
+<tr><td><b>Energy monitor</b></td><td>Per-circuit power on House Pulse — what the studio actually costs per month, AC left-on alerts</td><td>CT-clamp energy meter (electrician)</td><td>House Pulse</td><td><span class="tag t-idea">IDEA</span></td></tr>
+<tr><td><b>Doorbell cam v2</b></td><td>ESP32-CAM upgraded to a proper camera with person detection (Frigate) — snapshot in history + on phones</td><td>a better camera later</td><td>Safety page</td><td><span class="tag t-idea">IDEA</span></td></tr>
+<tr><td><b>Laundry / fridge nudges</b></td><td>Spare SW-420 says “washing machine done”; reed + DHT22 says “fridge door open”</td><td>owned spares</td><td>history + notifications</td><td><span class="tag t-idea">IDEA</span></td></tr>
+<tr><td><b>Rain-on-the-balcony alert</b></td><td>Owned leak sensor outside → “bring the clothes in” on every panel</td><td>owned spare</td><td>notification</td><td><span class="tag t-idea">IDEA</span></td></tr>
+</table>
+
+<h3>Music rig</h3>
+<div class="call amber"><b>Honest note:</b> the DAC Pro is output-only (that's why it sounds so good for its job). So music-Pi ideas are MIDI + playback ideas — anything needing audio <i>inputs</i> stays on the Mac/console side.</div>
+<table>
+<tr><th>Idea</th><th>What it does</th><th>Needs</th><th>In the app</th><th>Status</th></tr>
+<tr><td><b>MIDI black-box</b></td><td>The rig silently records EVERY note ever played as MIDI (tiny files, 24/7). An improvisation is never lost — replay any moment through Pianoteq, or export it into a lesson</td><td>nothing new</td><td>Piano Rig card: “last takes” list + replay cue</td><td><span class="tag t-next">NEXT</span></td></tr>
+<tr><td><b>Practice stats</b></td><td>The black-box becomes numbers: minutes played per day, streaks, most-practised keys/tempo — for Jason AND students</td><td>black-box</td><td>Piano Rig card graph</td><td><span class="tag t-idea">IDEA</span></td></tr>
+<tr><td><b>Preset picker</b></td><td>Full Pianoteq instrument list in the app (not just next/prev) — a NY Steinway for class, a Rhody for the evening, from any phone</td><td>nothing</td><td>Piano Rig card</td><td><span class="tag t-next">NEXT</span></td></tr>
+<tr><td><b>NSM sample player</b></td><td>sfizz on the rig plays OUR libraries (Salamander + any SFZ we build on the Mac) beside Pianoteq — tanpura drones, pads, harmonium</td><td>nothing new</td><td>Piano Rig: sound source switch</td><td><span class="tag t-idea">IDEA</span></td></tr>
+<tr><td><b>Tanpura + metronome on the rig</b></td><td>Drone in any key + the Groove Metronome on the rig's touch screen — the practice companion lives where the piano is</td><td>nothing</td><td>rig touch UI</td><td><span class="tag t-idea">IDEA</span></td></tr>
+<tr><td><b>Layer/split mode</b></td><td>Piano + pad layered, or bass/piano split — one keyboard, a fuller stage sound</td><td>sample player</td><td>rig touch UI</td><td><span class="tag t-idea">IDEA</span></td></tr>
+<tr><td><b>AirPlay into the console</b></td><td>The rig is an AirPlay/Spotify Connect receiver — any phone plays reference tracks through the XLR outs</td><td>nothing</td><td>Piano Rig toggle</td><td><span class="tag t-idea">IDEA</span></td></tr>
+<tr><td><b>REAPER remote</b></td><td>The rig's touch screen gets a Mac mode: transport, record-arm, marker drop — control the recording Mac from the piano bench</td><td>nothing</td><td>rig touch UI</td><td><span class="tag t-idea">IDEA</span></td></tr>
+<tr><td><b>Nightly REAPER backup</b></td><td>3am rsync of the Mac's REAPER projects to the rig's USB SSD — an off-Mac copy always exists</td><td>USB SSD (already owned)</td><td>Fleet card shows “last backup”</td><td><span class="tag t-next">NEXT</span></td></tr>
+<tr><td><b>Recording tally</b></td><td>Rec states already cue the rig; the rig screen shows a red ON AIR tally at the piano</td><td>nothing</td><td>already wired</td><td><span class="tag t-ship">SHIPPED</span></td></tr>
+</table>
+
+<div class="call green"><b>How approval works:</b> tell Claude which rows to build (“build the MIDI black-box and the Apple TV HomeKit bridge”) — SHIPPED means live today, NEXT means ready to build immediately, IDEA means a short build after the hardware lands.</div>
+
+<div class="foot">Aangan · Nathaniel School of Music · 29 Jul 2026 · companion file: “Aangan — Buy List” (for the intern) · repo: github.com/jasonzacmusic/aangan</div>
+</body>
+</html>
