@@ -15,6 +15,7 @@ Every state recolors the five room signs, changes the house behavior, protects t
 - **Close-the-door nudge** — when any monitored door is open while the room is above the recording-quiet threshold, phones and wall panels ask (with hysteresis, no flicker) for the door to be closed.
 - **Fleet card** (on Home) — every machine in the school (Macs, Pis, panels, router) with live up/down status; fed by `/api/fleet` (nsm-health on the LAN).
 - **Guest QR** — door displays carry a small QR to `/#/guest`, a read-only live visitor page: what's happening inside, how to behave, and delivery guidance. Nothing to install.
+- **Air** (on Home) — per-room CO₂, dust, odour index and humidity, plus per-purifier control and a one-tap purge. Four behaviours run in Home Assistant so they keep working with the app closed (`pi/house/homeassistant/packages/air_quality.yaml`): purifiers **hush during a take** and restore to their exact previous modes, a **pre-class purge** runs 20 minutes before a calendar class, a **CO₂ nudge** asks for fresh air (a purifier cannot fix CO₂), and an **instrument climate guard** warns on sustained damp or dryness. Pre-flight gains an air row that is deliberately **advice, not a gate** — `studio_ready` stays the four original checks.
 - **Displays** — every wall/door screen is a generic panel: assign it Door sign, Studio state, House board, Doorbell cam, Custom message, or Clock, open it full-screen at `/#/display/<id>`, and add/remove panels freely. The **delivery OTP hand-off** lives here too: pick Swiggy/Zomato/Amazon/etc., type the OTP, and the door display shows it big to the delivery partner (with a note like "Leave it at the door") until it expires — nobody opens the door mid-take.
 - **Piano Rig** (on Home) — live status of the PIANO Pi (Pianoteq preset, CPU, temperature, buffer/latency) with preset next/prev cues; arming a Rec state cues the rig's tally automatically. Cues are one-way and can never glitch the audio.
 - **Settings** — dB threshold, family notifications, chimes/siren, device-alert permission, and a scene editor that can add, remove, rename, recolor, and re-icon scenes.
@@ -55,6 +56,10 @@ The TypeScript shapes in [src/api/types.ts](src/api/types.ts) and the comments i
 | POST | `/api/preflight/restore` | — | `PreflightPrep` |
 | POST | `/api/settings/db-threshold` | `{ "value": 45 }` | `{ "ok": true }` |
 | GET | `/api/fleet` | — | `FleetDevice[]` (wrapper pings machines / reads nsm-health) |
+| GET | `/api/air` | — | `AirState` |
+| POST | `/api/air/purifier` | `{ id, mode }` | `AirState` — mode is `off \| silent \| auto \| max` |
+| POST | `/api/air/purge` | `{ minutes }` | `AirState` |
+| POST | `/api/air/purge/stop` | — | `AirState` |
 | GET | `/api/sos` | — | `Sos \| null` |
 | POST | `/api/sos` | `{ "who": string, "message": string }` | `Sos` (also sets state to `emergency`, setBy `SOS · <who>`) |
 | POST | `/api/sos/clear` | — | `{ "ok": true }` (never changes the studio state by itself) |
@@ -149,6 +154,7 @@ interface PreflightPrep {
 | `displays` | `DisplayConfig[]` |
 | `sos` | `Sos` or JSON `null` |
 | `fleet` | `FleetDevice[]` |
+| `air` | `AirState` |
 
 Send an initial `safety`, `utilities`, and `preflight` frame as soon as a client subscribes. Heartbeat comments such as `: keepalive` are welcome. If SSE drops, Studio Command polls the state, rooms, safety, pre-flight, and utilities every three seconds while retrying SSE every ten seconds.
 

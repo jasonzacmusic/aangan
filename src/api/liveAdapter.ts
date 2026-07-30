@@ -1,5 +1,6 @@
 import {
   ActivityEvent,
+  AirState,
   ApiAdapter,
   ConnectionState,
   Delivery,
@@ -10,6 +11,7 @@ import {
   PianoCue,
   PianoRig,
   Preflight,
+  PurifierMode,
   PreflightPrep,
   Room,
   Safety,
@@ -65,6 +67,20 @@ import {
  *   GET  /api/fleet                 -> FleetDevice[]
  *   The wrapper pings each machine (Macs, Pis, panels, router) or reads the
  *   nsm-health snapshot; emit a fleet SSE frame whenever a device changes.
+ *
+ * Air, ventilation and purifiers
+ *   GET  /api/air                   -> AirState
+ *   POST /api/air/purifier { id, mode } -> AirState   (off|silent|auto|max)
+ *   POST /api/air/purge { minutes }     -> AirState
+ *   POST /api/air/purge/stop            -> AirState
+ *   Readings come from the ESPHome air nodes (PMS5003 / SCD41 / SGP41 / SHT45)
+ *   and from the Dyson via the ha-dyson integration, which measures the same
+ *   things better. Purifier entities are Dyson (ha-dyson) or Xiaomi
+ *   (xiaomi_miio) fans — map mode → percentage/preset in the HA package.
+ *   Home Assistant owns the automatic behaviour (hush during a take, pre-class
+ *   purge, CO₂ nudge, instrument-climate guard) so it keeps working with the
+ *   app closed; the app shows and overrides it. See
+ *   pi/house/homeassistant/packages/air_quality.yaml.
  *
  * Family SOS (raised from any phone's #/sos page)
  *   GET  /api/sos                   -> Sos | null
@@ -182,6 +198,18 @@ export class LiveAdapter implements ApiAdapter {
   getFleet() {
     return this.get<FleetDevice[]>("/api/fleet");
   }
+  getAir() {
+    return this.get<AirState>("/api/air");
+  }
+  setPurifierMode(id: string, mode: PurifierMode) {
+    return this.post<AirState>("/api/air/purifier", { id, mode });
+  }
+  startAirPurge(minutes: number) {
+    return this.post<AirState>("/api/air/purge", { minutes });
+  }
+  stopAirPurge() {
+    return this.post<AirState>("/api/air/purge/stop");
+  }
   getSos() {
     return this.get<Sos | null>("/api/sos");
   }
@@ -233,7 +261,7 @@ export class LiveAdapter implements ApiAdapter {
 
   private async pollOnce() {
     try {
-      const [state, rooms, safety, preflight, prep, utilities, piano, delivery, displays, sos, fleet] = await Promise.all([
+      const [state, rooms, safety, preflight, prep, utilities, piano, delivery, displays, sos, fleet, air] = await Promise.all([
         this.getState(),
         this.getRooms(),
         this.getSafety(),
@@ -245,6 +273,7 @@ export class LiveAdapter implements ApiAdapter {
         this.getDisplays(),
         this.getSos(),
         this.getFleet(),
+        this.getAir(),
       ]);
       this.emit({ type: "state", state });
       this.emit({ type: "rooms", rooms });
@@ -256,6 +285,7 @@ export class LiveAdapter implements ApiAdapter {
       this.emit({ type: "displays", displays });
       this.emit({ type: "sos", sos });
       this.emit({ type: "fleet", fleet });
+      this.emit({ type: "air", air });
       this.setConnection("online");
     } catch {
       this.setConnection("offline");
@@ -293,6 +323,7 @@ export class LiveAdapter implements ApiAdapter {
         displays: "displays",
         sos: "sos",
         fleet: "fleet",
+        air: "air",
       };
       (Object.keys(keys) as Array<keyof typeof keys>).forEach((name) => {
         es.addEventListener(name, (raw) => {

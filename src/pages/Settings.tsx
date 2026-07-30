@@ -84,6 +84,64 @@ export default function Settings() {
         </div>
       </section>
 
+      {/* Air thresholds */}
+      <section className="mt-4 rounded-2xl border border-line bg-surface/80 px-4 py-2 backdrop-blur">
+        <div className="border-b border-line py-3 font-mono text-[10px] uppercase tracking-[0.3em] text-dim">Air &amp; instruments</div>
+        <div className="border-b border-line py-3.5">
+          <div className="flex items-baseline justify-between">
+            <div className="text-sm font-medium">Ask for fresh air above</div>
+            <div className="font-mono text-lg text-gold">{settings.co2Threshold} ppm</div>
+          </div>
+          <div className="mt-1 text-xs text-dim">CO₂ nobody can smell. A purifier cannot fix it — only opening something can.</div>
+          <input
+            type="range"
+            min={700}
+            max={1600}
+            step={50}
+            value={settings.co2Threshold}
+            onChange={(e) => updateSettings({ co2Threshold: Number(e.target.value) })}
+            className="mt-4 w-full accent-[#c9a84c]"
+            aria-label="CO2 nudge threshold in ppm"
+            aria-valuetext={`${settings.co2Threshold} parts per million`}
+          />
+          <div className="flex justify-between font-mono text-[9px] text-dim">
+            <span>700 · very fresh</span>
+            <span>1600 · heads get heavy</span>
+          </div>
+        </div>
+        <div className="py-3.5">
+          <div className="flex items-baseline justify-between">
+            <div className="text-sm font-medium">Instrument-safe humidity</div>
+            <div className="font-mono text-lg text-gold">{settings.rhMin}–{settings.rhMax}%</div>
+          </div>
+          <div className="mt-1 text-xs text-dim">Outside this band for hours is what warps pianos, guitars and bows.</div>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className="font-mono text-[9px] uppercase tracking-widest text-dim">Dry limit</span>
+              <input
+                type="number"
+                min={20}
+                max={45}
+                value={settings.rhMin}
+                onChange={(e) => updateSettings({ rhMin: Number(e.target.value) })}
+                className="mt-1 w-full rounded-xl border border-line bg-ink/60 px-3 py-2.5 text-sm text-paper focus:border-gold/50 focus:outline-none"
+              />
+            </label>
+            <label className="block">
+              <span className="font-mono text-[9px] uppercase tracking-widest text-dim">Damp limit</span>
+              <input
+                type="number"
+                min={55}
+                max={85}
+                value={settings.rhMax}
+                onChange={(e) => updateSettings({ rhMax: Number(e.target.value) })}
+                className="mt-1 w-full rounded-xl border border-line bg-ink/60 px-3 py-2.5 text-sm text-paper focus:border-gold/50 focus:outline-none"
+              />
+            </label>
+          </div>
+        </div>
+      </section>
+
       {/* Family notifications */}
       <section className="mt-4 rounded-2xl border border-line bg-surface/80 px-4 backdrop-blur">
         <div className="border-b border-line py-3 font-mono text-[10px] uppercase tracking-[0.3em] text-dim">Family notifications</div>

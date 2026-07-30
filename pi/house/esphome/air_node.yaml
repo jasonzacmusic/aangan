@@ -1,0 +1,108 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# AANGAN · AIR NODE — one ESP32 per room (studio / kitchen / bedroom)
+#
+# Flash three times, changing ROOM below each time:
+#   substitutions: room: studio | kitchen | bedroom
+# First flash over USB from the ESPHome add-on, OTA after that.
+#
+# Wiring (all 3.3V logic, node powered from a 5V USB charger):
+#   PMS5003 dust     → VCC 5V, GND, TX → GPIO16 (node RX)
+#   SCD41 CO2        → 3.3V, GND, SDA → GPIO21, SCL → GPIO22   (I2C)
+#   SGP41 VOC/NOx    → 3.3V, GND, same I2C bus
+#   SHT4x climate    → 3.3V, GND, same I2C bus
+# The three I2C parts share one bus — daisy-chain SDA/SCL, no extra parts.
+# ─────────────────────────────────────────────────────────────────────────────
+
+substitutions:
+  room: studio
+  room_name: Studio
+
+esphome:
+  name: air-${room}
+  friendly_name: ${room_name} air
+
+esp32:
+  board: esp32dev
+
+logger:
+api:
+  encryption:
+    key: !secret air_${room}_api_key
+ota:
+  - platform: esphome
+    password: !secret ota_password
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # A dropped node must never silently report stale air.
+  ap:
+    ssid: "air-${room} fallback"
+    password: !secret fallback_password
+
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+
+uart:
+  rx_pin: GPIO16
+  baud_rate: 9600
+
+sensor:
+  # ── Dust ────────────────────────────────────────────────────────────────
+  - platform: pmsx003
+    type: PMSX003
+    pm_2_5:
+      name: ${room_name} air PM2.5
+      id: ${room}_pm25
+      filters:
+        - sliding_window_moving_average: { window_size: 6, send_every: 6 }
+    pm_10_0:
+      name: ${room_name} air PM10
+
+  # ── True CO2 (photoacoustic — measured, not inferred from VOCs) ──────────
+  - platform: scd4x
+    co2:
+      name: ${room_name} air CO2
+      id: ${room}_co2
+      filters:
+        - sliding_window_moving_average: { window_size: 4, send_every: 4 }
+    temperature:
+      name: ${room_name} air temperature
+    humidity:
+      name: ${room_name} air humidity
+      id: ${room}_humidity
+    # Fresh Bangalore outdoor air is ~430 ppm; let the sensor self-calibrate
+    # against the cleanest air it sees over a week.
+    automatic_self_calibration: true
+    update_interval: 30s
+
+  # ── VOC + NOx: this is the "how stale / how smelly" number ──────────────
+  - platform: sgp4x
+    voc:
+      name: ${room_name} air VOC index
+      id: ${room}_voc
+    nox:
+      name: ${room_name} air NOx index
+    # Feeding it real humidity and temperature makes the index far more stable.
+    compensation:
+      humidity_source: ${room}_humidity
+      temperature_source: ${room}_temp_sht
+    update_interval: 10s
+
+  - platform: sht4x
+    temperature:
+      name: ${room_name} climate temperature
+      id: ${room}_temp_sht
+    humidity:
+      name: ${room_name} climate humidity
+    update_interval: 30s
+
+  - platform: wifi_signal
+    name: ${room_name} air node wifi
+    update_interval: 120s
+
+binary_sensor:
+  # The house must be able to tell "clean air" apart from "node is dead".
+  - platform: status
+    name: ${room_name} air node online

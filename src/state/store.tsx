@@ -2,15 +2,19 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { api, DATA_SOURCE } from "../api/api";
 import {
   ActivityEvent,
+  AirState,
   DEFAULT_SCENES,
   Delivery,
   DeliveryInput,
   DisplayConfig,
   Doorbell,
   FleetDevice,
+  INSTRUMENT_RH_MAX,
+  INSTRUMENT_RH_MIN,
   PianoCue,
   PianoRig,
   Preflight,
+  PurifierMode,
   PreflightPrep,
   Room,
   Safety,
@@ -34,6 +38,11 @@ export interface Settings {
   notifyDoorbell: boolean;
   /** Standing directions appended to every delivery hand-off (lift, floor, landmark). */
   deliveryDirections: string;
+  /** Ask for fresh air above this CO₂ (ppm). 1000 is the usual comfort line. */
+  co2Threshold: number;
+  /** Instrument-safe humidity band — outside it, for hours, is what warps pianos. */
+  rhMin: number;
+  rhMax: number;
   scenes: SceneDef[];
 }
 
@@ -45,6 +54,9 @@ const DEFAULT_SETTINGS: Settings = {
   notifyEmergency: true,
   notifyDoorbell: false,
   deliveryDirections: "",
+  co2Threshold: 1000,
+  rhMin: INSTRUMENT_RH_MIN,
+  rhMax: INSTRUMENT_RH_MAX,
   scenes: DEFAULT_SCENES,
 };
 
@@ -58,6 +70,7 @@ interface Store {
   safety: Safety | null;
   sos: Sos | null;
   fleet: FleetDevice[];
+  air: AirState | null;
   doorbell: Doorbell | null;
   utilities: Utilities | null;
   pianoRig: PianoRig | null;
@@ -83,6 +96,9 @@ interface Store {
   prepareStudio: () => Promise<void>;
   restoreStudio: () => Promise<void>;
   runUtilityAction: (action: UtilityAction) => Promise<void>;
+  setPurifierMode: (id: string, mode: PurifierMode) => Promise<void>;
+  startAirPurge: (minutes: number) => Promise<void>;
+  stopAirPurge: () => Promise<void>;
   playTone: (hz?: number) => Promise<void>;
   sendPianoCue: (cue: PianoCue) => Promise<void>;
   postDelivery: (input: DeliveryInput) => Promise<void>;
@@ -130,6 +146,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [safety, setSafety] = useState<Safety | null>(null);
   const [sos, setSos] = useState<Sos | null>(null);
   const [fleet, setFleet] = useState<FleetDevice[]>([]);
+  const [air, setAir] = useState<AirState | null>(null);
   const [doorbell, setDoorbell] = useState<Doorbell | null>(null);
   const [utilities, setUtilities] = useState<Utilities | null>(null);
   const [pianoRig, setPianoRig] = useState<PianoRig | null>(null);
@@ -184,7 +201,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       while (!cancelled) {
         setConnectionStatus(attempt === 0 ? "connecting" : "reconnecting");
         try {
-          const [st, rm, pf, prep, sf, db, events, util, piano, del, disp, sosNow, fleetNow] = await Promise.all([
+          const [st, rm, pf, prep, sf, db, events, util, piano, del, disp, sosNow, fleetNow, airNow] = await Promise.all([
             api.getState(),
             api.getRooms(),
             api.getPreflight(),
@@ -198,6 +215,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             api.getDisplays(),
             api.getSos(),
             api.getFleet(),
+            api.getAir(),
           ]);
           if (cancelled) return;
           setStateInfo(st);
@@ -214,6 +232,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           setDisplays(disp);
           setSos(sosNow);
           setFleet(fleetNow);
+          setAir(airNow);
           const music = rm.find((room) => room.id === "music");
           if (music?.dbLevel != null) setDbHistory([music.dbLevel]);
           setConnected(true);
@@ -237,6 +256,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             if (ev.type === "displays") setDisplays(ev.displays);
             if (ev.type === "sos") setSos(ev.sos);
             if (ev.type === "fleet") setFleet(ev.fleet);
+            if (ev.type === "air") setAir(ev.air);
             if (ev.type === "preflight") {
               setPreflight(ev.preflight);
               setPreflightPrep(ev.prep);
@@ -406,6 +426,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const setPurifierMode = useCallback(async (id: string, mode: PurifierMode) => {
+    try {
+      setAir(await api.setPurifierMode(id, mode));
+    } catch {
+      setLastError("The purifier did not confirm that change.");
+    }
+  }, []);
+
+  const startAirPurge = useCallback(async (minutes: number) => {
+    try {
+      setAir(await api.startAirPurge(minutes));
+    } catch {
+      setLastError("Could not start the air purge.");
+    }
+  }, []);
+
+  const stopAirPurge = useCallback(async () => {
+    try {
+      setAir(await api.stopAirPurge());
+    } catch {
+      setLastError("Could not stop the air purge.");
+    }
+  }, []);
+
   const playTone = useCallback(async (hz = 440) => {
     playReferenceTone(hz);
     try {
@@ -494,6 +538,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       safety,
       sos,
       fleet,
+      air,
       doorbell,
       utilities,
       pianoRig,
@@ -519,6 +564,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       prepareStudio,
       restoreStudio,
       runUtilityAction,
+      setPurifierMode,
+      startAirPurge,
+      stopAirPurge,
       playTone,
       sendPianoCue,
       postDelivery,
@@ -530,7 +578,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       requestNotificationPermission,
       clearError,
     }),
-    [stateInfo, rooms, preflight, preflightPrep, safety, sos, fleet, doorbell, utilities, pianoRig, delivery, displays, history, settings, dbHistory, connected, connectionStatus, committing, sceneRunning, lastError, notificationPermission, setStudioState, runScene, triggerPanic, triggerSos, clearSos, updateSettings, refreshDoorbell, prepareStudio, restoreStudio, runUtilityAction, playTone, sendPianoCue, postDelivery, clearDelivery, updateDisplay, addDisplay, removeDisplay, triggerSafetyDemo, requestNotificationPermission, clearError]
+    [stateInfo, rooms, preflight, preflightPrep, safety, sos, fleet, air, doorbell, utilities, pianoRig, delivery, displays, history, settings, dbHistory, connected, connectionStatus, committing, sceneRunning, lastError, notificationPermission, setStudioState, runScene, triggerPanic, triggerSos, clearSos, updateSettings, refreshDoorbell, prepareStudio, restoreStudio, runUtilityAction, setPurifierMode, startAirPurge, stopAirPurge, playTone, sendPianoCue, postDelivery, clearDelivery, updateDisplay, addDisplay, removeDisplay, triggerSafetyDemo, requestNotificationPermission, clearError]
   );
 
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;

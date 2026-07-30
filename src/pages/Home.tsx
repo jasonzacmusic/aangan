@@ -6,6 +6,8 @@ import { Room } from "../api/types";
 import UtilitiesPanel from "../components/UtilitiesPanel";
 import PianoRigCard from "../components/PianoRigCard";
 import FleetCard from "../components/FleetCard";
+import AirCard from "../components/AirCard";
+import AirBanner from "../components/AirBanner";
 
 export default function Home() {
   const { rooms, settings, dbHistory } = useStore();
@@ -22,6 +24,10 @@ export default function Home() {
           <RoomCard key={r.id} room={r} threshold={settings.dbThreshold} onOpen={() => setOpenRoom(r)} />
         ))}
       </div>
+
+      <AirBanner />
+
+      <AirCard />
 
       <PianoRigCard />
 

@@ -124,6 +124,54 @@ export interface Utilities {
 export type UtilityAction = "water_pump_toggle" | "purifier_toggle";
 export type ConnectionState = "online" | "reconnecting" | "offline";
 
+/**
+ * One air node — ESP32 + PMS5003 (dust) + SCD41 (true CO₂) + SGP41 (VOC/odour)
+ * + SHT45 (climate). The studio's readings may instead come from the Dyson,
+ * which measures the same things to a better standard.
+ */
+export interface AirRoomReading {
+  id: string;
+  name: string;
+  online: boolean;
+  pm25: number; // µg/m³
+  co2: number; // ppm — measured, never estimated from VOCs
+  vocIndex: number; // Sensirion index · 100 = typical air, higher = staler/smellier
+  tempC: number;
+  humidityPct: number;
+}
+
+export type PurifierMode = "off" | "silent" | "auto" | "max";
+
+export interface Purifier {
+  id: string;
+  name: string;
+  brand: string;
+  roomId: string;
+  online: boolean;
+  mode: PurifierMode;
+  filterPct: number;
+}
+
+export interface AirState {
+  rooms: AirRoomReading[];
+  purifiers: Purifier[];
+  /** Purifiers hushed because a take is rolling — they are fans, so they are noise. */
+  hushed: boolean;
+  /** Pre-class / pre-take purge runs until this timestamp. */
+  purgeUntil: number | null;
+}
+
+export const PURIFIER_MODE_META: Record<PurifierMode, { label: string; hint: string }> = {
+  off: { label: "Off", hint: "Not running" },
+  silent: { label: "Silent", hint: "Lowest speed — safe during a take" },
+  auto: { label: "Auto", hint: "Follows the room's dust level" },
+  max: { label: "Max", hint: "Full speed — for purging between takes" },
+};
+
+/** Pianos, guitars and bows want this band. Outside it, for hours, is what warps them. */
+export const INSTRUMENT_RH_MIN = 35;
+export const INSTRUMENT_RH_MAX = 65;
+
 /** The MIDI black-box: the rig silently saves every note ever played. */
 export interface BlackboxInfo {
   recording: boolean;
@@ -219,6 +267,7 @@ export type StreamEvent =
   | { type: "displays"; displays: DisplayConfig[] }
   | { type: "sos"; sos: Sos | null }
   | { type: "fleet"; fleet: FleetDevice[] }
+  | { type: "air"; air: AirState }
   | { type: "connection"; status: ConnectionState };
 
 export interface SceneDef {
@@ -250,6 +299,12 @@ export interface ApiAdapter {
   pianoCue(cue: PianoCue): Promise<PianoRig>;
   /** Fleet health — every machine in the school, one glance. */
   getFleet(): Promise<FleetDevice[]>;
+  /** Air, ventilation and the purifiers. */
+  getAir(): Promise<AirState>;
+  setPurifierMode(id: string, mode: PurifierMode): Promise<AirState>;
+  /** Run every purifier flat out for N minutes, then return them to auto. */
+  startAirPurge(minutes: number): Promise<AirState>;
+  stopAirPurge(): Promise<AirState>;
   /** Family SOS — one tap from any phone raises the whole house. */
   getSos(): Promise<Sos | null>;
   triggerSos(who: string, message: string): Promise<Sos>;

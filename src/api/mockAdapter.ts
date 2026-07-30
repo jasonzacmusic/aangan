@@ -1,5 +1,6 @@
 import {
   ActivityEvent,
+  AirState,
   ApiAdapter,
   DEFAULT_DISPLAYS,
   Delivery,
@@ -10,6 +11,7 @@ import {
   PianoCue,
   PianoRig,
   Preflight,
+  PurifierMode,
   PreflightPrep,
   Room,
   Safety,
@@ -117,6 +119,21 @@ export class MockAdapter implements ApiAdapter {
   private pianoPresetIx = 0;
   private delivery: Delivery | null = null;
   private sos: Sos | null = null;
+  private air: AirState = {
+    rooms: [
+      { id: "studio", name: "Music Room", online: true, pm25: 18, co2: 620, vocIndex: 104, tempC: 24.1, humidityPct: 58 },
+      { id: "kitchen", name: "Kitchen", online: true, pm25: 24, co2: 540, vocIndex: 118, tempC: 26.2, humidityPct: 61 },
+      { id: "bedroom", name: "Bedroom", online: true, pm25: 14, co2: 700, vocIndex: 98, tempC: 24.8, humidityPct: 56 },
+    ],
+    purifiers: [
+      { id: "dyson-studio", name: "Dyson", brand: "Dyson", roomId: "studio", online: true, mode: "auto", filterPct: 62 },
+      { id: "xiaomi-bedroom", name: "Bedroom purifier", brand: "Xiaomi", roomId: "bedroom", online: true, mode: "auto", filterPct: 88 },
+    ],
+    hushed: false,
+    purgeUntil: null,
+  };
+  /** Modes saved before a hush, so restoring is exact rather than a guess. */
+  private preHushModes: Record<string, PurifierMode> = {};
   private fleet: FleetDevice[] = [
     { id: "mac-mini", name: "Studio Mac mini", kind: "mac", online: true, lastSeen: Date.now(), detail: "REAPER host · backup 03:00 ✓" },
     { id: "house-pi", name: "House Pi", kind: "pi", online: true, lastSeen: Date.now(), detail: "Home Assistant · 6/6 nodes" },
@@ -189,6 +206,123 @@ export class MockAdapter implements ApiAdapter {
 
   private clonePrep(): PreflightPrep {
     return { ...this.prep };
+  }
+
+  private cloneAir(): AirState {
+    return {
+      rooms: this.air.rooms.map((r) => ({ ...r })),
+      purifiers: this.air.purifiers.map((p) => ({ ...p })),
+      hushed: this.air.hushed,
+      purgeUntil: this.air.purgeUntil,
+    };
+  }
+
+  private emitAir() {
+    this.emit({ type: "air", air: this.cloneAir() });
+  }
+
+  /** Purifiers are fans, so they are noise. Hush them for a take, exactly restore after. */
+  private hushPurifiers(hush: boolean) {
+    if (hush === this.air.hushed) return;
+    if (hush) {
+      this.preHushModes = {};
+      this.air.purifiers.forEach((p) => {
+        this.preHushModes[p.id] = p.mode;
+        p.mode = "silent";
+      });
+      this.air.hushed = true;
+      this.air.purgeUntil = null;
+      this.addHistory({
+        type: "utility",
+        title: "Purifiers hushed for the take",
+        detail: "Dropped to silent so the fan never lands on the recording",
+        severity: "info",
+      });
+    } else {
+      this.air.purifiers.forEach((p) => {
+        p.mode = this.preHushModes[p.id] ?? "auto";
+      });
+      this.preHushModes = {};
+      this.air.hushed = false;
+      this.addHistory({
+        type: "utility",
+        title: "Purifiers back to work",
+        detail: "Returned to the exact modes they were in before the take",
+        severity: "success",
+      });
+    }
+    this.emitAir();
+  }
+
+  private beginPurge(minutes: number, reason: string) {
+    this.air.purgeUntil = Date.now() + Math.max(1, minutes) * 60_000;
+    this.air.hushed = false;
+    this.preHushModes = {};
+    this.air.purifiers.forEach((p) => (p.mode = "max"));
+    this.addHistory({
+      type: "utility",
+      title: `Air purge · ${minutes} min`,
+      detail: `${reason} — every purifier on max, then back to auto`,
+      severity: "info",
+    });
+    this.emitAir();
+  }
+
+  private endPurge(note: string) {
+    if (!this.air.purgeUntil) return;
+    this.air.purgeUntil = null;
+    this.air.purifiers.forEach((p) => (p.mode = this.air.hushed ? "silent" : "auto"));
+    this.addHistory({ type: "utility", title: "Air purge finished", detail: note, severity: "success" });
+    this.emitAir();
+  }
+
+  private stepAir() {
+    const state = this.state.state;
+    const purging = !!this.air.purgeUntil && Date.now() < this.air.purgeUntil;
+    const OUTDOOR_CO2 = 430;
+
+    this.air.rooms.forEach((room) => {
+      const matching = this.rooms.find((r) => r.id === (room.id === "studio" ? "music" : room.id));
+      const occupied = matching?.presence ?? false;
+      // A door only ventilates the room it belongs to.
+      const roomDoorOpen = matching?.doorOpen ?? false;
+      const purifier = this.air.purifiers.find((p) => p.roomId === room.id);
+      const scrubbing = purifier ? purifier.mode === "max" || (purifier.mode === "auto" && room.pm25 > 20) : false;
+
+      // CO₂: people make it, only fresh air removes it. A sealed studio in class
+      // climbs fast — this is the whole point of measuring it. Removal is
+      // proportional to how far above outdoor air the room already is, which is
+      // how ventilation actually behaves.
+      const inClass = room.id === "studio" && (state === "class" || state === "meeting");
+      const load = (occupied ? 6 : 0) + (inClass ? 14 : 0);
+      const exchange = roomDoorOpen ? 0.12 : 0.015;
+      const excess = room.co2 - OUTDOOR_CO2;
+      room.co2 = Math.round(Math.max(OUTDOOR_CO2, Math.min(2600, room.co2 + load - excess * exchange + (Math.random() - 0.5) * 6)));
+
+      // Dust: drifts up from the road, comes down when something is scrubbing it.
+      const dustIn = room.id === "kitchen" ? 1.1 : 0.55;
+      room.pm25 = Math.round(Math.max(3, Math.min(180, room.pm25 + dustIn - (scrubbing ? 2.6 : 0) + (Math.random() - 0.5) * 2)) * 10) / 10;
+
+      // VOC / odour index: 100 is ordinary air; cooking and damp push it up.
+      const vocTarget = room.id === "kitchen" && occupied ? 190 : 100;
+      room.vocIndex = Math.round(room.vocIndex + (vocTarget - room.vocIndex) * 0.04 + (Math.random() - 0.5) * 3);
+
+      room.humidityPct = Math.round(Math.max(30, Math.min(82, room.humidityPct + (Math.random() - 0.48) * 0.5)) * 10) / 10;
+      room.tempC = Math.round(Math.max(20, Math.min(34, room.tempC + (Math.random() - 0.5) * 0.06)) * 10) / 10;
+    });
+
+    if (this.air.purgeUntil && !purging) this.endPurge("Room purged — purifiers back to auto");
+
+    // Keep House Pulse's air summary honest: it mirrors the studio node.
+    const studio = this.air.rooms[0];
+    const studioPurifier = this.air.purifiers.find((p) => p.roomId === "studio");
+    this.utilities.air.pm25 = Math.round(studio.pm25);
+    this.utilities.air.aqi = Math.round(Math.min(300, studio.pm25 * 2.9));
+    this.utilities.air.tempC = studio.tempC;
+    this.utilities.air.humidityPct = studio.humidityPct;
+    this.utilities.air.purifierOn = !!studioPurifier && studioPurifier.mode !== "off";
+
+    this.emitAir();
   }
 
   private addHistory(event: Omit<ActivityEvent, "id" | "ts"> & { ts?: number }) {
@@ -335,9 +469,7 @@ export class MockAdapter implements ApiAdapter {
       u.power.inverterPct = Math.max(0, Math.min(100, u.power.inverterPct + (u.power.mainsOnline ? 0.05 : -0.4)));
       u.power.estimatedMinutes = Math.round(u.power.inverterPct * 1.5);
       u.power.voltage = u.power.mainsOnline ? Math.round((230 + (Math.random() - 0.5) * 5) * 10) / 10 : 0;
-      u.air.aqi = Math.round(Math.max(30, Math.min(180, u.air.aqi + (Math.random() - 0.5) * 5)));
-      u.air.pm25 = Math.round(u.air.aqi * 0.34);
-      if (u.air.aqi > 100) u.air.purifierOn = true;
+      // air.* is owned by stepAir() so House Pulse and the Air card never disagree
       this.emit({ type: "utilities", utilities: this.cloneUtilities() });
     }
 
@@ -374,6 +506,8 @@ export class MockAdapter implements ApiAdapter {
         this.emitPreflight();
       }, 12_000);
     }
+
+    if (this.tick % 3 === 0) this.stepAir();
 
     // Fleet: rare device blips so the card is honest about what "down" looks like.
     if (this.tick % 4 === 0) {
@@ -423,8 +557,14 @@ export class MockAdapter implements ApiAdapter {
     this.emit({ type: "rooms", rooms: this.rooms.map((room) => ({ ...room })) });
     this.broadcast({ kind: "state", payload: { ...this.state } });
     this.addHistory({ type: "state", title: `Studio → ${STATE_META[state].label}`, detail: `${setBy} conducted the house`, severity: state === "emergency" ? "critical" : "info" });
-    if (state === "audio_rec" || state === "video_rec") void this.pianoCue("recording_started");
-    if (state === "available") void this.pianoCue("recording_stopped");
+    if (state === "audio_rec" || state === "video_rec") {
+      void this.pianoCue("recording_started");
+      this.hushPurifiers(true);
+    }
+    if (state === "available") {
+      void this.pianoCue("recording_stopped");
+      this.hushPurifiers(false);
+    }
     return { ...this.state };
   }
 
@@ -566,6 +706,36 @@ export class MockAdapter implements ApiAdapter {
     return this.fleet.map((d) => ({ ...d }));
   }
 
+  async getAir() {
+    return this.cloneAir();
+  }
+
+  async setPurifierMode(id: string, mode: PurifierMode) {
+    const purifier = this.air.purifiers.find((p) => p.id === id);
+    if (purifier) {
+      purifier.mode = mode;
+      // A hand-set mode is a decision, so it also cancels the automatic states.
+      if (this.air.hushed) {
+        this.air.hushed = false;
+        this.preHushModes = {};
+      }
+      this.air.purgeUntil = null;
+      this.addHistory({ type: "utility", title: `${purifier.name} → ${mode}`, detail: `Set by hand from Studio Command`, severity: "info" });
+      this.emitAir();
+    }
+    return this.cloneAir();
+  }
+
+  async startAirPurge(minutes: number) {
+    this.beginPurge(minutes, "Purge started from Studio Command");
+    return this.cloneAir();
+  }
+
+  async stopAirPurge() {
+    this.endPurge("Purge stopped by hand");
+    return this.cloneAir();
+  }
+
   async getSos() {
     await this.hydrateState();
     return this.sos ? { ...this.sos } : null;
@@ -689,6 +859,7 @@ export class MockAdapter implements ApiAdapter {
       cb({ type: "displays", displays: this.displays.map((d) => ({ ...d })) });
       cb({ type: "sos", sos: this.sos ? { ...this.sos } : null });
       cb({ type: "fleet", fleet: this.fleet.map((d) => ({ ...d })) });
+      cb({ type: "air", air: this.cloneAir() });
     });
     return () => {
       this.listeners.delete(cb);

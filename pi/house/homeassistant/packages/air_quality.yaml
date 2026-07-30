@@ -1,0 +1,357 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# AANGAN · AIR, VENTILATION & INSTRUMENT CLIMATE — drop into /config/packages/
+#
+# Home Assistant owns the automatic behaviour so it keeps working with the app
+# closed and the phones asleep. Studio Command shows it and can override it.
+#
+# ONE-TIME SETUP
+#  1. Dyson (already owned):  HACS → Custom repositories → libdyson-wg/ha-dyson
+#     → install → restart → add the integration. Models from ~mid-2021 need one
+#     MyDyson cloud sign-in to fetch MQTT credentials; after that it is local.
+#     It gives us fan.dyson_* plus its own PM2.5 / PM10 / VOC / NO2 sensors,
+#     which are better than the DIY parts — prefer them for the studio.
+#  2. Xiaomi purifiers:  Settings → Devices & Services → Add → Xiaomi Miio.
+#     Local control. Gives fan.xiaomi_* + filter life.
+#  3. Air nodes: flash pi/house/esphome/air_node.yaml onto an ESP32 per room
+#     (studio / kitchen / bedroom) and adopt them.
+#  4. Rename the entity ids below in THIS FILE ONLY if yours differ.
+#
+# Every threshold is an input_number so it can be tuned from the app or the HA
+# dashboard without editing YAML again.
+# ─────────────────────────────────────────────────────────────────────────────
+
+input_number:
+  co2_nudge_ppm:
+    name: Ask for fresh air above (CO2)
+    min: 700
+    max: 1600
+    step: 50
+    initial: 1000
+    unit_of_measurement: ppm
+    icon: mdi:molecule-co2
+  rh_min_instruments:
+    name: Instrument-safe humidity — dry limit
+    min: 20
+    max: 45
+    step: 1
+    initial: 35
+    unit_of_measurement: "%"
+    icon: mdi:piano
+  rh_max_instruments:
+    name: Instrument-safe humidity — damp limit
+    min: 55
+    max: 85
+    step: 1
+    initial: 65
+    unit_of_measurement: "%"
+    icon: mdi:water-percent
+  odour_exhaust_index:
+    name: Run the kitchen exhaust above (VOC index)
+    min: 120
+    max: 400
+    step: 10
+    initial: 200
+    icon: mdi:scent
+
+input_boolean:
+  air_hushed_for_take:
+    name: Purifiers hushed for a take
+    icon: mdi:volume-off
+  air_purge_running:
+    name: Air purge running
+    icon: mdi:weather-windy
+
+input_text:
+  # Modes are saved before a hush so the restore is exact, not a guess.
+  air_pre_hush_modes:
+    name: Purifier modes before the hush
+    max: 255
+    initial: ""
+
+template:
+  - binary_sensor:
+      # ── CO2: measured, never estimated. A purifier cannot fix this. ─────────
+      - name: air_needs_ventilation
+        unique_id: air_needs_ventilation
+        icon: mdi:window-open-variant
+        # 2 minutes of sustained high CO2, and it only clears 100 ppm lower, so
+        # a jittery sensor can never flap the nudge.
+        delay_on: "00:02:00"
+        state: >
+          {% set thr = states('input_number.co2_nudge_ppm') | float(1000) %}
+          {% set worst = [
+               states('sensor.studio_air_co2') | float(0),
+               states('sensor.bedroom_air_co2') | float(0),
+               states('sensor.kitchen_air_co2') | float(0) ] | max %}
+          {% if is_state('binary_sensor.air_needs_ventilation', 'on') %}
+            {{ worst > thr - 100 }}
+          {% else %}
+            {{ worst >= thr }}
+          {% endif %}
+
+      # ── Instrument climate: sustained damp or dryness warps instruments ─────
+      - name: instrument_climate_alert
+        unique_id: instrument_climate_alert
+        icon: mdi:piano
+        # 30 minutes: a shower or an open door should not page anybody, but a
+        # room that genuinely sits damp must.
+        delay_on: "00:30:00"
+        delay_off: "00:15:00"
+        state: >
+          {% set lo = states('input_number.rh_min_instruments') | float(35) %}
+          {% set hi = states('input_number.rh_max_instruments') | float(65) %}
+          {% set rh = states('sensor.studio_air_humidity') | float(50) %}
+          {{ rh > hi or rh < lo }}
+
+  - sensor:
+      # What the wrapper serves to the app as the studio's air reading.
+      - name: studio_air_verdict
+        unique_id: studio_air_verdict
+        state: >
+          {% set pm = states('sensor.studio_air_pm25') | float(0) %}
+          {% set co2 = states('sensor.studio_air_co2') | float(0) %}
+          {% set thr = states('input_number.co2_nudge_ppm') | float(1000) %}
+          {% if pm >= 55 %}dusty
+          {% elif co2 >= thr %}stale
+          {% elif pm >= 30 %}hazy
+          {% else %}clean{% endif %}
+
+script:
+  # ── Hush: purifiers are fans, so they are noise on the take ───────────────
+  air_hush_for_take:
+    alias: "Air · hush the purifiers for a take"
+    sequence:
+      - condition: state
+        entity_id: input_boolean.air_hushed_for_take
+        state: "off"
+      # Remember exactly what each purifier was doing.
+      - action: input_text.set_value
+        target: { entity_id: input_text.air_pre_hush_modes }
+        data:
+          value: >
+            {{ { 'dyson': state_attr('fan.dyson_purifier','percentage') | default(0),
+                 'xiaomi': state_attr('fan.xiaomi_purifier','percentage') | default(0) } | tojson }}
+      - action: input_boolean.turn_off
+        target: { entity_id: input_boolean.air_purge_running }
+      # Lowest speed rather than off: air still moves, the mic hears nothing.
+      - action: fan.set_percentage
+        target:
+          entity_id: [fan.dyson_purifier, fan.xiaomi_purifier]
+        data: { percentage: 10 }
+      - action: input_boolean.turn_on
+        target: { entity_id: input_boolean.air_hushed_for_take }
+
+  air_restore_after_take:
+    alias: "Air · put the purifiers back exactly as they were"
+    sequence:
+      - condition: state
+        entity_id: input_boolean.air_hushed_for_take
+        state: "on"
+      - variables:
+          saved: "{{ states('input_text.air_pre_hush_modes') | from_json(default={}) }}"
+      - action: fan.set_percentage
+        target: { entity_id: fan.dyson_purifier }
+        data: { percentage: "{{ saved.get('dyson', 40) | int(40) }}" }
+      - action: fan.set_percentage
+        target: { entity_id: fan.xiaomi_purifier }
+        data: { percentage: "{{ saved.get('xiaomi', 40) | int(40) }}" }
+      - action: input_boolean.turn_off
+        target: { entity_id: input_boolean.air_hushed_for_take }
+
+  air_purge:
+    alias: "Air · purge the rooms, then return to auto"
+    fields:
+      minutes:
+        description: How long to run flat out
+        example: 20
+    sequence:
+      - action: input_boolean.turn_off
+        target: { entity_id: input_boolean.air_hushed_for_take }
+      - action: input_boolean.turn_on
+        target: { entity_id: input_boolean.air_purge_running }
+      - action: fan.set_percentage
+        target:
+          entity_id: [fan.dyson_purifier, fan.xiaomi_purifier]
+        data: { percentage: 100 }
+      - delay:
+          minutes: "{{ minutes | int(20) }}"
+      # Only stand down if nothing else took over in the meantime.
+      - condition: state
+        entity_id: input_boolean.air_purge_running
+        state: "on"
+      - action: fan.set_preset_mode
+        target:
+          entity_id: [fan.dyson_purifier, fan.xiaomi_purifier]
+        data: { preset_mode: "Auto" }
+      - action: input_boolean.turn_off
+        target: { entity_id: input_boolean.air_purge_running }
+
+automation:
+  # ① RECORDING-AWARE PURIFYING
+  - id: air_hush_on_rec
+    alias: "Air · hush purifiers when tape rolls"
+    trigger:
+      - platform: state
+        entity_id: input_select.studio_state
+        to: [audio_rec, video_rec]
+    action:
+      - action: script.air_hush_for_take
+
+  - id: air_restore_on_available
+    alias: "Air · restore purifiers when the studio frees up"
+    trigger:
+      - platform: state
+        entity_id: input_select.studio_state
+        to: available
+    action:
+      - action: script.air_restore_after_take
+
+  # ② PRE-CLASS / PRE-TAKE PURGE — clean air on arrival, silence during
+  - id: air_purge_before_class
+    alias: "Air · purge before a calendar class"
+    trigger:
+      - platform: calendar
+        event: start
+        entity_id: calendar.nsm_classes   # ← same calendar as calendar_states.yaml
+        offset: "-0:20:00"
+    condition:
+      - condition: template
+        value_template: >
+          {{ 'class' in trigger.calendar_event.summary | lower
+             or 'lesson' in trigger.calendar_event.summary | lower }}
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: input_select.studio_state
+            state: [audio_rec, video_rec]
+    action:
+      - action: script.air_purge
+        data: { minutes: 18 }   # ends ~2 min before the class starts
+
+  - id: air_quiet_when_class_starts
+    alias: "Air · go quiet the moment the class starts"
+    trigger:
+      - platform: state
+        entity_id: input_select.studio_state
+        to: class
+    action:
+      - action: input_boolean.turn_off
+        target: { entity_id: input_boolean.air_purge_running }
+      - action: fan.set_percentage
+        target:
+          entity_id: [fan.dyson_purifier, fan.xiaomi_purifier]
+        data: { percentage: 25 }
+
+  # ③ CO2 VENTILATION NUDGE
+  - id: air_co2_nudge
+    alias: "Air · ask for fresh air"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.air_needs_ventilation
+        to: "on"
+    action:
+      - action: notify.all_family
+        data:
+          title: "Open a window"
+          message: >
+            {{ states('sensor.studio_air_co2') }} ppm CO2 in the studio.
+            {% if is_state('input_select.studio_state','class') %}
+            A class is running — crack the door for a minute.
+            {% endif %}
+
+  # ④ INSTRUMENT CLIMATE GUARD
+  - id: air_instrument_climate
+    alias: "Air · instrument climate warning"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.instrument_climate_alert
+        to: "on"
+    action:
+      - action: notify.all_family
+        data:
+          title: "Instrument climate"
+          message: >
+            The music room has been at {{ states('sensor.studio_air_humidity') }}%
+            humidity for half an hour. Safe band is
+            {{ states('input_number.rh_min_instruments') }}–{{ states('input_number.rh_max_instruments') }}%.
+            Pianos and guitars do not like this.
+
+  # ⑤ KITCHEN ODOUR AUTO-EXHAUST — safety always outranks silence
+  - id: air_kitchen_odour_exhaust
+    alias: "Air · clear kitchen odour"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.kitchen_air_voc_index
+        above: input_number.odour_exhaust_index
+        for: "00:02:00"
+    condition:
+      # Never add fan noise to a take — unless gas is involved, which always wins.
+      - condition: or
+        conditions:
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: input_select.studio_state
+                state: [audio_rec, video_rec]
+          - condition: state
+            entity_id: binary_sensor.lpg_detector_alarm_contact
+            state: "on"
+    action:
+      - action: switch.turn_on
+        target: { entity_id: switch.kitchen_exhaust_fan }
+      - delay: "00:12:00"
+      - action: switch.turn_off
+        target: { entity_id: switch.kitchen_exhaust_fan }
+
+  # ⑥ BATHROOM DAMP CONTROL — ends the "someone forgot the fan" mould cycle
+  - id: air_bathroom_damp
+    alias: "Air · dry the bathroom out"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.bathroom_1_humidity
+        above: 75
+        for: "00:03:00"
+    action:
+      - action: switch.turn_on
+        target: { entity_id: switch.bathroom_1_exhaust_fan }
+      - wait_for_trigger:
+          - platform: numeric_state
+            entity_id: sensor.bathroom_1_humidity
+            below: 65
+            for: "00:05:00"
+        timeout: "00:45:00"
+        continue_on_timeout: true
+      - action: switch.turn_off
+        target: { entity_id: switch.bathroom_1_exhaust_fan }
+
+  # ⑦ Don't purify to the street
+  - id: air_window_open_while_purifying
+    alias: "Air · purifier running with a door open"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.studio_door_leaf_a
+        to: "on"
+        for: "00:05:00"
+    condition:
+      - condition: numeric_state
+        entity_id: fan.dyson_purifier
+        attribute: percentage
+        above: 50
+    action:
+      - action: notify.all_family
+        data:
+          title: "Purifier is working hard with the door open"
+          message: "Close the studio door or drop the purifier — that filter is being wasted."
+
+  # ⑧ Filter life
+  - id: air_filter_low
+    alias: "Air · filter needs ordering"
+    trigger:
+      - platform: numeric_state
+        entity_id: [sensor.dyson_purifier_filter_life, sensor.xiaomi_purifier_filter_life]
+        below: 10
+    action:
+      - action: notify.all_family
+        data:
+          title: "Order a purifier filter"
+          message: "{{ trigger.to_state.name }} is down to {{ trigger.to_state.state }}%."

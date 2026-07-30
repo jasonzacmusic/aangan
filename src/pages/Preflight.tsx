@@ -32,8 +32,13 @@ function CheckRow({ ok, title, detail }: { ok: boolean; title: string; detail: s
 }
 
 export default function Preflight({ onSelect }: Props) {
-  const { preflight, preflightPrep, rooms, settings, prepareStudio, restoreStudio } = useStore();
+  const { preflight, preflightPrep, rooms, settings, air, startAirPurge, prepareStudio, restoreStudio } = useStore();
   if (!preflight) return null;
+
+  // Air is advice, not a gate: dust on camera is worth knowing, but it must
+  // never be the reason recording is blocked. studio_ready stays the four checks.
+  const studioAir = air?.rooms.find((r) => r.id === "studio") ?? air?.rooms[0];
+  const airClean = !studioAir || (studioAir.pm25 < 30 && studioAir.co2 < settings.co2Threshold);
 
   const music = rooms.find((r) => r.id === "music");
   const db = music?.dbLevel ?? preflight.dbLevel;
@@ -87,6 +92,37 @@ export default function Preflight({ onSelect }: Props) {
           detail={preflight.safetyClear ? "No fire, gas, leak or panic anywhere in the house." : "Recording stays locked while a fire, gas, leak or panic alert is live."}
         />
       </div>
+
+      {/* Air — advisory, deliberately not part of the go/no-go verdict */}
+      {studioAir && (
+        <div className={`mt-3 rounded-2xl border p-4 ${airClean ? "border-line bg-surface/80" : "border-st-meeting/40 bg-st-meeting/5"}`}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="font-mono text-[9px] uppercase tracking-[0.25em] text-dim">Air · advice, not a blocker</div>
+              <div className={`mt-1 text-sm font-semibold ${airClean ? "text-paper" : "text-st-meeting"}`}>
+                {airClean
+                  ? "Air is clean enough to shoot"
+                  : studioAir.pm25 >= 30
+                    ? `Dust at ${studioAir.pm25.toFixed(0)} µg/m³ — it can show on camera`
+                    : `CO₂ at ${studioAir.co2} ppm — crack the door between takes`}
+              </div>
+              <p className="mt-1 text-xs text-dim">
+                {airClean
+                  ? `${studioAir.name} · ${studioAir.co2} ppm CO₂ · ${studioAir.pm25.toFixed(0)} µg/m³ dust`
+                  : "Purge now, then start the take — purifiers hush themselves the moment you go to Rec."}
+              </p>
+            </div>
+            {!airClean && (
+              <button
+                onClick={() => void startAirPurge(10)}
+                className="shrink-0 rounded-xl border border-gold/50 bg-gold/10 px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider text-gold transition-all active:scale-95"
+              >
+                Purge 10 min
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Live meter */}
       <div className="mt-4 rounded-2xl border border-line bg-surface/80 p-4 backdrop-blur">
