@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Aangan · Air, Ventilation &amp; Environment Plan</title>
+<style>
+  :root{--plum:#2a1e4d;--rasp:#C51A4A;--teal:#077857;--blue:#1D4ED8;--viol:#6D28D9;--line:#e2dccb;--muted:#6B6456;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,'Inter',sans-serif;background:#fff;color:#1a1822;line-height:1.55;font-size:13px;padding:34px 40px;max-width:1000px;margin:0 auto;}
+  h1{font-size:26px;color:var(--plum);}
+  .sub{color:var(--muted);font-size:12.5px;margin:4px 0 12px;}
+  h2{font-size:17px;color:#fff;background:var(--plum);padding:9px 14px;border-radius:9px;margin:26px 0 8px;}
+  h2 small{font-weight:400;font-size:11px;opacity:.85;}
+  h3{font-size:14px;color:var(--rasp);margin:16px 0 5px;}
+  p{margin:6px 0;}
+  table{width:100%;border-collapse:collapse;font-size:12.3px;margin:8px 0;}
+  th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);border-bottom:2px solid var(--line);padding:6px 8px;}
+  td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top;}
+  td.q{text-align:center;font-weight:700;color:var(--rasp);white-space:nowrap;}
+  td.p{white-space:nowrap;color:var(--muted);text-align:right;}
+  a{color:#0b57d0;text-decoration:none;font-weight:600;}
+  .note{color:var(--muted);font-size:11px;}
+  .call{border-radius:0 10px 10px 0;padding:10px 14px;margin:10px 0;font-size:12.5px;}
+  .call.green{background:#EAF8F1;border-left:4px solid #10B981;color:#0A5840;}
+  .call.amber{background:#FDF6E9;border-left:4px solid #F59E0B;color:#6B4D08;}
+  .call.red{background:#FBE9E9;border-left:4px solid #DC2626;color:#7a1f1f;}
+  .call.blue{background:#E8EEFB;border-left:4px solid var(--blue);color:#1e3a8a;}
+  .tag{display:inline-block;font-size:8.5px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:20px;white-space:nowrap;}
+  .t-free{background:#EAF8F1;color:#077857;}
+  .t-buy{background:#FDF6E9;color:#92580a;}
+  .t-elec{background:#E8EEFB;color:#1D4ED8;}
+  ul{margin:6px 0 6px 20px;}
+  li{padding:3px 0;}
+  .foot{margin-top:26px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:10.5px;}
+  @media print{body{padding:10mm 12mm;} h2,.tag{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+</style>
+</head>
+<body>
+<h1>Air, Ventilation &amp; Environment</h1>
+<div class="sub">Aangan · Nathaniel School of Music · 30 Jul 2026 · what the Dyson can already do, what to add per room, and the automations that make it a system rather than a shelf of gadgets</div>
+
+<div class="call green"><b>Short answer:</b> yes to all three. (1) Your existing Dyson can join Aangan for <b>₹0</b> — it has excellent sensors inside it that we're currently wasting. (2) For other rooms, do <b>not</b> buy Dyson again — Xiaomi purifiers integrate natively for about a quarter of the price. (3) The Pi doesn't purify air; it <b>decides</b> — and that decision layer (recording-aware, class-aware, CO₂, odour, humidity) is worth more than any single purifier.</div>
+
+<!-- ─────────── 1 ─────────── -->
+<h2>1 · The Dyson you already own <small>₹0 · the biggest win in this document</small></h2>
+
+<p>Wi-Fi Dyson purifiers speak MQTT, and Home Assistant talks to them through the community <b>ha-dyson</b> integration (installed via HACS). After a one-time sign-in it runs <b>fully locally</b> — no cloud in the daily loop.</p>
+
+<h3>What we gain immediately</h3>
+<ul>
+  <li><b>Its sensors become the house's sensors.</b> The Dyson already measures PM2.5, PM10, VOCs, NO₂, temperature and humidity to a standard better than most DIY parts. That data flows straight into Aangan's House Pulse — a professional air sensor we already paid for and currently can't see.</li>
+  <li><b>Full control:</b> fan speed, auto mode, night mode, oscillation, plus filter life remaining (so the app can say “order a filter” instead of you discovering it).</li>
+  <li><b>It joins the studio logic.</b> This is the real prize — see the automations below.</li>
+</ul>
+
+<div class="call amber"><b>One honest caveat, resolved in five minutes:</b> Dyson removed the local Wi-Fi credential sticker on models from roughly mid-2021 onward, so those need a single one-time MyDyson cloud login for the integration to fetch credentials — after that it's local. Very recent models occasionally lag support. <b>Send me the model number from the sticker under the base</b> (e.g. TP07, HP09, PH04) and I'll confirm support before we count on it. Cost either way: nothing.</div>
+
+<!-- ─────────── 2 ─────────── -->
+<h2>2 · Purifiers for the other rooms <small>the affordable answer</small></h2>
+
+<p>A second Dyson is roughly ₹45,000–55,000. It is a superb machine and it belongs where you record and teach — which is where you already have it. For bedrooms and the teaching room, the sensible buy is Xiaomi: <b>native Home Assistant support</b> (the built-in Xiaomi integration, local control), real HEPA + activated-carbon filtration, and about a quarter of the price.</p>
+
+<table>
+<tr><th>Room</th><th>What goes there</th><th>Why</th><th>Ref. price</th></tr>
+<tr><td><b>Music room / studio</b></td><td>the Dyson you own <span class="tag t-free">₹0</span></td><td>best filtration + best sensors, already there; becomes recording-aware</td><td class="p">₹0</td></tr>
+<tr><td><b>Bedroom (Amma)</b></td><td>Xiaomi Smart Air Purifier 4 <span class="tag t-buy">BUY FIRST</span></td><td>where a person breathes 8 hours a night — the highest health return in the house</td><td class="p">~₹13,000</td></tr>
+<tr><td><b>Teaching room</b></td><td>Xiaomi Smart Air Purifier 4 Lite</td><td>students in a closed room; runs max between classes, silent during</td><td class="p">~₹10,000</td></tr>
+<tr><td><b>Other bedrooms / hall</b></td><td>Xiaomi 4 Lite, added later</td><td>scale only after the first unit's automation is proven</td><td class="p">~₹10,000 ea</td></tr>
+</table>
+
+<div class="call red"><b>Do not use the smart-plug trick on a purifier.</b> Cutting power to a “dumb” purifier looks clever, but most units do not resume their previous speed when power returns — some need a physical button press, so the house silently stops purifying and nobody notices. Buy units the system can actually talk to (Dyson / Xiaomi). The one appliance where a plug or relay IS correct is a simple exhaust fan, which has no state to lose.</div>
+
+<!-- ─────────── 3 ─────────── -->
+<h2>3 · The sensing layer <small>where the Raspberry Pi earns its place · ~₹6–8k per room</small></h2>
+
+<p>A purifier only knows the air at its own grille, and only reacts. The Pi's job is to know the whole flat and act <i>ahead</i> of the problem. Each air node is one ESP32 (six already owned) plus these sensors, reporting to the House Pi over Wi-Fi:</p>
+
+<table>
+<tr><th>Sensor</th><th>Measures</th><th>Why it matters here</th></tr>
+<tr><td><b>PMS5003</b></td><td>PM2.5 / PM10 dust</td><td>Bangalore road dust, and dust that visibly shows up in video</td></tr>
+<tr><td><b>SCD41</b> (true CO₂, not an estimate)</td><td>CO₂ ppm</td><td><b>The one everybody misses.</b> A soundproofed room with the doors shut and four people in it climbs past 1,400 ppm fast — that is exactly why students get dull and heads get heavy in the second half of a class. You cannot smell it. Only a sensor finds it.</td></tr>
+<tr><td><b>SGP41</b></td><td>VOC index + NOx index</td><td>This <i>is</i> the “smell” number — a live staleness/odour index. Cooking, paint, damp, bathroom, a closed room after a long day.</td></tr>
+<tr><td><b>SHT45</b> (or the owned DHT22)</td><td>temperature / humidity</td><td>mould risk in monsoon <b>and instrument protection</b> — see §5</td></tr>
+</table>
+
+<p><b>Where to put the three nodes:</b> ① music room / studio (the room that earns money) ② kitchen (cooking smoke, odour, and it doubles as backup to the gas sensors) ③ Amma's bedroom (night-time CO₂ and humidity).</p>
+
+<!-- ─────────── 4 ─────────── -->
+<h2>4 · The automations — this is the actual product</h2>
+
+<p>Gadgets on their own get ignored within a month. These rules are what make it a system, and every one of them is a rule the app can show and you can override.</p>
+
+<table>
+<tr><th>Automation</th><th>What happens</th><th>Needs</th></tr>
+<tr><td><b>Recording-aware purifying</b> ★</td><td>A purifier is a fan — it is noise on the take. When the dial goes Audio Rec or Video Rec, the Dyson drops to silent or off and joins the existing “Silence the room” pre-flight; when the studio returns to Available it goes back to purifying at full. Right now this is a manual thing you have to remember mid-session.</td><td>Dyson integration</td></tr>
+<tr><td><b>Pre-class / pre-take purge</b> ★</td><td>Twenty minutes before a calendar class or a shoot, every purifier runs on maximum; the moment the class starts they go quiet. Students walk into clean, silent air.</td><td>Dyson + calendar (already built)</td></tr>
+<tr><td><b>CO₂ ventilation nudge</b> ★</td><td>Studio or bedroom CO₂ over ~1,000 ppm → “open a window / crack the door” on the wall panels and phones. During a class, over ~1,400 ppm it nudges harder. A purifier does <b>not</b> fix CO₂ — only fresh air does, which is why this is a ventilation rule, not a purifier rule.</td><td>SCD41 node</td></tr>
+<tr><td><b>Kitchen odour auto-exhaust</b></td><td>Odour index or cooking dust spikes → the kitchen exhaust fan runs for N minutes and stops itself. It will not start during a take (that's noise) — <b>unless</b> gas is detected, in which case safety always wins and it runs regardless.</td><td>SGP41 node + fan relay <span class="tag t-elec">electrician</span></td></tr>
+<tr><td><b>Bathroom damp control</b></td><td>Humidity jumps after a shower → exhaust fan runs until the room is dry again. Ends the “someone forgot the fan, now there's mould” cycle.</td><td>humidity node + fan relay <span class="tag t-elec">electrician</span></td></tr>
+<tr><td><b>Instrument climate guard</b> ★</td><td>Any room holding above ~65% RH (or below ~35%) for hours → alert, because that is what warps pianos, guitars and bows. See §5 — for a music school this may be the single most valuable rule in the list.</td><td>humidity nodes</td></tr>
+<tr><td><b>Air row in Pre-flight</b></td><td>The go/no-go verdict gains an air line: don't start a shoot with dust high — it shows on camera and means the room wants purging first.</td><td>any node</td></tr>
+<tr><td><b>Purifier running with a window open</b></td><td>The door/window sensors already exist — if a purifier is working hard while a window is wide open, the app says so instead of quietly wasting the filter.</td><td>reeds (on order)</td></tr>
+<tr><td><b>Filter life &amp; reorder</b></td><td>Dyson and Xiaomi both report filter life; Aangan warns at 10% instead of you finding out from a red light.</td><td>purifier integrations</td></tr>
+</table>
+
+<div class="call blue"><b>★ = the four I would build first.</b> Recording-aware purifying and the pre-class purge pay for themselves in your working day; the CO₂ nudge fixes an invisible problem that affects how well students actually learn; the instrument guard protects assets worth far more than the sensors.</div>
+
+<!-- ─────────── 5 ─────────── -->
+<h2>5 · “Anything for that matter” — the wider environment layer</h2>
+
+<h3>The one I would insist on: instrument climate</h3>
+<p>Pianos want roughly 40–60% relative humidity and hate swings. Bangalore's monsoon pushes indoor humidity well past that, and the studio is sealed. Two humidity sensors and a rule that shouts early is insurance on instruments worth lakhs — and if it turns out a room sits damp for weeks, the fix is a dehumidifier on a relay (dehumidifiers, unlike purifiers, do resume after power returns — we verify the specific model first).</p>
+
+<h3>Also worth doing, cheap</h3>
+<ul>
+  <li><b>RO water quality</b> — a TDS probe on the drinking line (~₹600) tells you the RO filter is finished before the water tastes wrong.</li>
+  <li><b>AC efficiency nudge</b> — “AC running with the balcony door open” is a rule we can write today from sensors already on order.</li>
+  <li><b>Circadian light</b> — the WS2812B strip you own can warm down after sunset; smart bulbs later if you like the effect.</li>
+  <li><b>Kitchen chimney reminder</b> — cooking dust spike with no chimney running → a nudge to switch it on.</li>
+  <li><b>Balcony rain + plants</b> — the owned rain sensor and soil-moisture sensor already cover “bring the clothes in” and “the planter is dry”.</li>
+</ul>
+
+<div class="call amber"><b>Deliberately NOT recommending:</b> ozone generators or “ionisers” for odour (ozone is a lung irritant — never in an occupied room, and definitely not near singers), and cheap all-in-one “air quality” modules that estimate CO₂ from VOCs instead of measuring it. If we are going to act on a number, the number has to be real.</div>
+
+<!-- ─────────── 6 ─────────── -->
+<h2>6 · What to buy <small>added to the procurement list as Order 3 — nothing here disturbs Orders 1 and 2</small></h2>
+
+<table>
+<tr><th>Item</th><th>Qty</th><th>Ref. price</th><th>Where</th></tr>
+<tr><td><b>Xiaomi Smart Air Purifier 4</b> — bedroom</td><td class="q">1</td><td class="p">₹13,000</td><td><a href="https://www.mi.com/in/product/xiaomi-smart-air-purifier-4/buy/">mi.com/in</a></td></tr>
+<tr><td><b>Xiaomi Smart Air Purifier 4 Lite</b> — teaching room</td><td class="q">1</td><td class="p">₹10,000</td><td><a href="https://www.mi.com/in/product-list/smart-home/air-purifier/">mi.com/in</a></td></tr>
+<tr><td><b>PMS5003 particulate sensor</b></td><td class="q">3</td><td class="p">₹2,000 ea</td><td><a href="https://robu.in/?s=PMS5003">robu / SP Road</a></td></tr>
+<tr><td><b>SCD41 true CO₂ sensor module</b></td><td class="q">3</td><td class="p">₹3,500 ea</td><td><a href="https://robu.in/?s=SCD41">robu / SP Road</a></td></tr>
+<tr><td><b>SGP41 VOC + NOx sensor module</b></td><td class="q">3</td><td class="p">₹2,000 ea</td><td><a href="https://robu.in/?s=SGP41">robu / SP Road</a></td></tr>
+<tr><td><b>SHT45 temperature/humidity module</b></td><td class="q">2</td><td class="p">₹1,000 ea</td><td><a href="https://robu.in/?s=SHT45">robu / SP Road</a></td></tr>
+<tr><td><b>Relay module for exhaust fans</b> <span class="tag t-elec">fitted by electrician</span></td><td class="q">3</td><td class="p">₹250 ea</td><td>SP Road electrical</td></tr>
+<tr><td><b>TDS water quality probe</b></td><td class="q">1</td><td class="p">₹600</td><td><a href="https://robu.in/?s=TDS+sensor">robu / SP Road</a></td></tr>
+<tr><td><b>Project boxes for the three air nodes</b></td><td class="q">3</td><td class="p">₹200 ea</td><td>SP Road</td></tr>
+</table>
+
+<p class="note">ESP32 boards, DHT22 and the jumper/breadboard/charger bundle are already owned or already on Order 1 — nothing duplicated here.</p>
+
+<div class="call green"><b>Order 3 total ≈ ₹47,000</b> — and it is genuinely staged: the <b>₹0 Dyson integration first</b> (do it the day the House Pi boots and see whether the data alone changes how you run the rooms), then <b>one Xiaomi + one air node ≈ ₹20,500</b> to prove the automations in the room that matters most, then scale. If only one line ever gets bought, buy the CO₂ sensor for the studio — it answers a question nothing else in the house can.</div>
+
+<div class="foot">Aangan · Nathaniel School of Music · Air, Ventilation &amp; Environment Plan · 30 Jul 2026 · companion files: “Aangan — Procurement List” and “Aangan — Install Guide + Idea Menu” · repo: github.com/jasonzacmusic/aangan</div>
+</body>
+</html>
