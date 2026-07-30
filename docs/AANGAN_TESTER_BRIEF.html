@@ -1,0 +1,588 @@
+<title>Aangan — Tester's Brief</title>
+<style>
+  :root {
+    --ink: #171A21;
+    --ink-soft: #4A505E;
+    --ink-faint: #767D8C;
+    --paper: #F4F5F7;
+    --surface: #FFFFFF;
+    --rule: #DEE1E7;
+    --brass: #8A6B12;
+    --brass-bg: #F5EEDA;
+    --fresh: #1F7A5E;
+    --fresh-bg: #E4F1EC;
+    --warn: #A55A11;
+    --warn-bg: #FBEEDF;
+    --crit: #A8342E;
+    --crit-bg: #FBE9E7;
+    --shadow: 0 1px 2px rgba(23, 26, 33, .06), 0 8px 24px -16px rgba(23, 26, 33, .18);
+
+    --display: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --data: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #E8EAEF;
+      --ink-soft: #A2A9B8;
+      --ink-faint: #767D8C;
+      --paper: #131620;
+      --surface: #1B1F2B;
+      --rule: #2A3040;
+      --brass: #D9B451;
+      --brass-bg: #2A2416;
+      --fresh: #5BC49E;
+      --fresh-bg: #14261F;
+      --warn: #E0A052;
+      --warn-bg: #2B2114;
+      --crit: #E8756D;
+      --crit-bg: #2B1817;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 28px -18px rgba(0, 0, 0, .7);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ink: #E8EAEF;
+    --ink-soft: #A2A9B8;
+    --ink-faint: #767D8C;
+    --paper: #131620;
+    --surface: #1B1F2B;
+    --rule: #2A3040;
+    --brass: #D9B451;
+    --brass-bg: #2A2416;
+    --fresh: #5BC49E;
+    --fresh-bg: #14261F;
+    --warn: #E0A052;
+    --warn-bg: #2B2114;
+    --crit: #E8756D;
+    --crit-bg: #2B1817;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 28px -18px rgba(0, 0, 0, .7);
+  }
+
+  :root[data-theme="light"] {
+    --ink: #171A21;
+    --ink-soft: #4A505E;
+    --ink-faint: #767D8C;
+    --paper: #F4F5F7;
+    --surface: #FFFFFF;
+    --rule: #DEE1E7;
+    --brass: #8A6B12;
+    --brass-bg: #F5EEDA;
+    --fresh: #1F7A5E;
+    --fresh-bg: #E4F1EC;
+    --warn: #A55A11;
+    --warn-bg: #FBEEDF;
+    --crit: #A8342E;
+    --crit-bg: #FBE9E7;
+    --shadow: 0 1px 2px rgba(23, 26, 33, .06), 0 8px 24px -16px rgba(23, 26, 33, .18);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2.75rem;
+  }
+
+  .eyebrow {
+    font-family: var(--data);
+    font-size: .6875rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0;
+  }
+
+  /* ── masthead ─────────────────────────────────────── */
+  .masthead { display: flex; flex-direction: column; gap: 1rem; }
+
+  .masthead h1 {
+    font-family: var(--display);
+    font-size: clamp(2rem, 7vw, 3rem);
+    line-height: 1.08;
+    letter-spacing: -.015em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: 1.0625rem;
+    color: var(--ink-soft);
+    margin: 0;
+    max-width: 34rem;
+  }
+
+  .cta-row { display: flex; flex-wrap: wrap; gap: .625rem; }
+
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .75rem 1.125rem;
+    border-radius: 2rem;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: .9375rem;
+    border: 1px solid transparent;
+    transition: transform .12s ease;
+  }
+
+  .cta:active { transform: scale(.98); }
+
+  .cta-main {
+    background: var(--brass);
+    color: var(--paper);
+  }
+
+  :root[data-theme="dark"] .cta-main,
+  .cta-main { color: #14161C; }
+
+  .cta-ghost {
+    border-color: var(--rule);
+    color: var(--ink);
+    background: var(--surface);
+  }
+
+  a { color: var(--brass); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  :focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; border-radius: 4px; }
+
+  /* ── generic blocks ───────────────────────────────── */
+  section { display: flex; flex-direction: column; gap: 1rem; }
+
+  h2 {
+    font-family: var(--display);
+    font-size: 1.5rem;
+    line-height: 1.2;
+    margin: 0;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: var(--body);
+    font-size: 1.0625rem;
+    font-weight: 650;
+    margin: 0;
+  }
+
+  p { margin: 0; }
+  p + p { margin-top: .75rem; }
+
+  .lede { color: var(--ink-soft); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: .875rem;
+    padding: 1.125rem 1.25rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: .625rem;
+  }
+
+  .note {
+    border-radius: .875rem;
+    padding: 1rem 1.125rem;
+    display: flex;
+    flex-direction: column;
+    gap: .375rem;
+    font-size: .9375rem;
+  }
+
+  .note-fresh { background: var(--fresh-bg); color: var(--fresh); }
+  .note-warn { background: var(--warn-bg); color: var(--warn); }
+  .note strong { color: inherit; }
+  .note p { color: inherit; }
+
+  /* ── feature blocks ───────────────────────────────── */
+  .feature {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: .875rem;
+    padding: 1.125rem 1.25rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: .875rem;
+  }
+
+  .feature-head {
+    display: flex;
+    align-items: baseline;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+
+  .metric {
+    font-family: var(--data);
+    font-size: .6875rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: .1875rem .5rem;
+    border-radius: .375rem;
+    background: var(--brass-bg);
+    color: var(--brass);
+    white-space: nowrap;
+  }
+
+  .feature dl {
+    margin: 0;
+    display: grid;
+    gap: .5rem;
+    font-size: .9375rem;
+  }
+
+  .feature dt {
+    font-family: var(--data);
+    font-size: .625rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .feature dd { margin: 0 0 .375rem; color: var(--ink-soft); }
+  .feature dd:last-child { margin-bottom: 0; }
+  .feature dd strong { color: var(--ink); font-weight: 600; }
+
+  /* ── numbered test script: a real sequence ────────── */
+  .steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .75rem; counter-reset: step; }
+
+  .steps li {
+    counter-increment: step;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: .875rem;
+    padding: 1rem 1.125rem 1rem 3.25rem;
+    position: relative;
+    box-shadow: var(--shadow);
+    font-size: .9375rem;
+  }
+
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 1rem;
+    top: 1rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: .5rem;
+    background: var(--brass-bg);
+    color: var(--brass);
+    font-family: var(--data);
+    font-size: .8125rem;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+
+  .steps strong { font-weight: 650; }
+  .steps .look {
+    display: block;
+    margin-top: .5rem;
+    color: var(--ink-soft);
+    font-size: .875rem;
+  }
+  .steps .look b { color: var(--fresh); font-weight: 600; }
+
+  /* ── ask list ─────────────────────────────────────── */
+  .asks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+  .asks li {
+    padding-left: 1.125rem;
+    position: relative;
+    color: var(--ink-soft);
+    font-size: .9375rem;
+  }
+  .asks li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: .6em;
+    width: .375rem;
+    height: .375rem;
+    border-radius: 50%;
+    background: var(--brass);
+  }
+  .asks li b { color: var(--ink); font-weight: 600; }
+
+  /* ── glossary ─────────────────────────────────────── */
+  .glossary { margin: 0; display: grid; gap: .875rem; }
+  .glossary dt {
+    font-weight: 650;
+    font-size: .9375rem;
+  }
+  .glossary dd {
+    margin: .1875rem 0 0;
+    color: var(--ink-soft);
+    font-size: .9375rem;
+  }
+
+  .num { font-family: var(--data); font-variant-numeric: tabular-nums; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 1.25rem;
+    color: var(--ink-faint);
+    font-family: var(--data);
+    font-size: .75rem;
+    line-height: 1.7;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">Nathaniel School of Music · Aangan · tester's brief</p>
+    <h1>You are testing a house that listens.</h1>
+    <p class="standfirst">
+      Aangan runs a real home and a working music studio in Bangalore — doors, air, safety,
+      the recording room, and an emergency button that Jason's mother can reach from her phone.
+      Your job today is to use it like a stranger would, and tell us where it confused you.
+    </p>
+    <div class="cta-row">
+      <a class="cta cta-main" href="https://studio-command.vercel.app">Open the app</a>
+      <a class="cta cta-ghost" href="https://studio-command.vercel.app/#/guest">Visitor page</a>
+      <a class="cta cta-ghost" href="https://studio-command.vercel.app/#/display/front-house">Door screen</a>
+    </div>
+  </header>
+
+  <div class="note note-fresh">
+    <strong>You cannot break anything.</strong>
+    <p>
+      What you're opening is running in simulation. There is no real house wired to it yet, so every
+      switch, dial and alarm is safe to press. Press all of them. The worst thing you can do today
+      is be too careful to click.
+    </p>
+  </div>
+
+  <section>
+    <h2>Why this exists</h2>
+    <p class="lede">
+      One flat is a family home: a mother, two brothers. The other is a studio where lessons are
+      taught and videos are recorded for thousands of students. Those two lives collide constantly.
+      A doorbell during a take ruins the take. A delivery partner at the gate mid-lesson means
+      someone has to break the class. If someone in the family needs help, the person who can help
+      might be wearing headphones in a soundproofed room.
+    </p>
+    <p class="lede">
+      So Aangan is not a gadget collection. It is one dial that tells the whole house what is
+      happening — <span class="num">Available</span>, <span class="num">Class</span>,
+      <span class="num">Recording</span>, <span class="num">Emergency</span> — and the house then
+      behaves accordingly. Everything you'll test hangs off that idea.
+    </p>
+  </section>
+
+  <section>
+    <h2>The four new things — and the one that will surprise you</h2>
+    <p class="lede">
+      This week's build is about air. Not the "smells nice" kind — the kind you can measure and act on.
+    </p>
+
+    <div class="note note-warn">
+      <strong>Start here, because you have lived this one.</strong>
+      <p>
+        You know the 2&nbsp;p.m. lecture where everybody is yawning, nobody can focus, and you blame
+        lunch or the lecturer? Sixty people in a closed room push carbon dioxide past
+        <span class="num">1,500&nbsp;ppm</span>. Fresh outdoor air is about
+        <span class="num">430</span>. Above roughly <span class="num">1,000</span> your thinking
+        measurably slows down. You cannot see it, smell it, or taste it — and an air purifier does
+        nothing about it, because a purifier filters dust, it does not remove CO₂. Only opening
+        something does. That is the entire reason one of these four features exists.
+      </p>
+    </div>
+
+    <div class="feature">
+      <div class="feature-head">
+        <h3>Purifiers go quiet when tape rolls</h3>
+        <span class="metric">dBA</span>
+      </div>
+      <dl>
+        <dt>What it does</dt>
+        <dd>The moment the studio switches to Recording, every air purifier drops to its lowest speed. When the studio is free again, each one returns to <strong>the exact mode it was in before</strong> — not a guess, not a default.</dd>
+        <dt>Why it matters</dt>
+        <dd>A purifier is a fan. A fan is noise. Noise lands on the recording and cannot be removed afterwards. Until now this was a thing a human had to remember, mid-session, every session.</dd>
+        <dt>Where to look</dt>
+        <dd>Home tab → the <strong>Air</strong> card header changes to “hushed for the take”.</dd>
+      </dl>
+    </div>
+
+    <div class="feature">
+      <div class="feature-head">
+        <h3>The room is purged before a class</h3>
+        <span class="metric">PM2.5</span>
+      </div>
+      <dl>
+        <dt>What it does</dt>
+        <dd>Twenty minutes before a lesson in the calendar, purifiers run flat out. The moment the class begins, they go quiet again.</dd>
+        <dt>Why it matters</dt>
+        <dd>Students arrive to clean air and a silent room. Doing it the obvious way — running purifiers during class — gets you clean air and a fan whining over the piano.</dd>
+        <dt>Where to look</dt>
+        <dd>Air card → <strong>10 min</strong> or <strong>20 min</strong> purge buttons, and the countdown that replaces them.</dd>
+      </dl>
+    </div>
+
+    <div class="feature">
+      <div class="feature-head">
+        <h3>The house asks for fresh air</h3>
+        <span class="metric">CO₂ ppm</span>
+      </div>
+      <dl>
+        <dt>What it does</dt>
+        <dd>When CO₂ climbs past your threshold, the phones and the wall screens say so — in words, not numbers: <em>“Crack the door — the room is going stale.”</em></dd>
+        <dt>Why it matters</dt>
+        <dd>It is the invisible problem from the box above. In a soundproofed studio with the doors shut, it is worse than a classroom, because the room is sealed by design.</dd>
+        <dt>Where to look</dt>
+        <dd>Home tab, above the room cards. Put the studio into <strong>Class mode</strong> and wait about half a minute — you will watch the number climb and the banner appear on its own.</dd>
+      </dl>
+    </div>
+
+    <div class="feature">
+      <div class="feature-head">
+        <h3>The instruments get a bodyguard</h3>
+        <span class="metric">RH %</span>
+      </div>
+      <dl>
+        <dt>What it does</dt>
+        <dd>If a room sits outside <span class="num">35–65%</span> humidity for half an hour, the house warns the family.</dd>
+        <dt>Why it matters</dt>
+        <dd>A piano is wood and felt under tension. Bangalore's monsoon damp warps it, dry air cracks it, and the damage is slow, silent and expensive. Two cheap sensors protect instruments worth lakhs. This may be the most valuable rule in the app and it is the least dramatic.</dd>
+        <dt>Where to look</dt>
+        <dd>Air card → the <strong>RH</strong> column per room, and Settings → Air &amp; instruments to move the safe band.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section>
+    <h2>Your job today — about twenty minutes</h2>
+    <p class="lede">Do these in order on your phone. After each one, note what you expected versus what happened.</p>
+    <ol class="steps">
+      <li>
+        <strong>Open the app and just look for thirty seconds.</strong>
+        <span class="look">Before touching anything: can you tell what state the studio is in, and what that means for a person standing at the door? <b>If not, that is a finding — write it down.</b></span>
+      </li>
+      <li>
+        <strong>Turn the dial to Class mode</strong> (Command tab → Class mode).
+        <span class="look">Watch the Home tab for the next minute. <b>The CO₂ number should climb and a banner should appear by itself.</b></span>
+      </li>
+      <li>
+        <strong>Start a recording</strong> (Command tab → Video Rec, then press and hold the confirm button).
+        <span class="look">Go to Home. <b>The Air card should say “hushed for the take” and both purifiers should read Silent.</b> Why do you think it makes you hold the button instead of tapping it?</span>
+      </li>
+      <li>
+        <strong>Now stand the studio down</strong> (Command tab → Wind down).
+        <span class="look"><b>Both purifiers should return to Auto — the mode they were in before, not off.</b> Check that this actually happened.</span>
+      </li>
+      <li>
+        <strong>Run a 10-minute purge</strong> from the Air card, then stop it.
+        <span class="look"><b>The countdown should appear, then the purifiers should go back to Auto.</b> Try starting a purge while recording — it should refuse. Does it tell you why clearly enough?</span>
+      </li>
+      <li>
+        <strong>Open the SOS page</strong> at <a href="https://studio-command.vercel.app/#/sos">/#/sos</a> and raise one as “Amma”, then mark yourself safe.
+        <span class="look">This is the page Jason's mother would use. <b>Ask yourself honestly: could a sixty-year-old who dislikes phones do this in a panic?</b> That is the whole test.</span>
+      </li>
+      <li>
+        <strong>Open the door screen</strong> at <a href="https://studio-command.vercel.app/#/display/front-house">/#/display/front-house</a> on a laptop if you can.
+        <span class="look">This is what a Swiggy delivery partner reads at the gate. <b>Scan the QR on it with your phone.</b> Is the wording clear to someone in a hurry who did not design this?</span>
+      </li>
+      <li>
+        <strong>Check Pre-flight and Settings.</strong>
+        <span class="look">Pre-flight is the go/no-go before recording. <b>Notice that air is listed as advice, not as a blocker.</b> Do you agree with that decision? Argue with us if you don't.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>What kind of feedback is actually valuable</h2>
+    <div class="note note-fresh">
+      <strong>“I didn't understand this” is the most useful sentence you can send us.</strong>
+      <p>
+        It is not a sign you missed something. It is a bug in our design. You are the closest thing
+        we have to a first-time user, and that makes your confusion the most expensive information
+        in the room. Do not polish it away before telling us.
+      </p>
+    </div>
+    <ul class="asks">
+      <li><b>Where did you hesitate?</b> Any moment you weren't sure what a button would do.</li>
+      <li><b>What word confused you?</b> We wrote all of this — if a label reads like jargon, it is wrong.</li>
+      <li><b>What did you expect that didn't happen?</b> Even if you were "wrong", your expectation is data.</li>
+      <li><b>Would you trust it?</b> If this were your mother's SOS button, would you rely on it?</li>
+      <li><b>On your phone:</b> anything cut off, too small to tap, or awkward with one thumb.</li>
+      <li><b>What's missing?</b> You will think of something we haven't. Say it even if it sounds obvious.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Words you'll hit, so nobody has to pretend</h2>
+    <dl class="glossary">
+      <dt>Simulation (or "mock")</dt>
+      <dd>The app is pretending to be a house, so it can be built and tested before a single wire is run. Real sensors replace the pretend ones later, and the screens do not change.</dd>
+      <dt>Home Assistant</dt>
+      <dd>Free open-source software that will run on a Raspberry Pi in the flat and do the actual talking to sensors and appliances. It keeps working when the app is closed and the phones are asleep — that is deliberate.</dd>
+      <dt>ESP32</dt>
+      <dd>A ₹400 Wi-Fi microcontroller. One per room, with sensors soldered on, reporting to the Pi. You have probably used one in a college project; this is the same chip doing a job someone depends on.</dd>
+      <dt>ppm</dt>
+      <dd>Parts per million — how CO₂ is measured. <span class="num">430</span> outdoors, <span class="num">1,000</span> is the comfort line, <span class="num">1,500</span> is a stuffy classroom.</dd>
+      <dt>PM2.5</dt>
+      <dd>Dust particles small enough to reach your lungs. This is the number Bangalore's air-quality apps show you.</dd>
+      <dt>RH</dt>
+      <dd>Relative humidity, as a percentage. Instruments want <span class="num">35–65%</span>.</dd>
+      <dt>Kiosk mode</dt>
+      <dd>A tablet locked to one full-screen page, so a wall screen cannot be poked into a browser or a home screen.</dd>
+    </dl>
+  </section>
+
+  <section>
+    <h2>What you're actually getting out of this</h2>
+    <p class="lede">
+      Worth being direct about, because it belongs on your CV and in interviews. Today you are
+      evaluating a deployed system that mixes home automation, sensor networks, real-time data and
+      safety-critical design decisions. You will see why a team chose a ₹2,800 camera over a
+      ₹12,000 one, why the emergency button makes you hold rather than tap, and why the air check
+      advises instead of blocks. Those trade-offs are the actual job — the wiring is the easy part.
+    </p>
+    <p class="lede">
+      If you find something real today, you will have shipped a fix to a system a family uses. That
+      is a better line than any certificate.
+    </p>
+  </section>
+
+  <section>
+    <h2>Sending it back</h2>
+    <p class="lede">
+      Write your notes as you go — the details evaporate within an hour. Numbered against the eight
+      steps above is perfect; plain WhatsApp text is completely fine. Screenshots beat descriptions,
+      and a short screen recording beats both. Send it to Jason.
+    </p>
+    <p class="lede">
+      One request: send the rough version. Do not tidy your confusion into something that sounds
+      more competent. The mess is the useful part.
+    </p>
+  </section>
+
+  <footer>
+    Aangan · Nathaniel School of Music, Bangalore<br>
+    Tester's brief for the Acharya College team · air, ventilation &amp; instrument-climate build<br>
+    The app is a simulation today — press everything.
+  </footer>
+
+</div>
