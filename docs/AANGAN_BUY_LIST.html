@@ -82,14 +82,30 @@
 </table>
 
 <!-- ════════ ORDER 2 ════════ -->
-<h2>ORDER 2 — Music rig <small>uses the Raspberry Pi 5 already in hand</small></h2>
+<h2>ORDER 2 — Music rig <small>uses the Raspberry Pi 5 already in hand · runs BOTH Pianoteq and Chorale</small></h2>
 
-<h3>A · Audio core</h3>
+<div class="rule"><b>Board change — read before ordering.</b> The Raspberry Pi DAC Pro and its XLR daughter board are <b>output-only</b>. Pianoteq is happy on them, but Chorale is a harmonizer — it needs an analogue <i>input</i>, and that board has none. Since both apps are meant to run on this Pi, the audio board must have an ADC. Only one audio HAT can occupy the I2S bus, so this is a choice, not an addition.</div>
+
+<h3>A · Audio core — the ADC decision</h3>
 <table>
 <tr><th>Item</th><th>Qty</th><th>Ref. price</th><th>Link</th></tr>
-<tr><td><b>Raspberry Pi DAC Pro (IQaudio DAC Pro, PCM5242)</b></td><td class="q">1</td><td class="p">₹2,500</td><td><a href="https://robu.in/product/raspberry-pi-iqaudio-dac-pro">robu — DAC Pro</a></td></tr>
-<tr><td><b>XLR Board for IQaudio DAC Pro</b></td><td class="q">1</td><td class="p">₹2,000 + shipping</td><td><a href="https://www.pishop.us/product/xlr-board-for-iqaudio-dac-pro/">pishop.us</a> · <a href="https://robu.in/?s=IQaudio+XLR">robu</a></td></tr>
+<tr><td><b>HiFiBerry DAC2 ADC Pro</b><div class="note">RECOMMENDED. Stereo line in + line out, 24-bit/192k, input stage built for studio line level. One board serves Pianoteq (out) and Chorale (in + out). Still a HAT — nothing external, nothing USB.</div></td><td class="q">1</td><td class="p">₹7,500 + shipping</td><td><a href="https://www.hifiberry.com/shop/">hifiberry.com</a></td></tr>
+<tr><td><b>Behringer DI400P passive DI</b><div class="note">The ADC Pro's output is RCA; these restore balanced XLR into the console.</div></td><td class="q">2</td><td class="p">₹1,000 ea</td><td><a href="https://www.amazon.in/s?k=Behringer+DI400P">amazon — DI400P</a></td></tr>
+<tr><td><b>Raspberry Pi DAC Pro + XLR board</b><div class="note">ONLY if the Pi stays a Pianoteq-only rig and Chorale runs on the Mac. Do NOT buy alongside the HiFiBerry — they cannot coexist on the same Pi.</div></td><td class="q">(1)</td><td class="p">₹4,500</td><td><a href="https://robu.in/product/raspberry-pi-iqaudio-dac-pro">robu — DAC Pro</a></td></tr>
 <tr><td><b>6-pin female header, 2.54mm</b></td><td class="q">2</td><td class="p">₹30</td><td><a href="https://robu.in/?s=6+pin+female+header+2.54mm">header</a></td></tr>
+</table>
+<p class="note"><b>Why there is no mic preamp on this list:</b> on stage the console already has the preamp and the phantom power. Take a line-level send from the vocal channel into the Pi, return the harmonies to two spare channels. Line in, line out — exactly what this board is designed for.</p>
+
+<h3>A2 · Stage-worthiness — the parts that stop a Pi failing in front of an audience</h3>
+<table>
+<tr><th>Item</th><th>Qty</th><th>Ref. price</th><th>Link</th></tr>
+<tr><td><b>True-bypass looper pedal, 1 loop</b><div class="note">NON-NEGOTIABLE. A mechanical relay that lifts the Pi out of the signal path with one stomp, so a crash or a reboot is a five-second recovery instead of silence in front of an audience.</div></td><td class="q">1</td><td class="p">₹2,500</td><td><a href="https://www.amazon.in/s?k=true+bypass+looper+pedal+1+loop">amazon — true bypass looper</a></td></tr>
+<tr><td><b>NVMe HAT + 256GB NVMe SSD</b><div class="note">Boot from SSD, not microSD. Card corruption on power loss is the most common way a Pi dies in the field, and the card is the part that dies.</div></td><td class="q">1</td><td class="p">₹4,500</td><td><a href="https://robu.in/?s=raspberry+pi+5+nvme+hat">robu — NVMe HAT</a></td></tr>
+<tr><td><b>UPS HAT with 18650 cells</b><div class="note">Rides out a brownout or a pulled cable long enough to shut down cleanly.</div></td><td class="q">1</td><td class="p">₹3,500</td><td><a href="https://robu.in/?s=raspberry+pi+5+UPS+HAT">robu — UPS HAT</a></td></tr>
+<tr><td><b>Raspberry Pi Pico (RP2040)</b><div class="note">The footswitch brain — no OS, no card, USB-MIDI in under a second. Firmware is written: chorale repo, tools/pico-footswitch/code.py. Buy two so there is a spare in the case.</div></td><td class="q">2</td><td class="p">₹400 ea</td><td><a href="https://robu.in/?s=raspberry+pi+pico">robu — Pico</a></td></tr>
+<tr><td><b>Momentary SPST footswitches</b><div class="note">Harmony · Voices · Mode · Doubler · Stage/Studio · Panic</div></td><td class="q">6</td><td class="p">₹120 ea</td><td><a href="https://robu.in/?s=momentary+foot+switch">robu — footswitch</a></td></tr>
+<tr><td><b>1590BB aluminium enclosure + 6.35mm jacks</b><div class="note">Metal, not plastic — it gets stood on.</div></td><td class="q">1</td><td class="p">₹1,200</td><td><a href="https://robu.in/?s=1590BB+aluminium+enclosure">robu — enclosure</a></td></tr>
+<tr><td><b>Expression pedal + TRS cable</b><div class="note">Optional, but the most musical control on the board — swells the choir on CC 11.</div></td><td class="q">(1)</td><td class="p">₹3,500</td><td><a href="https://www.amazon.in/s?k=expression+pedal+TRS">amazon — expression pedal</a></td></tr>
 </table>
 
 <h3>B · Control, cooling, power, storage</h3>
@@ -101,6 +117,8 @@
 <tr><td><b>SanDisk Extreme A2 microSD 64GB</b><div class="note">one runs the rig, one is the cloned spare</div></td><td class="q">2</td><td class="p">₹700 ea</td><td class="note">SP Road / local</td></tr>
 <tr><td><b>100W USB-C PD power bank, 20,000mAh+</b></td><td class="q">1</td><td class="p">₹10,000</td><td><a href="https://www.amazon.in/s?k=100W+PD+power+bank+20000mah">amazon — PD bank</a></td></tr>
 </table>
+
+<div class="verify"><b>⚠ Set Chorale's Trigger CC to 27 before the first gig.</b> It defaults to CC 64, which is also the MIDI sustain-pedal message. If a keyboard shares the MIDI port, its sustain pedal will silently toggle your harmony on and off mid-song. Change it in Chorale and set <code>TRIGGER_CC = 27</code> in the pedal firmware to match.</div>
 
 <h3>C · MIDI</h3>
 <table>
@@ -143,7 +161,7 @@
 </table>
 
 <div class="foot">
-Aangan · Nathaniel School of Music · rev 4 (30 Jul 2026) · Order 1 ≈ ₹51,000 · Order 2 ≈ ₹39,300 · Order 3 ≈ ₹47,000 (stageable — Dyson integration is ₹0; first proving step is one purifier + one air node ≈ ₹20,500) · build documents: “Aangan — Install Guide + Idea Menu”, “Aangan — Air, Ventilation &amp; Environment Plan”, PIANO_PI_BUILD_PLAN.html in the aangan repo.
+Aangan · Nathaniel School of Music · rev 5 (31 Jul 2026) · Order 1 ≈ ₹51,000 · Order 2 ≈ ₹31,500 core (stage-worthy, both apps) · Order 3 ≈ ₹47,000 (stageable — Dyson integration is ₹0; first proving step is one purifier + one air node ≈ ₹20,500) · build documents: “Aangan — Install Guide + Idea Menu”, “Aangan — Air, Ventilation &amp; Environment Plan”, PIANO_PI_BUILD_PLAN.html in the aangan repo.
 </div>
 </body>
 </html>
