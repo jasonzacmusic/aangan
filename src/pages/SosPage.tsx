@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { SOS_MESSAGES, SOS_PEOPLE } from "../api/types";
 import HoldButton from "../components/HoldButton";
+import { AlertIcon } from "../components/icons";
 import { useStore } from "../state/store";
 import { timeSince } from "../state/store";
 
@@ -31,7 +32,9 @@ export default function SosPage() {
   if (sos?.active) {
     return (
       <div className="rise-in mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-6 text-center">
-        <div className="emergency-flash flex h-20 w-20 items-center justify-center rounded-full border-2 border-st-emergency bg-st-emergency/20 text-4xl">🆘</div>
+        <div className="emergency-flash flex h-20 w-20 items-center justify-center rounded-full border-2 border-st-emergency bg-st-emergency/20 text-st-emergency">
+          <AlertIcon size={38} />
+        </div>
         <div className="mt-6 font-mono text-[10px] uppercase tracking-[0.4em] text-st-emergency">SOS is live</div>
         <h1 className="font-display mt-3 text-4xl text-st-emergency">{sos.who} needs help</h1>
         {sos.message && <p className="mt-3 text-lg text-paper">“{sos.message}”</p>}

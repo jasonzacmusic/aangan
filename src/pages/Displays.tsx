@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { DISPLAY_CONTENT_META, DEFAULT_DISPLAYS, DisplayContent } from "../api/types";
+import { CloseIcon } from "../components/icons";
 import { useStore } from "../state/store";
 
 const COURIERS = ["Swiggy", "Instamart", "Blinkit", "Zepto", "Zomato", "Amazon", "BigBasket", "Porter"];
@@ -44,7 +45,7 @@ export default function Displays() {
   const minsLeft = delivery ? Math.max(0, Math.ceil((delivery.expiresAt - Date.now()) / 60000)) : 0;
 
   return (
-    <div className="rise-in mx-auto max-w-md px-5 lg:max-w-3xl">
+    <div className="rise-in page-shell">
       <h2 className="font-display mb-1 text-2xl lg:text-3xl">Displays</h2>
       <p className="mb-5 font-mono text-[11px] text-dim">every screen shows exactly what you assign</p>
 
@@ -188,9 +189,9 @@ export default function Displays() {
                     <button
                       onClick={() => void removeDisplay(d.id)}
                       aria-label={`Remove ${d.name}`}
-                      className="rounded-lg border border-line px-2.5 py-2 text-xs text-dim hover:text-st-audio"
+                      className="flex items-center justify-center rounded-lg border border-line px-2.5 py-2 text-dim transition-colors hover:border-st-audio/40 hover:text-st-audio"
                     >
-                      ✕
+                      <CloseIcon size={15} />
                     </button>
                   )}
                 </div>

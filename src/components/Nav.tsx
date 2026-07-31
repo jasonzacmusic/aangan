@@ -87,7 +87,7 @@ export default function Nav({ tab, setTab }: Props) {
               className={`flex flex-1 flex-col items-center gap-1 py-2.5 transition-colors ${tab === t.id ? "text-gold" : "text-dim"}`}
             >
               {t.icon}
-              <span className="font-mono text-[9px] uppercase tracking-[0.18em]">{t.label}</span>
+              <span className="whitespace-nowrap font-mono text-[8.5px] uppercase tracking-[0.1em]">{t.label}</span>
             </button>
           ))}
         </div>

@@ -87,7 +87,7 @@ export default function VoiceButton({ onCommand }: Props) {
       <button
         aria-label="Voice command"
         onClick={start}
-        className={`fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full border transition-all active:scale-95 lg:bottom-8 lg:right-8 ${
+        className={`fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full border shadow-2xl shadow-black/60 transition-all active:scale-95 lg:bottom-6 lg:right-6 ${
           listening ? "listening border-gold bg-gold text-ink" : "border-gold/50 bg-surface/90 text-gold backdrop-blur"
         }`}
       >

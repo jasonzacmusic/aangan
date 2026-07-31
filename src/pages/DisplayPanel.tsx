@@ -5,6 +5,7 @@ import DbMeter from "../components/DbMeter";
 import NudgeBanner from "../components/NudgeBanner";
 import GuestQr from "../components/GuestQr";
 import AirBanner from "../components/AirBanner";
+import { AlertIcon } from "../components/icons";
 
 /**
  * Full-screen kiosk view for a wall/door display.
@@ -79,7 +80,7 @@ export default function DisplayPanel({ id }: { id: string }) {
   if (sos?.active) {
     return (
       <PanelChrome accent="#7C3AED" pulse>
-        <div className="emergency-flash text-8xl">🆘</div>
+        <AlertIcon size={92} className="emergency-flash text-st-emergency" />
         <div className="mt-6 font-mono text-sm uppercase tracking-[0.4em] text-st-emergency">Family SOS</div>
         <div className="font-display mt-4 text-7xl leading-tight lg:text-8xl" style={{ color: "#a78bfa", textShadow: "0 0 50px #7C3AED88" }}>
           {sos.who} NEEDS HELP

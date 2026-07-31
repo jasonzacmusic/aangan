@@ -1,5 +1,6 @@
 import React from "react";
 import { useStore, timeSince } from "../state/store";
+import { ChevronLeftIcon, ChevronRightIcon, PlayIcon } from "./icons";
 
 /** The PIANO Pi (Pianoteq stage rig) as a living card on the Home page. */
 export default function PianoRigCard() {
@@ -28,16 +29,16 @@ export default function PianoRigCard() {
               <button
                 onClick={() => void sendPianoCue("prev_preset")}
                 aria-label="Previous piano preset"
-                className="h-10 w-10 rounded-xl border border-line text-dim transition-all active:scale-95"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-dim transition-all hover:border-gold/30 hover:text-paper active:scale-95"
               >
-                ‹
+                <ChevronLeftIcon size={18} />
               </button>
               <button
                 onClick={() => void sendPianoCue("next_preset")}
                 aria-label="Next piano preset"
-                className="h-10 w-10 rounded-xl border border-gold/40 bg-gold/10 text-gold transition-all active:scale-95"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-gold/40 bg-gold/10 text-gold transition-all hover:bg-gold/20 active:scale-95"
               >
-                ›
+                <ChevronRightIcon size={18} />
               </button>
             </div>
           )}
@@ -76,9 +77,10 @@ export default function PianoRigCard() {
             {p.online && p.blackbox.lastTakeAt && !p.blackbox.recording && (
               <button
                 onClick={() => void sendPianoCue("replay_last")}
-                className="shrink-0 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-gold transition-all active:scale-95"
+                className="flex shrink-0 items-center gap-1.5 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-gold transition-all hover:bg-gold/20 active:scale-95"
               >
-                ▶ Replay
+                <PlayIcon size={11} />
+                Replay
               </button>
             )}
           </div>

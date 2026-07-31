@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useStore } from "../state/store";
+import { PianoIcon, WindowIcon } from "./icons";
 
 export interface AirAlert {
   kind: "co2" | "climate";
@@ -65,7 +66,7 @@ export default function AirBanner({ variant = "app" }: { variant?: "app" | "pane
       <div className="mt-6 flex flex-col items-center gap-3">
         {alerts.map((a) => (
           <div key={a.kind} className="flex items-center justify-center gap-4 rounded-2xl border border-st-meeting/50 bg-st-meeting/10 px-8 py-4">
-            <span className="text-3xl" aria-hidden>{a.kind === "co2" ? "🪟" : "🎹"}</span>
+            {a.kind === "co2" ? <WindowIcon size={34} className="shrink-0 text-st-meeting" /> : <PianoIcon size={34} className="shrink-0 text-st-meeting" />}
             <div className="text-left">
               <div className="font-display text-2xl text-st-meeting">{a.title}</div>
               <div className="mt-0.5 font-mono text-sm text-paper/80">{a.detail}</div>
@@ -80,7 +81,7 @@ export default function AirBanner({ variant = "app" }: { variant?: "app" | "pane
     <div className="mt-4 space-y-2">
       {alerts.map((a) => (
         <div key={a.kind} className="rise-in flex items-center gap-3 rounded-2xl border border-st-meeting/50 bg-st-meeting/10 p-3.5" role="status">
-          <span className="text-2xl" aria-hidden>{a.kind === "co2" ? "🪟" : "🎹"}</span>
+          {a.kind === "co2" ? <WindowIcon size={22} className="shrink-0 text-st-meeting" /> : <PianoIcon size={22} className="shrink-0 text-st-meeting" />}
           <div className="flex-1">
             <div className="text-sm font-semibold text-st-meeting">{a.title}</div>
             <div className="font-mono text-[10px] text-dim">{a.detail}</div>

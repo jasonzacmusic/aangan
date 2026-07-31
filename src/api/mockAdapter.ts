@@ -135,7 +135,7 @@ export class MockAdapter implements ApiAdapter {
   /** Modes saved before a hush, so restoring is exact rather than a guess. */
   private preHushModes: Record<string, PurifierMode> = {};
   private fleet: FleetDevice[] = [
-    { id: "mac-mini", name: "Studio Mac mini", kind: "mac", online: true, lastSeen: Date.now(), detail: "REAPER host · backup 03:00 ✓" },
+    { id: "mac-mini", name: "Studio Mac mini", kind: "mac", online: true, lastSeen: Date.now(), detail: "REAPER host · backup 03:00 OK" },
     { id: "house-pi", name: "House Pi", kind: "pi", online: true, lastSeen: Date.now(), detail: "Home Assistant · 6/6 nodes" },
     { id: "piano-pi", name: "Piano Pi", kind: "pi", online: true, lastSeen: Date.now(), detail: "Pianoteq · black-box armed" },
     { id: "panel-front", name: "Front-door panel", kind: "panel", online: true, lastSeen: Date.now(), detail: "door sign · kiosk" },

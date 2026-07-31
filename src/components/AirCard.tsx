@@ -23,33 +23,27 @@ function RoomRow({ room }: { room: AirRoomReading }) {
   const rhOut = room.humidityPct > settings.rhMax || room.humidityPct < settings.rhMin;
   const smelly = room.vocIndex >= 160;
 
+  const metrics = [
+    { key: "CO₂", value: String(room.co2), note: co2.word, color: co2.color },
+    { key: "PM2.5", value: room.pm25.toFixed(0), note: dust.word, color: dust.color },
+    { key: "Odour", value: String(room.vocIndex), note: smelly ? "stale" : "ok", color: smelly ? "text-st-meeting" : "text-paper" },
+    { key: "RH", value: `${room.humidityPct.toFixed(0)}%`, note: rhOut ? "watch" : "safe", color: rhOut ? "text-st-meeting" : "text-paper" },
+  ];
+
   return (
-    <div className="rounded-xl border border-line bg-surface2 px-3 py-2.5">
+    <div className="rounded-xl border border-line bg-surface2 px-3.5 py-3">
       <div className="flex items-baseline justify-between gap-2">
         <span className="truncate text-sm font-semibold text-paper">{room.name}</span>
         {!room.online && <span className="font-mono text-[9px] uppercase tracking-wider text-st-audio">node offline</span>}
       </div>
-      <div className="mt-1.5 grid grid-cols-4 gap-1.5 text-center">
-        <div>
-          <div className="font-mono text-[8px] uppercase tracking-widest text-dim">CO₂</div>
-          <div className={`text-sm font-semibold ${co2.color}`}>{room.co2}</div>
-          <div className="font-mono text-[8px] text-dim">{co2.word}</div>
-        </div>
-        <div>
-          <div className="font-mono text-[8px] uppercase tracking-widest text-dim">PM2.5</div>
-          <div className={`text-sm font-semibold ${dust.color}`}>{room.pm25.toFixed(0)}</div>
-          <div className="font-mono text-[8px] text-dim">{dust.word}</div>
-        </div>
-        <div>
-          <div className="font-mono text-[8px] uppercase tracking-widest text-dim">Odour</div>
-          <div className={`text-sm font-semibold ${smelly ? "text-st-meeting" : "text-paper"}`}>{room.vocIndex}</div>
-          <div className="font-mono text-[8px] text-dim">{smelly ? "stale" : "ok"}</div>
-        </div>
-        <div>
-          <div className="font-mono text-[8px] uppercase tracking-widest text-dim">RH</div>
-          <div className={`text-sm font-semibold ${rhOut ? "text-st-meeting" : "text-paper"}`}>{room.humidityPct.toFixed(0)}%</div>
-          <div className="font-mono text-[8px] text-dim">{rhOut ? "watch" : "safe"}</div>
-        </div>
+      <div className="mt-2 grid grid-cols-4 gap-2">
+        {metrics.map((m) => (
+          <div key={m.key} className="min-w-0">
+            <div className="truncate font-mono text-[8px] uppercase tracking-[0.12em] text-dim">{m.key}</div>
+            <div className={`mt-0.5 text-base font-semibold tabular-nums ${m.color}`}>{m.value}</div>
+            <div className="truncate font-mono text-[8px] text-dim">{m.note}</div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -82,7 +76,9 @@ export default function AirCard() {
       </div>
 
       <div className="rounded-2xl border border-line bg-surface/80 p-3 backdrop-blur">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {/* Stacked rows: three rooms side by side squeezes four numbers into
+            nothing on a phone and inside a desktop dashboard column alike. */}
+        <div className="flex flex-col gap-2">
           {air.rooms.map((r) => (
             <RoomRow key={r.id} room={r} />
           ))}
@@ -129,13 +125,13 @@ export default function AirCard() {
         {/* Per-purifier control */}
         <div className="mt-3 space-y-2">
           {air.purifiers.map((p) => (
-            <div key={p.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface2 px-3 py-2">
-              <div className="min-w-0 flex-1">
+            <div key={p.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-xl border border-line bg-surface2 px-3.5 py-2.5">
+              <div className="min-w-[8rem] flex-1">
                 <div className="flex items-baseline gap-2">
                   <span className="truncate text-sm font-semibold text-paper">{p.name}</span>
-                  <span className="font-mono text-[8px] uppercase tracking-wider text-dim">{p.brand}</span>
+                  <span className="shrink-0 font-mono text-[8px] uppercase tracking-wider text-dim">{p.brand}</span>
                 </div>
-                <div className="font-mono text-[9px] text-dim">
+                <div className="truncate font-mono text-[9px] text-dim">
                   {p.online ? `${PURIFIER_MODE_META[p.mode].hint} · filter ${p.filterPct}%` : "offline"}
                 </div>
               </div>

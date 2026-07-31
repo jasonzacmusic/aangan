@@ -2,6 +2,7 @@ import React from "react";
 import { useStore } from "../state/store";
 import DbMeter from "../components/DbMeter";
 import { ROOM_NAMES, StudioState } from "../api/types";
+import { CheckIcon, PendingIcon, PlayIcon, RecordIcon } from "../components/icons";
 
 interface Props {
   onSelect: (s: StudioState) => void;
@@ -49,7 +50,7 @@ export default function Preflight({ onSelect }: Props) {
   const openList = preflight.openDoors.map((id) => ROOM_NAMES[id]).join(", ");
 
   return (
-    <div className="rise-in mx-auto max-w-md px-5 lg:max-w-2xl">
+    <div className="rise-in page-shell page-shell--narrow">
       <h2 className="font-display mb-1 text-2xl lg:text-3xl">Pre-flight</h2>
       <p className="mb-5 font-mono text-[11px] text-dim">go / no-go before tape rolls</p>
 
@@ -152,8 +153,9 @@ export default function Preflight({ onSelect }: Props) {
               ["AC", preflightPrep.acOff],
               ["Fan", preflightPrep.fanOff],
             ].map(([label, done]) => (
-              <div key={String(label)} className={`rounded-lg border px-2 py-2 text-center font-mono text-[8px] uppercase tracking-wider ${done ? "border-st-available/30 bg-st-available/10 text-st-available" : "border-line text-dim"}`}>
-                {done ? "✓ " : "… "}{label}
+              <div key={String(label)} className={`flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-center font-mono text-[8px] uppercase tracking-wider ${done ? "border-st-available/30 bg-st-available/10 text-st-available" : "border-line text-dim"}`}>
+                {done ? <CheckIcon size={11} strokeWidth={2.2} /> : <PendingIcon size={11} />}
+                {label}
               </div>
             ))}
           </div>
@@ -174,20 +176,22 @@ export default function Preflight({ onSelect }: Props) {
         <button
           disabled={!ready}
           onClick={() => onSelect("audio_rec")}
-          className={`h-16 rounded-2xl border font-semibold transition-all ${
-            ready ? "border-st-audio/60 bg-st-audio/15 text-st-audio active:scale-[0.98]" : "cursor-not-allowed border-line bg-surface/50 text-dim/50"
+          className={`flex h-16 items-center justify-center gap-2 rounded-2xl border font-semibold transition-all ${
+            ready ? "border-st-audio/60 bg-st-audio/15 text-st-audio hover:bg-st-audio/25 active:scale-[0.98]" : "cursor-not-allowed border-line bg-surface/50 text-dim/50"
           }`}
         >
-          ● Start Audio Rec
+          <RecordIcon size={17} />
+          Start Audio Rec
         </button>
         <button
           disabled={!ready}
           onClick={() => onSelect("video_rec")}
-          className={`h-16 rounded-2xl border font-semibold transition-all ${
-            ready ? "border-st-video/60 bg-st-video/15 text-st-video active:scale-[0.98]" : "cursor-not-allowed border-line bg-surface/50 text-dim/50"
+          className={`flex h-16 items-center justify-center gap-2 rounded-2xl border font-semibold transition-all ${
+            ready ? "border-st-video/60 bg-st-video/15 text-st-video hover:bg-st-video/25 active:scale-[0.98]" : "cursor-not-allowed border-line bg-surface/50 text-dim/50"
           }`}
         >
-          ▶ Start Video Rec
+          <PlayIcon size={16} />
+          Start Video Rec
         </button>
       </div>
       {!ready && <p className="mt-2 text-center font-mono text-[10px] text-dim">recording unlocks when everything is green</p>}

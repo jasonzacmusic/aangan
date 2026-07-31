@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useStore } from "../state/store";
 import HoldButton from "../components/HoldButton";
 import { SafetyAlertKind, STATE_META } from "../api/types";
+import { RefreshIcon } from "../components/icons";
 
 function SafetyTile({ label, alert, okText, alertText }: { label: string; alert: boolean; okText: string; alertText: string }) {
   return (
@@ -50,7 +51,7 @@ export default function Safety() {
   const meta = STATE_META[stateInfo.state];
 
   return (
-    <div className="rise-in mx-auto max-w-md px-5 lg:max-w-2xl">
+    <div className="rise-in page-shell page-shell--narrow">
       <h2
         className="font-display mb-1 w-fit text-2xl lg:text-3xl"
         onPointerDown={startDemoHold}
@@ -79,8 +80,9 @@ export default function Safety() {
       <div className="mt-5 overflow-hidden rounded-2xl border border-line bg-surface/80">
         <div className="flex items-center justify-between px-4 py-3">
           <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-dim">Doorbell · Entrance cam</span>
-          <button onClick={refreshDoorbell} className="font-mono text-[10px] uppercase tracking-wider text-gold active:opacity-60">
-            ↻ Refresh
+          <button onClick={refreshDoorbell} className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-gold transition-opacity hover:opacity-80 active:opacity-60">
+            <RefreshIcon size={13} />
+            Refresh
           </button>
         </div>
         {doorbell && (

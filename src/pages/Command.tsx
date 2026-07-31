@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { SceneDef, STATE_META, StudioState } from "../api/types";
 import StateDial from "../components/StateDial";
 import { timeSince, useStore } from "../state/store";
+import { ArrowRightIcon, ChevronDownIcon, SceneIcon, TuningForkIcon } from "../components/icons";
 
 interface Props {
   onSelect: (state: StudioState) => void;
@@ -31,7 +32,7 @@ export default function Command({ onSelect, onScene }: Props) {
   };
 
   return (
-    <div className="rise-in mx-auto flex max-w-md flex-col items-center px-5 pt-2 lg:max-w-2xl lg:pt-8">
+    <div className="rise-in page-shell page-shell--narrow flex flex-col items-center pt-2 lg:pt-8">
       <StateDial info={stateInfo} committing={committing} chimes={settings.chimes} onSelect={onSelect} />
 
       <p className="font-display mt-3 text-center text-[15px] italic text-paper/70 lg:text-lg">{meta.tagline}</p>
@@ -42,10 +43,11 @@ export default function Command({ onSelect, onScene }: Props) {
           <button
             onClick={soundA}
             disabled={tonePlaying}
-            className={`rounded-full border px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.18em] transition-all ${tonePlaying ? "border-gold bg-gold/20 text-gold" : "border-line text-dim active:scale-95"}`}
+            className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.18em] transition-all ${tonePlaying ? "border-gold bg-gold/20 text-gold" : "border-line text-dim hover:border-gold/40 hover:text-gold active:scale-95"}`}
             aria-label="Play A 440 tuning tone"
           >
-            {tonePlaying ? "A440 sounding" : "♪ A440"}
+            <TuningForkIcon size={13} />
+            {tonePlaying ? "A440 sounding" : "A440"}
           </button>
         </div>
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
@@ -60,11 +62,12 @@ export default function Command({ onSelect, onScene }: Props) {
                 className={`scene-button flex items-center gap-3 overflow-hidden rounded-2xl border bg-surface/80 px-4 py-3.5 text-left backdrop-blur transition-all active:scale-[0.98] sm:flex-col sm:items-start sm:gap-2 ${running ? "scene-conducting" : "border-line"}`}
                 style={running ? { borderColor: `${sceneMeta.color}88`, boxShadow: `0 0 24px ${sceneMeta.color}22` } : undefined}
               >
-                <span className="scene-icon text-xl">{scene.icon}</span>
-                <span>
-                  <span className="block text-sm font-medium">{running ? "Conducting…" : scene.label}</span>
-                  <span className="font-mono text-[10px] uppercase tracking-wider" style={{ color: sceneMeta.color }}>
-                    → {sceneMeta.label}
+                <SceneIcon icon={scene.icon} size={22} className="scene-icon shrink-0 text-gold" />
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium">{running ? "Conducting…" : scene.label}</span>
+                  <span className="mt-0.5 flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider" style={{ color: sceneMeta.color }}>
+                    <ArrowRightIcon size={11} />
+                    {sceneMeta.label}
                   </span>
                 </span>
               </button>
@@ -83,7 +86,7 @@ export default function Command({ onSelect, onScene }: Props) {
             <span className="block font-mono text-[10px] uppercase tracking-[0.28em] text-dim">House memory</span>
             {!historyOpen && history[0] && <span className="mt-1 block text-xs text-paper/70">{history[0].title} · {latestWhen}</span>}
           </span>
-          <span className={`text-gold transition-transform ${historyOpen ? "rotate-180" : ""}`} aria-hidden="true">⌄</span>
+          <ChevronDownIcon size={18} className={`shrink-0 text-gold transition-transform ${historyOpen ? "rotate-180" : ""}`} />
         </button>
         {historyOpen && (
           <div className="border-t border-line px-4 py-1">

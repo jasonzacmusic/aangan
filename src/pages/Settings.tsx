@@ -3,6 +3,7 @@ import { useStore } from "../state/store";
 import { DATA_SOURCE } from "../api/api";
 import { LIVE_BASE_URL } from "../config";
 import { STATE_META, STATE_ORDER, SceneDef, StudioState } from "../api/types";
+import { SCENE_ICON_KEYS, SCENE_ICONS, SceneIcon } from "../components/icons";
 
 function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
@@ -36,8 +37,6 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
 export default function Settings() {
   const { settings, updateSettings, notificationPermission, requestNotificationPermission } = useStore();
 
-  const icons = ["🎬", "🎹", "🎙️", "🎧", "💡", "🌙", "☕", "🎸", "🎼", "🔴"];
-
   const updateScene = (idx: number, patch: Partial<SceneDef>) => {
     const scenes = settings.scenes.map((s, i) => (i === idx ? { ...s, ...patch } : s));
     updateSettings({ scenes });
@@ -45,13 +44,13 @@ export default function Settings() {
 
   const addScene = () => {
     const id = typeof crypto !== "undefined" && "randomUUID" in crypto ? `custom-${crypto.randomUUID()}` : `custom-${Date.now()}`;
-    updateSettings({ scenes: [...settings.scenes, { id, label: "New house scene", state: "available", icon: "💡" }] });
+    updateSettings({ scenes: [...settings.scenes, { id, label: "New house scene", state: "available", icon: "bulb" }] });
   };
 
   const removeScene = (idx: number) => updateSettings({ scenes: settings.scenes.filter((_, i) => i !== idx) });
 
   return (
-    <div className="rise-in mx-auto max-w-md px-5 lg:max-w-2xl">
+    <div className="rise-in page-shell page-shell--narrow">
       <h2 className="font-display mb-1 text-2xl lg:text-3xl">Settings</h2>
       <p className="mb-5 font-mono text-[11px] text-dim">
         data source: <span className="text-gold uppercase">{DATA_SOURCE}</span>
@@ -183,14 +182,9 @@ export default function Settings() {
           {settings.scenes.map((sc, i) => (
             <div key={sc.id} className="rounded-xl border border-line bg-surface2 p-3">
               <div className="flex items-center gap-2">
-                <select
-                  value={sc.icon}
-                  onChange={(e) => updateScene(i, { icon: e.target.value })}
-                  aria-label={`Icon for ${sc.label}`}
-                  className="h-10 w-12 rounded-lg border border-line bg-ink px-1 text-center text-lg outline-none focus:border-gold/60"
-                >
-                  {icons.map((icon) => <option key={icon} value={icon}>{icon}</option>)}
-                </select>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line bg-ink text-gold">
+                  <SceneIcon icon={sc.icon} size={19} />
+                </span>
                 <input
                   value={sc.label}
                   onChange={(e) => updateScene(i, { label: e.target.value })}
@@ -199,7 +193,27 @@ export default function Settings() {
                 />
                 <button onClick={() => removeScene(i)} className="h-10 rounded-lg border border-line px-3 text-xs text-dim hover:text-st-audio" aria-label={`Remove ${sc.label}`}>Remove</button>
               </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
+              <div className="mt-2.5 flex flex-wrap gap-1.5" role="group" aria-label={`Icon for ${sc.label}`}>
+                {SCENE_ICON_KEYS.map((key) => {
+                  const Cmp = SCENE_ICONS[key];
+                  const active = sc.icon === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => updateScene(i, { icon: key })}
+                      aria-label={key}
+                      aria-pressed={active}
+                      className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
+                        active ? "border-gold/60 bg-gold/15 text-gold" : "border-line text-dim hover:border-gold/30 hover:text-paper"
+                      }`}
+                    >
+                      <Cmp size={17} />
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
                 {STATE_ORDER.filter((s) => s !== "emergency").map((s) => {
                   const m = STATE_META[s];
                   const active = sc.state === s;

@@ -1,13 +1,14 @@
 import React from "react";
 import { FleetDevice } from "../api/types";
 import { timeSince, useStore } from "../state/store";
+import { ChipIcon, IconProps, MonitorIcon, PlugIcon, SignIcon, WifiIcon } from "./icons";
 
-const KIND_ICON: Record<FleetDevice["kind"], string> = {
-  mac: "🖥",
-  pi: "🍓",
-  panel: "🪧",
-  network: "📡",
-  other: "🔌",
+const KIND_ICON: Record<FleetDevice["kind"], (p: IconProps) => React.JSX.Element> = {
+  mac: MonitorIcon,
+  pi: ChipIcon,
+  panel: SignIcon,
+  network: WifiIcon,
+  other: PlugIcon,
 };
 
 /** One glance answers: is everything in the school alive? */
@@ -27,9 +28,11 @@ export default function FleetCard() {
       </div>
       <div className={`rounded-2xl border p-2 backdrop-blur ${allUp ? "border-line bg-surface/80" : "border-st-audio/40 bg-st-audio/5"}`}>
         <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
-          {fleet.map((d) => (
+          {fleet.map((d) => {
+            const KindIcon = KIND_ICON[d.kind];
+            return (
             <div key={d.id} className={`flex items-center gap-3 rounded-xl px-3 py-2 ${d.online ? "" : "bg-st-audio/10"}`}>
-              <span className="text-base" aria-hidden>{KIND_ICON[d.kind]}</span>
+              <KindIcon size={18} className={d.online ? "shrink-0 text-dim" : "shrink-0 text-st-audio"} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2">
                   <span className="truncate text-sm font-semibold text-paper">{d.name}</span>
@@ -43,7 +46,8 @@ export default function FleetCard() {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

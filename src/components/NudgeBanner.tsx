@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { useStore } from "../state/store";
+import { DoorIcon } from "./icons";
 
 /**
  * The "close the door" nudge: when any monitored door is open AND the music
@@ -30,7 +31,7 @@ export default function NudgeBanner({ variant = "app" }: { variant?: "app" | "pa
   if (variant === "panel") {
     return (
       <div className="emergency-flash mt-8 flex items-center justify-center gap-4 rounded-2xl border border-st-meeting/60 bg-st-meeting/15 px-8 py-5">
-        <span className="text-4xl">🚪</span>
+        <DoorIcon size={34} className="shrink-0 text-st-meeting" />
         <div className="text-left">
           <div className="font-display text-3xl text-st-meeting">Please close the {nudge.count > 1 ? "doors" : "door"}</div>
           <div className="mt-1 font-mono text-sm text-paper/80">{nudge.names} open · {nudge.db} dB in the music room</div>
@@ -40,8 +41,11 @@ export default function NudgeBanner({ variant = "app" }: { variant?: "app" | "pa
   }
 
   return (
-    <div className="rise-in fixed inset-x-4 top-16 z-[30] mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-st-meeting/50 bg-surface/95 p-3.5 shadow-2xl backdrop-blur lg:top-6" role="status">
-      <span className="text-2xl">🚪</span>
+    <div
+      className="rise-in fixed inset-x-4 top-16 z-[30] mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-st-meeting/50 bg-surface/95 p-3.5 shadow-2xl shadow-black/50 backdrop-blur sm:inset-x-auto sm:right-5 sm:top-5 sm:mx-0 sm:w-[21rem] lg:top-20"
+      role="status"
+    >
+      <DoorIcon size={22} className="shrink-0 text-st-meeting" />
       <div className="flex-1">
         <div className="text-sm font-semibold text-st-meeting">Please close the {nudge.count > 1 ? "doors" : "door"}</div>
         <div className="font-mono text-[10px] text-dim">{nudge.names} open · {nudge.db} dB with sound in the room</div>

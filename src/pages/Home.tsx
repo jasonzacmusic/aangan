@@ -15,11 +15,11 @@ export default function Home() {
   const live = openRoom ? rooms.find((r) => r.id === openRoom.id) ?? openRoom : null;
 
   return (
-    <div className="rise-in mx-auto max-w-md px-5 lg:max-w-3xl">
+    <div className="rise-in page-shell">
       <h2 className="font-display mb-1 text-2xl lg:text-3xl">The House</h2>
       <p className="mb-5 font-mono text-[11px] text-dim">5 zones · live from the room sensors</p>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {rooms.map((r) => (
           <RoomCard key={r.id} room={r} threshold={settings.dbThreshold} onOpen={() => setOpenRoom(r)} />
         ))}
@@ -27,13 +27,17 @@ export default function Home() {
 
       <AirBanner />
 
-      <AirCard />
-
-      <PianoRigCard />
-
-      <FleetCard />
-
-      <UtilitiesPanel />
+      {/* Two balanced columns on a desktop; one honest scroll on a phone. */}
+      <div className="dash-grid">
+        <div>
+          <AirCard />
+          <PianoRigCard />
+        </div>
+        <div>
+          <FleetCard />
+          <UtilitiesPanel />
+        </div>
+      </div>
 
       {/* Room detail sheet */}
       {live && (

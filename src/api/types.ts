@@ -274,7 +274,8 @@ export interface SceneDef {
   id: string;
   label: string;
   state: StudioState;
-  icon: string; // emoji-ish glyph shown on the button
+  /** A key from SCENE_ICONS in components/icons.tsx (legacy emoji still resolve). */
+  icon: string;
 }
 
 /** Everything the app needs from the house, mock or live. */
@@ -411,7 +412,7 @@ export const ROOM_NAMES: Record<RoomId, string> = {
 };
 
 export const DEFAULT_SCENES: SceneDef[] = [
-  { id: "youtube", label: "Start YouTube shoot", state: "video_rec", icon: "🎬" },
-  { id: "classmode", label: "Class mode", state: "class", icon: "🎹" },
-  { id: "winddown", label: "Wind down", state: "available", icon: "🌙" },
+  { id: "youtube", label: "Start YouTube shoot", state: "video_rec", icon: "clapper" },
+  { id: "classmode", label: "Class mode", state: "class", icon: "piano" },
+  { id: "winddown", label: "Wind down", state: "available", icon: "moon" },
 ];

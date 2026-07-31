@@ -59,6 +59,70 @@ select:focus-visible,
   min-height: 100dvh;
 }
 
+/* ── Page shell ────────────────────────────────────────
+   One container for every page so phone, laptop and the
+   desktop all get a deliberate measure instead of a phone
+   column stretched across a 27-inch screen.               */
+.page-shell {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+  max-width: 30rem;
+}
+@media (min-width: 640px) {
+  .page-shell {
+    max-width: 44rem;
+    padding-inline: 1.75rem;
+  }
+}
+@media (min-width: 1024px) {
+  .page-shell {
+    max-width: 62rem;
+    padding-inline: 2.5rem;
+  }
+}
+@media (min-width: 1536px) {
+  .page-shell {
+    max-width: 80rem;
+  }
+}
+
+/* Reading-width variant for pages that are lists, not dashboards. */
+.page-shell--narrow {
+  max-width: 30rem;
+}
+@media (min-width: 640px) {
+  .page-shell--narrow { max-width: 40rem; }
+}
+@media (min-width: 1024px) {
+  .page-shell--narrow { max-width: 46rem; }
+}
+
+/* Desktop dashboard: cards flow into columns instead of one long scroll. */
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+@media (min-width: 1280px) {
+  .dash-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1.5rem;
+    align-items: start;
+  }
+}
+
+/* Pointer-capable devices get hover affordances; touch screens do not. */
+@media (hover: hover) {
+  .lift {
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease;
+  }
+  .lift:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--color-gold) 32%, transparent);
+  }
+}
+
 /* ── Living background ─────────────────────────────── */
 .living-bg {
   position: fixed;

@@ -183,7 +183,7 @@ export default function App() {
         <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-dim">{dataSource} · {statusLabel}</span>
       </div>
 
-      <main className="relative z-10 pb-32 pt-2 lg:pl-56 lg:pt-16">
+      <main className="relative z-10 pb-32 pt-2 lg:pl-56 lg:pb-28 lg:pt-16">
         {tab === "command" && <Command onSelect={requestState} onScene={requestScene} />}
         {tab === "home" && <Home />}
         {tab === "preflight" && <Preflight onSelect={requestState} />}
