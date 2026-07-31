@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Aangan + Chorale · Master Status</title>
+<style>
+  :root{--plum:#2a1e4d;--rasp:#C51A4A;--teal:#077857;--blue:#1D4ED8;--viol:#6D28D9;--amber:#92580a;--line:#e2dccb;--muted:#6B6456;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,'Inter',sans-serif;background:#fff;color:#1a1822;line-height:1.55;font-size:12.8px;padding:32px 40px;max-width:1040px;margin:0 auto;}
+  h1{font-size:27px;color:var(--plum);}
+  .sub{color:var(--muted);font-size:12.5px;margin:5px 0 14px;}
+  h2{font-size:16.5px;color:#fff;background:var(--plum);padding:9px 14px;border-radius:9px;margin:26px 0 8px;}
+  h2 small{font-weight:400;font-size:11px;opacity:.85;}
+  h3{font-size:14px;color:var(--rasp);margin:18px 0 5px;}
+  h4{font-size:12.5px;color:var(--plum);margin:14px 0 4px;font-weight:700;}
+  p{margin:6px 0;}
+  ul{margin:6px 0 6px 19px;}
+  li{padding:2.5px 0;}
+  table{width:100%;border-collapse:collapse;font-size:12.2px;margin:8px 0;}
+  th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);border-bottom:2px solid var(--line);padding:6px 8px;}
+  td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
+  td.c{text-align:center;white-space:nowrap;}
+  td.p{white-space:nowrap;text-align:right;color:var(--muted);}
+  code{font-family:ui-monospace,Menlo,monospace;font-size:11.2px;background:#f4f1ea;padding:1px 5px;border-radius:4px;}
+  a{color:#0b57d0;text-decoration:none;font-weight:600;}
+  .call{border-radius:0 10px 10px 0;padding:10px 14px;margin:10px 0;font-size:12.3px;}
+  .call.green{background:#EAF8F1;border-left:4px solid #10B981;color:#0A5840;}
+  .call.amber{background:#FDF6E9;border-left:4px solid #F59E0B;color:#6B4D08;}
+  .call.red{background:#FBE9E9;border-left:4px solid #DC2626;color:#7a1f1f;}
+  .call.blue{background:#E8EEFB;border-left:4px solid var(--blue);color:#1e3a8a;}
+  .tag{display:inline-block;font-size:8.5px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:20px;white-space:nowrap;}
+  .t-live{background:#EAF8F1;color:#077857;}
+  .t-built{background:#E8EEFB;color:#1D4ED8;}
+  .t-appr{background:#F3EEFB;color:#6D28D9;}
+  .t-open{background:#FDF6E9;color:#92580a;}
+  .foot{margin-top:24px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:10.5px;}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:8px 0;}
+  @media print{body{padding:9mm 11mm;} h2,.tag{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+</style>
+</head>
+<body>
+
+<h1>Aangan + Chorale — Master Status</h1>
+<div class="sub">Nathaniel School of Music · everything built, decided and outstanding · 31 July 2026</div>
+
+<div class="legend">
+  <span><span class="tag t-live">LIVE</span> shipped and deployed</span>
+  <span><span class="tag t-built">BUILT</span> code written, waits on hardware</span>
+  <span><span class="tag t-appr">APPROVED</span> you said yes, not yet built</span>
+  <span><span class="tag t-open">OPEN</span> genuinely unresolved</span>
+</div>
+
+<!-- ─────────── 1 ─────────── -->
+<h2>1 · What Aangan is</h2>
+<p>Aangan (आंगन — the courtyard) is one system covering a family home and a working music studio in Bangalore. The organising idea is a single dial with six states — <b>Available, Class, Meeting, Audio Rec, Video Rec, Emergency</b> — and the whole house then behaves accordingly: door signs recolour, the doorbell mutes, AC and fan cut, the piano rig shows a tally, purifiers go quiet.</p>
+<p>It replaced the name "Studio Command". The repo is <a href="https://github.com/jasonzacmusic/aangan">jasonzacmusic/aangan</a>, the local path is <code>~/Documents/Claude/aangan</code>, and the app is live at <a href="https://studio-command.vercel.app">studio-command.vercel.app</a> (the Vercel <i>project</i> is still named studio-command, which is why the URL didn't change). Deploys are manual: <code>vercel --prod --yes</code> after pushing.</p>
+
+<h3>The machines</h3>
+<table>
+<tr><th>Machine</th><th>Role</th><th>OS</th><th>Status</th></tr>
+<tr><td><b>Pi 5 8GB — already owned</b></td><td>MUSIC Pi — Pianoteq, and now Chorale too</td><td>Raspberry Pi OS 64-bit Desktop</td><td><span class="tag t-open">awaiting audio board</span></td></tr>
+<tr><td><b>Pi 5 8GB — to buy</b></td><td>HOUSE Pi — Home Assistant, every sensor, the studio_ready verdict</td><td>Home Assistant OS</td><td><span class="tag t-open">to buy</span></td></tr>
+<tr><td><b>2× Samsung Galaxy Tab A9</b></td><td>Front-door and studio-door screens, kiosk mode</td><td>Android + Fully Kiosk Browser</td><td><span class="tag t-open">to buy</span></td></tr>
+<tr><td><b>Old iPad</b></td><td>Third in-house panel</td><td>—</td><td><span class="tag t-live">owned</span></td></tr>
+<tr><td><b>Apple TV</b></td><td>HomeKit hub — makes Siri work from anywhere</td><td>—</td><td><span class="tag t-built">bridge written</span></td></tr>
+</table>
+<p class="sub" style="margin:4px 0 0">The Pi Zero plan for the door screens was dropped: a tablet is screen, computer, touch and battery backup in one slab, with one cable — cheaper and neater than a Zero plus a driver board plus a PSU plus a case.</p>
+
+<!-- ─────────── 2 ─────────── -->
+<h2>2 · Everything shipped in the app <small>all live at studio-command.vercel.app</small></h2>
+
+<h3>28 July — safety and the door</h3>
+<table>
+<tr><th>Feature</th><th>What it does</th><th>Where</th></tr>
+<tr><td><b>Family SOS</b> <span class="tag t-live">LIVE</span></td><td>A page at <code>/#/sos</code> meant to live as a home-screen bookmark on Amma's, your and your brother's phones. Pick who you are, pick a message ("I need help right now", "I'm feeling unwell", "Call a doctor"), hold the button just over a second — pocket presses can't fire it. Every family phone rings through silent mode, all room signs flash violet, and <b>every wall panel takes over</b> showing who needs help. "I'm OK now" stands the house down.</td><td><code>/#/sos</code>, Safety page</td></tr>
+<tr><td><b>Delivery hand-off</b> <span class="tag t-live">LIVE</span></td><td>Two taps: courier chip (Swiggy, Instamart, Blinkit, Zepto, Zomato, Amazon, BigBasket, Porter), a pre-written message, type the OTP. The door screen shows it huge and clears itself. A <b>standing directions</b> line you type once ("Blue gate · lift to 2nd floor") rides under every hand-off.</td><td>Displays page</td></tr>
+<tr><td><b>Close-the-door nudge</b> <span class="tag t-live">LIVE</span></td><td>Any monitored door open while the room is above your recording threshold → "Please close the door" on phones and wall panels, with 3 dB hysteresis so a jittery mic can't flicker it.</td><td>App + panels</td></tr>
+</table>
+
+<h3>29 July — the piano, the Apple TV, the calendar, the fleet, the guest</h3>
+<table>
+<tr><th>Feature</th><th>What it does</th><th>Where</th></tr>
+<tr><td><b>MIDI black-box</b> <span class="tag t-built">BUILT</span></td><td>The rig silently captures <b>every note you ever play</b>, 24/7, as MIDI. Takes split automatically after 90 seconds of silence; a year of playing is a few megabytes. An improvisation is never lost — replay the last take straight back through Pianoteq. The app card shows a live red dot while capturing, takes today, and a <b>Replay</b> button.</td><td><code>pi/piano/midi_blackbox.py</code>, Piano Rig card</td></tr>
+<tr><td><b>Apple TV HomeKit bridge</b> <span class="tag t-built">BUILT</span></td><td>Home Assistant exposes Aangan to Apple Home. "Hey Siri, is the studio ready?", "Hey Siri, turn on Class Mode". Gas, fire and leak appear as <b>real HomeKit sensors</b> so iPhones give native critical alerts too. The Apple TV is the always-home hub that makes it work from outside the house. One QR scan to pair.</td><td><code>homekit_bridge.yaml</code></td></tr>
+<tr><td><b>Calendar-driven states</b> <span class="tag t-built">BUILT</span></td><td>Class or lesson events in Google Calendar flip the dial to Class five minutes early and back to Available after. Safety rails: it never interrupts a recording, a meeting or an emergency, and only reverts a state the <i>calendar</i> set.</td><td><code>calendar_states.yaml</code></td></tr>
+<tr><td><b>Fleet health card</b> <span class="tag t-live">LIVE</span></td><td>One glance answers "is everything in the school alive?" — Mac mini, House Pi, Piano Pi, all three panels, router. Green/red dot each, with detail ("Home Assistant · 6/6 nodes", "backup 03:00 OK"). Offline devices go red with "last seen X ago" and land in history.</td><td>Home page, <code>/api/fleet</code></td></tr>
+<tr><td><b>Guest QR</b> <span class="tag t-live">LIVE</span></td><td>Door screens carry a small "VISITING? Scan for live status" QR. It opens a read-only page telling the visitor what's happening inside and how to behave — "A lesson is in progress, please enter softly" — updating live. Nothing to install, no controls exposed.</td><td><code>/#/guest</code></td></tr>
+</table>
+
+<h3>30 July — air, ventilation and the instruments</h3>
+<div class="call amber"><b>The idea behind all four:</b> a purifier filters dust; it does nothing about CO₂. Only fresh air does. Measuring the difference is what makes this a system rather than a shelf of gadgets.</div>
+<table>
+<tr><th>Feature</th><th>What it does</th></tr>
+<tr><td><b>Recording-aware hush</b> <span class="tag t-live">LIVE</span></td><td>A purifier is a fan, and a fan lands on the take. The moment the dial goes to Audio or Video Rec, every purifier drops to silent; when the studio frees up they return to <b>the exact mode they were in before</b> — saved, not guessed. Verified in the browser: auto → silent → auto.</td></tr>
+<tr><td><b>Pre-class purge</b> <span class="tag t-live">LIVE</span></td><td>Twenty minutes before a calendar class the purifiers run flat out; the moment the class starts they go quiet. Students arrive to clean air <i>and</i> a silent room. Manual 10 and 20 minute purge buttons with a countdown, and it refuses to start during a take.</td></tr>
+<tr><td><b>CO₂ ventilation nudge</b> <span class="tag t-live">LIVE</span></td><td>Past your threshold the panels and phones say "Crack the door — the room is going stale", and during a class it names the real cost: this is what makes students dull. A sealed, soundproofed studio is <i>worse</i> than an ordinary room because it's sealed by design.</td></tr>
+<tr><td><b>Instrument climate guard</b> <span class="tag t-live">LIVE</span></td><td>A room outside 35–65% humidity for half an hour warns the family. A piano is wood and felt under tension; Bangalore's monsoon warps it and dry air cracks it, slowly and silently. Two cheap sensors protecting instruments worth lakhs.</td></tr>
+</table>
+<p><b>Also in that pass:</b> the Air card on Home (per-room CO₂, dust, odour index, humidity, plus per-purifier Off/Silent/Auto/Max), an air row in Pre-flight that is <b>deliberately advice, not a gate</b> — dust on camera is worth knowing but must never block recording, so <code>studio_ready</code> stays the original four checks — and Settings for the CO₂ threshold and the instrument humidity band.</p>
+<div class="call blue"><b>A real bug found and fixed while testing:</b> in the simulation, one open door anywhere was flushing CO₂ in <i>every</i> room at once and pinning it to the floor. It's now per-room with proportional (exponential) ventilation toward the 430 ppm outdoor baseline, which is how air actually behaves.</div>
+
+<h3>31 July — the design pass</h3>
+<p>You said the emojis were unprofessional and it needed to be a finished product across mobile, laptop and desktop. Both were fair.</p>
+<ul>
+  <li><b>A real icon set</b> — <code>src/components/icons.tsx</code>, 26 icons on one 24×24 geometry, single stroke weight, no fills, all inheriting the colour of whatever they sit in. Every emoji replaced: fleet devices, air alerts, the door nudge, the SOS mark, all scene icons. Text glyphs standing in for buttons (<code>‹ › ▶ ✕ ↻ ⌄ ● ✓</code>) became real chevron, play, close, refresh and check icons.</li>
+  <li><b>Scene icons migrate safely</b> — scenes you'd already saved held an emoji string. A legacy map translates them into the new icons, so nothing broke silently. The Settings picker changed from an emoji dropdown to a grid of ten tappable icons.</li>
+  <li><b>The A440 button carries a tuning fork</b> — the one icon in the set specific to your world rather than generic UI.</li>
+  <li><b>Responsive shell</b> — the app was capped at phone width, so on your Mac it was a ribbon down the middle. One container now runs 30rem phone → 44rem tablet → 62rem laptop → 80rem desktop, and Home becomes a <b>two-column dashboard</b> on wide screens.</li>
+  <li><b>Four flaws found by actually looking</b> at 375/768/1280/1680px: the door nudge was landing on the page title; the Air card's four metrics were colliding ("PM2.5ODOUR"); purifier rows were squeezing names to "Bedroo…"; the "Pre-flight" tab label wrapped onto two lines. All fixed.</li>
+  <li><b>Polish</b> — hover states only on pointer devices so touch screens don't stick, a shadow on the floating mic button, desktop bottom padding so content never hides under it.</li>
+</ul>
+
+<!-- ─────────── 3 ─────────── -->
+<h2>3 · Chorale — the vocal harmonizer</h2>
+<p>Repo <a href="https://github.com/jasonzacmusic/chorale">jasonzacmusic/chorale</a> at <code>~/Documents/New project/chorale</code>. JUCE 8 + C++, Signalsmith Stretch for formant-preserving pitch shift, Mac standalone + AU + VST3, notarized. Your own <b>v0.6.0 "Just Sing"</b> shipped — sung-note-driven diatonic harmony as the new default, source profiles, VOICES on the face, gesture 2.0, the Stage Screen projection, and a rewritten testing guide.</p>
+
+<h3>What I added on 31 July <small>commit 7b2f2e6 · all 11 test suites green · all 3 plugin formats build</small></h3>
+<table>
+<tr><th>Addition</th><th>Detail</th></tr>
+<tr><td><b>Stage CC map</b></td><td>Chorale understood only two MIDI messages — trigger and expression — so a footswitch could not reach modes, voices or the doubler. It now accepts <b>CC 20–26</b> for <code>numVoices</code>, <code>harmonyMode2</code>, <code>doubler</code>, <code>dryLevel</code>, <code>harmonyLevel</code>, <code>stereoWidth</code>, <code>doublerVoices</code>. CC 20–27 are undefined in the MIDI spec, so a pedal can own them without colliding with anything a keyboard sends.</td></tr>
+<tr><td><b>Kept real-time safe</b></td><td>The audio thread only stores atomics; a 25 Hz message-thread pump does the parameter write, because <code>setValueNotifyingHost</code> is not RT-safe and your engine path is a zero-allocation gate. <code>quality</code> and <code>sourceRange</code> are <b>deliberately excluded</b> — they force a re-prepare, and a footswitch must never reallocate the engine mid-song.</td></tr>
+<tr><td><b>A test that proves it</b></td><td><code>testStageFootswitchCCs</code> asserts three things: the CC path allocates nothing on the callback, values land <i>exactly</i> on the right step, and the re-prepare parameters stay off the map.</td></tr>
+<tr><td><b>Footswitch firmware</b></td><td><code>tools/pico-footswitch/code.py</code> — CircuitPython on a Raspberry Pi Pico. Drag-and-drop install, no toolchain: copy one file to the CIRCUITPY drive and it is a MIDI device. No OS, no SD card, enumerates in under a second, cannot crash the way Linux can. Six switches: harmony, voices, mode, doubler, stage/studio, and a <b>panic stomp</b> that returns you to a safe audible state in one press. Expression pedal optional on CC 11.</td></tr>
+<tr><td><b>Pi build in one command</b></td><td><code>scripts/build-pi.sh</code> — installs JUCE's Linux dependencies, configures <code>SCHED_FIFO</code> permission, builds with <code>-mcpu=cortex-a76</code>, runs the RT-safety gate and the budget matrix, and prints the Mac reference numbers beside the Pi result.</td></tr>
+<tr><td><b>Honest Linux measurement</b></td><td>The perf tool's non-Apple branch was a stub returning <code>false</code>, which would have measured scheduler noise rather than DSP cost. It now takes real <code>SCHED_FIFO</code> priority 80 on Linux.</td></tr>
+</table>
+
+<h3>The measurements — and the correction I owed you</h3>
+<div class="call red"><b>My first answer was wrong.</b> I benchmarked Chorale while the Vite dev server and browser from the Aangan work were still running, which inflated the result about 2.5×. I told you a Pi would need ~165% of a core and was therefore impossible. That was based on a contaminated measurement.</div>
+<table>
+<tr><th>48 kHz · 6 voices · worst of all 3 quality windows</th><th>Contaminated</th><th>Clean</th></tr>
+<tr><td>64 samples</td><td class="p">—</td><td class="p">20.7%</td></tr>
+<tr><td>128 samples</td><td class="p">32.9%</td><td class="p"><b>13.0%</b></td></tr>
+<tr><td>256 samples</td><td class="p">29.0%</td><td class="p">14.3%</td></tr>
+<tr><td>512 samples</td><td class="p">20.7%</td><td class="p">9.7%</td></tr>
+</table>
+<p>I also built and ran the entire thing <b>without Apple's Accelerate framework</b> to see what a Linux port would lose: 351.9 µs versus 347.4 µs at 128 samples. Within noise. So Accelerate is <b>not</b> a porting blocker either — the second multiplier in my estimate doesn't exist.</p>
+<div class="call green"><b>Revised verdict.</b> A Pi 5's Cortex-A76 is roughly 4.5–6× slower per core than an M4 Pro core. Applied to 13.0%, Chorale lands at about <b>60–80% of one core</b> with all six voices — tight but an engineering problem, not a physics problem, and cheaper with three or four voices or Live quality only. The Pi 5 has four cores and Chorale needs one. This is still an extrapolation; <code>build-pi.sh</code> replaces it with a real number in one afternoon.</div>
+
+<h3>What still blocks Chorale on the Pi</h3>
+<ul>
+  <li><b>Gestures</b> <span class="tag t-open">OPEN</span> — <code>GestureTrigger.mm</code> is <code>#if JUCE_MAC</code>, built on AVFoundation and Apple's <b>Vision</b> framework. No Linux equivalent; this is a rewrite, not a port. I'd argue a camera is the wrong sensor for a stage anyway — coloured wash, backlight and haze all degrade pose detection, and the inference would compete for the cores the DSP needs. A time-of-flight or mmWave sensor reads hand height and arm spread for almost no CPU and doesn't care about lighting.</li>
+  <li><b>The audio board</b> — see the next section. The DAC Pro cannot do this job.</li>
+  <li><b>The Linux UI</b> — untested. For a stage box, headless with the Touch Display 2 showing the existing Stage Screen is probably the better answer.</li>
+  <li><b>A soak test</b> — two hours at temperature before it goes near an audience.</li>
+</ul>
+
+<!-- ─────────── 4 ─────────── -->
+<h2>4 · The hardware plan</h2>
+
+<div class="call red"><b>The decision that affects the next order.</b> The Raspberry Pi DAC Pro and its XLR daughter board are <b>output-only</b>. Pianoteq is happy on them, but Chorale is a harmonizer — it needs an analogue input and that board has none. Since both apps are meant to run on the music Pi, the board must have an ADC. Only one audio HAT can occupy the I2S bus, so this is a swap, not an addition.</div>
+
+<h3>The recommendation</h3>
+<p><b>HiFiBerry DAC2 ADC Pro</b> — stereo line in and line out, 24-bit/192k, an input stage built for studio line level. One board serves Pianoteq (out) and Chorale (in and out). It is still a HAT: nothing external, nothing USB, consistent with wanting the audio baked into the Pi. The trade-off is real and yours to make: it doesn't mate with the official XLR daughter board, so balanced output comes back via two DI boxes.</p>
+<p><b>Why there is no mic preamp on the list:</b> on stage the console already has the preamp and the phantom power. Take a line-level send from the vocal channel into the Pi and return the harmonies to two spare channels. Line in, line out — exactly what the board is designed for.</p>
+
+<h3>Stage-worthiness — the parts that stop a Pi failing in front of an audience</h3>
+<table>
+<tr><th>Part</th><th>Why it is on the list</th></tr>
+<tr><td><b>True-bypass looper pedal</b></td><td>Non-negotiable. A mechanical relay that lifts the Pi out of the signal path with one stomp, so a crash or a reboot is a five-second recovery instead of silence in front of an audience. Software cannot be trusted to fail gracefully.</td></tr>
+<tr><td><b>NVMe HAT + SSD</b></td><td>Boot from SSD, not microSD. Card corruption on power loss is the most common way a Pi dies in the field, and the card is the part that dies.</td></tr>
+<tr><td><b>UPS HAT</b></td><td>Rides out a brownout or a pulled cable long enough to shut down cleanly.</td></tr>
+<tr><td><b>Pico ×2, footswitches ×6, 1590BB enclosure</b></td><td>The pedal. Metal enclosure, not plastic — it gets stood on. Two Picos so there's a spare in the case.</td></tr>
+</table>
+
+<h3>The three orders</h3>
+<table>
+<tr><th>Order</th><th>Covers</th><th>Core cost</th></tr>
+<tr><td><b>1 — Studio &amp; House</b></td><td>Pi 5 + PSU, two Galaxy Tab A9 door screens + mounts, Tapo C210 camera, every sensor (reeds ×12, leak ×9, DHT22 ×4, MQ-6 ×4, flame ×4, PIR ×4, SW-420 ×5, LD2410, SEN0232, JSN-SR04T, HX711), the prototyping bundle (jumper ribbon, breadboards, six node chargers), and all the electrician hardware</td><td class="p">≈ ₹51,000</td></tr>
+<tr><td><b>2 — Music rig</b></td><td>HiFiBerry DAC2 ADC Pro + DIs, Touch Display 2, Active Cooler, PSU, SD cards, true-bypass looper, NVMe boot, UPS HAT, Pico pedal parts</td><td class="p">≈ ₹31,500</td></tr>
+<tr><td><b>3 — Air &amp; environment</b></td><td>Xiaomi purifiers ×2, PMS5003 ×3, SCD41 ×3, SGP41 ×3, SHT45 ×2, TDS probe, exhaust relays. Genuinely stageable — the Dyson integration is ₹0 and the first proving step is one purifier plus one air node ≈ ₹20,500</td><td class="p">≈ ₹47,000</td></tr>
+</table>
+
+<h3>The inventory question, settled</h3>
+<p>Your two inventories disagreed. The WhatsApp screenshot is now canonical: you own <b>zero</b> reed door sensors (so 12 are on the order), <b>one</b> leak sensor (9 more), <b>one</b> DHT22 (4 more), and <b>no</b> PIRs (4 on the order). You do own six ESP32s, an ESP32-CAM, an HC-SR04, four buzzers, the MEMS mic, a soil-moisture sensor, the LED strip and six jumper wires. Also owned and not to be rebought: the USB A→B cable, XLR cables, USB-C 100W cables, USB SSD, gaffer tape, velcro, and the studio UPS.</p>
+
+<h3>The Dyson — the biggest win, at ₹0</h3>
+<p>Wi-Fi Dyson purifiers speak MQTT and Home Assistant talks to them through the community integration; after a one-time sign-in it runs entirely locally. You're currently wasting the best air sensor in the house — it already measures PM2.5, PM10, VOCs, NO₂, temperature and humidity better than most DIY parts, and none of it reaches you. <b>I still need the model number from the sticker under its base</b> (like TP07 or HP09) to confirm the integration supports it. For other rooms, don't buy Dyson again: Xiaomi integrates natively for about a quarter of the price.</p>
+
+<!-- ─────────── 5 ─────────── -->
+<h2>5 · Traps and findings worth keeping</h2>
+<table>
+<tr><th>Finding</th><th>Why it matters</th></tr>
+<tr><td><b>Never benchmark with a dev server running</b></td><td>Cost me a wrong answer on the biggest architectural question in this project. 2.5× inflation.</td></tr>
+<tr><td><b><code>timeout</code> does not exist on macOS</b></td><td><code>timeout N cmake --build …</code> silently does nothing, and you then test a stale binary and believe it passed. Always check the binary's timestamp after a build.</td></tr>
+<tr><td><b>Apple Accelerate makes no difference here</b></td><td>Measured both ways. Don't treat it as a porting blocker.</td></tr>
+<tr><td><b>CC 64 is the sustain pedal</b></td><td>Chorale's trigger defaults to CC 64. A keyboard sharing the MIDI port will toggle your harmony with its sustain pedal, mid-song. Move it to CC 27 before any gig and match the firmware.</td></tr>
+<tr><td><b>Stepped MIDI values must be exact</b></td><td>A stepped parameter needs <code>round(i/(n-1)×127)</code> or you land on 5 voices when you asked for 6. The firmware computes these.</td></tr>
+<tr><td><b>Never smart-plug a purifier</b></td><td>Most don't resume their previous speed when power returns — some need a physical button press. The house would silently stop purifying and nobody would notice. An exhaust fan is fine; it has no state to lose.</td></tr>
+<tr><td><b>A purifier cannot fix CO₂</b></td><td>It filters particles. Only fresh air removes CO₂ — which is why that feature is a ventilation nudge, not a purifier rule.</td></tr>
+<tr><td><b>Double doors: sensor at the meeting stiles</b></td><td>Switch on one leaf, magnet on the other, in the middle. Either leaf opening trips it, so one sensor covers the whole door.</td></tr>
+<tr><td><b>Certified alarms stay primary</b></td><td>Anything protecting people — gas, fire, panic — must work with no Pi and no Wi-Fi. The hobby sensors are the smart overlay, never the only line of defence. The panic loop is wired by a low-voltage/fire-alarm technician, and the ESP32s only observe volt-free contacts.</td></tr>
+<tr><td><b>Dry never goes through the box on stage</b></td><td>Chorale's ON STAGE scene already sets <code>dryLevel = 0</code>: the vocal goes direct to front-of-house at zero latency and Chorale contributes harmonies only. This side-steps the 22–55 ms FFT window entirely for the lead.</td></tr>
+</table>
+
+<!-- ─────────── 6 ─────────── -->
+<h2>6 · Still open</h2>
+<table>
+<tr><th>Item</th><th>State</th></tr>
+<tr><td>Dyson model number, so I can confirm HA support</td><td><span class="tag t-open">needs you</span></td></tr>
+<tr><td>Audio board decision confirmed before the order goes in</td><td><span class="tag t-open">needs you</span></td></tr>
+<tr><td>Voice paging, Tarang visuals toggle, washing-machine and rain nudges, nightly REAPER backup</td><td><span class="tag t-appr">approved, waits on the Pi</span></td></tr>
+<tr><td>Chorale gesture rewrite for Linux (or a ToF/mmWave sensor instead)</td><td><span class="tag t-open">open</span></td></tr>
+<tr><td>Run <code>build-pi.sh</code> on the real board and replace the estimate</td><td><span class="tag t-open">waits on hardware</span></td></tr>
+<tr><td>Commission the house: flash both Pis, electrician for the panic loop, train the noise threshold, run the test checklist</td><td><span class="tag t-open">waits on hardware</span></td></tr>
+</table>
+
+<!-- ─────────── 7 ─────────── -->
+<h2>7 · Where everything lives</h2>
+<table>
+<tr><th>Thing</th><th>Location</th></tr>
+<tr><td>The app</td><td><a href="https://studio-command.vercel.app">studio-command.vercel.app</a> · SOS at <code>/#/sos</code> · visitor page at <code>/#/guest</code> · panels at <code>/#/display/front-house</code> and <code>/#/display/front-studio</code></td></tr>
+<tr><td>Aangan repo</td><td><a href="https://github.com/jasonzacmusic/aangan">github.com/jasonzacmusic/aangan</a> · <code>~/Documents/Claude/aangan</code></td></tr>
+<tr><td>Chorale repo</td><td><a href="https://github.com/jasonzacmusic/chorale">github.com/jasonzacmusic/chorale</a> · <code>~/Documents/New project/chorale</code> · commit <code>7b2f2e6</code></td></tr>
+<tr><td>Documents (all in <code>aangan/docs/</code>)</td><td>Procurement List · Install Guide + Idea Menu · Air &amp; Environment Plan · Tester's Brief · your Piano Pi Build Plan · your House Procurement Matrix · Two-Pi Master Plan · this file</td></tr>
+<tr><td>PDFs</td><td><code>~/Desktop/Aangan – Pi Pack/</code></td></tr>
+<tr><td>Tester's brief for the Acharya team</td><td>A shareable web page — private until you share it from its own share menu</td></tr>
+<tr><td>Pi code</td><td><code>aangan/pi/house/</code> (Home Assistant packages, ESPHome nodes, wrapper on port 8126) · <code>aangan/pi/piano/</code> (Pianoteq setup, status server on 8951, MIDI black-box) · <code>chorale/scripts/build-pi.sh</code> · <code>chorale/tools/pico-footswitch/</code></td></tr>
+</table>
+
+<div class="foot">
+Aangan + Chorale · Master Status · Nathaniel School of Music, Bangalore · 31 July 2026<br>
+Every figure in this document was measured on this machine, not estimated, except the Pi 5 extrapolation which is labelled as such.
+</div>
+</body>
+</html>
