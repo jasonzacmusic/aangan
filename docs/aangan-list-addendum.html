@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aangan · Addendum — Decision + Gaps</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--acc:#b45309;--acc-bg:#fffbeb;--acc-line:#fde68a;--red:#b91c1c;--red-bg:#fef2f2;--red-line:#fecaca;--grn:#15803d;--grn-bg:#f0fdf4;--grn-line:#bbf7d0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#f4f2ed;color:#1a1a1a;line-height:1.5}
+.w{max-width:720px;margin:0 auto;padding:0 14px 50px}
+header{padding:24px 0 20px;border-bottom:3px solid var(--acc);background:#fff}
+.hd{max-width:720px;margin:0 auto;padding:0 14px}
+header h1{font-size:24px;font-weight:800;color:var(--acc)}
+header p{color:#777;font-size:12px;margin-top:3px}
+.note{border-radius:10px;padding:12px 14px;margin-top:14px;font-size:12.5px;line-height:1.55}
+.note b{font-weight:700}
+.note.red{background:var(--red-bg);border:1px solid var(--red-line);color:#7f1d1d}
+.note.amb{background:var(--acc-bg);border:1px solid var(--acc-line);color:#78350f}
+.note.grn{background:var(--grn-bg);border:1px solid var(--grn-line);color:#14532d}
+h2{font-size:15px;font-weight:800;margin-top:26px;padding-bottom:7px;border-bottom:2px solid #e2dcd0;color:#1a1a1a}
+h2 span{font-weight:500;color:#888;font-size:12px}
+.opt{background:#fff;border:2px solid #e2dcd0;border-radius:11px;padding:13px 15px;margin-top:10px}
+.opt.pick{border-color:var(--grn);background:var(--grn-bg)}
+.opt h3{font-size:14px;font-weight:800;margin-bottom:4px}
+.opt p{font-size:12.5px;color:#555;line-height:1.5}
+.opt .res{font-size:12px;margin-top:7px;padding:7px 10px;background:#fff;border-radius:7px;border-left:3px solid #ccc}
+.item{background:#fff;border:1px solid #e2dcd0;border-radius:11px;margin-top:10px;display:flex;gap:11px;padding:12px 14px;align-items:flex-start}
+.info{flex:1;min-width:0}
+.nm{font-weight:700;font-size:14px;line-height:1.3}
+.why{font-size:11.5px;color:#777;margin-top:3px;line-height:1.45}
+.skip{font-size:11px;color:#9a3412;margin-top:6px;padding:5px 9px;background:#fff7ed;border-radius:6px;border-left:3px solid #fdba74;line-height:1.4}
+.vend{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:20px;background:#f1efe9;color:#666;margin-top:6px}
+.qbox{flex:0 0 auto;text-align:center}
+.qty{font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:19px;color:var(--acc);background:var(--acc-bg);padding:4px 11px;border-radius:8px;min-width:44px}
+.pr{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#999;margin-top:4px}
+.chk{font-size:17px;color:#bbb;margin-top:4px}
+ul.ok{list-style:none;margin-top:10px}
+ul.ok li{background:#fff;border:1px solid #e2dcd0;border-radius:9px;padding:9px 13px;margin-top:7px;font-size:12.5px;position:relative;padding-left:34px;line-height:1.45}
+ul.ok li:before{content:"✓";position:absolute;left:13px;color:var(--grn);font-weight:800}
+ul.ok li b{font-weight:700}
+.total{background:var(--acc-bg);border:1px solid var(--acc-line);border-radius:10px;padding:12px 14px;margin-top:16px;font-size:13px;text-align:center;font-weight:700;color:var(--acc)}
+footer{margin-top:26px;padding-top:14px;border-top:1px solid #e2dcd0;font-size:10.5px;color:#999;font-family:'IBM Plex Mono',monospace;line-height:1.7;text-align:center}
+@media print{body{background:#fff}.item,.opt,ul.ok li{break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<header><div class="hd">
+  <h1>Addendum to the three lists</h1>
+  <p>Aangan · one decision + what is missing · 31 July 2026</p>
+</div></header>
+
+<div class="w">
+
+<div class="note grn">
+  <b>The three lists are good.</b> Silverline, SP Road and Amazon are internally consistent and the house side is nearly complete — you could build the whole sensor network from them. This sheet covers one decision that must be made first, and a short list of gaps.
+</div>
+
+<!-- ═══ DECISION ═══ -->
+<h2>1 · One decision before ordering <span>— affects the Silverline list only</span></h2>
+
+<div class="note red">
+  <b>The Raspberry Pi DAC Pro is output-only.</b> It has no analogue input. If you buy it, the music Pi runs Pianoteq and <b>can never run Chorale</b> — not later, not with software. Only one audio HAT fits the I2S bus, so this is decided at purchase.<br><br>
+  That contradicts the goal you set: <i>"Chorale and Piano Tech should be the first apps that should run successfully on the Pi."</i> Both options below are reasonable — but pick one now.
+</div>
+
+<div class="opt pick">
+  <h3>Option A — Swap to HiFiBerry DAC2 ADC Pro</h3>
+  <p>Line in <b>and</b> line out, 24-bit/192k, studio line level. One Pi runs Pianoteq <i>and</i> Chorale. Still a HAT — nothing external, nothing USB.</p>
+  <div class="res"><b>Cost:</b> remove DAC Pro + XLR board (−₹4,500), add DAC2 ADC Pro (₹7,500 + shipping, direct from hifiberry.com) and 2× Behringer DI400P (₹2,000) to restore balanced XLR into the console. <b>Net ≈ +₹5,000.</b></div>
+</div>
+
+<div class="opt">
+  <h3>Option B — Keep the DAC Pro + XLR board</h3>
+  <p>Native balanced XLR out, no DI boxes, first-party board. The Pi becomes a dedicated Pianoteq stage piano. Chorale stays on the Mac — where it already works, is notarized, and measured 13% CPU.</p>
+  <div class="res"><b>Cost:</b> no change. Order the Silverline list exactly as written. Honestly a very defensible choice — the Mac is the more reliable harmonizer host anyway.</div>
+</div>
+
+<!-- ═══ ADD ═══ -->
+<h2>2 · Add to the order <span>— cheap, and painful to skip</span></h2>
+
+<div class="item">
+  <div class="info">
+    <div class="nm">ESP32 Dev Board (30-pin, WROOM-32)</div>
+    <div class="why">You own exactly 6, and the house design uses exactly 6 nodes — studio doors, studio sense, kitchen safety, wet zones, perimeter, panic loop. Zero margin.</div>
+    <div class="skip">Skip it and one dead-on-arrival board stops the whole build until a re-order arrives.</div>
+    <div class="vend">SP ROAD</div>
+  </div>
+  <div class="qbox"><div class="qty">3</div><div class="pr">₹400 ea</div><div class="chk">☐</div></div>
+</div>
+
+<div class="item">
+  <div class="info">
+    <div class="nm">Perfboard / Zero PCB 7×9cm<br>+ solder wire + flux</div>
+    <div class="why">The 3 breadboards on the SP Road list are right for <b>prototyping</b>. They are not right for a permanent install — contacts loosen with time, vibration and humidity, and these nodes live near a stove, under sinks and in a bathroom.</div>
+    <div class="skip">Skip it and you will be chasing intermittent sensor faults in six months, with no way to tell a loose contact from a real alarm.</div>
+    <div class="vend">SP ROAD</div>
+  </div>
+  <div class="qbox"><div class="qty">6</div><div class="pr">₹60 ea</div><div class="chk">☐</div></div>
+</div>
+
+<div class="item">
+  <div class="info">
+    <div class="nm">ABS Project Enclosure<br>100×68×50mm</div>
+    <div class="why">One per node. Critical for wet zones and the kitchen — a bare board near a sink or a gas hob is a problem you only get once.</div>
+    <div class="vend">SP ROAD</div>
+  </div>
+  <div class="qbox"><div class="qty">6</div><div class="pr">₹200 ea</div><div class="chk">☐</div></div>
+</div>
+
+<div class="total">Adds roughly ₹2,800 to the SP Road order</div>
+
+<!-- ═══ STAGE ═══ -->
+<h2>3 · Only if the Pi goes on stage <span>— skip entirely for a studio-only rig</span></h2>
+
+<div class="note amb">
+  None of the below matters for a rig that lives in the studio. All of it matters in front of an audience. Decide once, then buy the whole group or none of it.
+</div>
+
+<div class="item">
+  <div class="info">
+    <div class="nm">NVMe HAT + 256GB NVMe SSD</div>
+    <div class="why">Boot from SSD instead of microSD. Card corruption on power loss is the single most common way a Pi dies in the field, and the card is the part that dies.</div>
+    <div class="vend">SP ROAD / ROBU</div>
+  </div>
+  <div class="qbox"><div class="qty">1</div><div class="pr">₹4,500</div><div class="chk">☐</div></div>
+</div>
+
+<div class="item">
+  <div class="info">
+    <div class="nm">UPS for the Pi<br>(inline USB-C type preferred)</div>
+    <div class="why">Rides out a brownout or a pulled cable long enough to shut down cleanly. <b>Prefer an inline USB-C UPS over a HAT</b> — a UPS HAT and the audio HAT both want the 40-pin header and cannot stack.</div>
+    <div class="vend">AMAZON</div>
+  </div>
+  <div class="qbox"><div class="qty">1</div><div class="pr">₹3,500</div><div class="chk">☐</div></div>
+</div>
+
+<div class="item">
+  <div class="info">
+    <div class="nm">True-bypass looper pedal, 1 loop</div>
+    <div class="why">A mechanical relay that lifts the Pi out of the signal path with one stomp, so a crash or a reboot is a five-second recovery instead of silence in front of an audience. Software cannot be trusted to fail gracefully.</div>
+    <div class="vend">AMAZON</div>
+  </div>
+  <div class="qbox"><div class="qty">1</div><div class="pr">₹2,500</div><div class="chk">☐</div></div>
+</div>
+
+<div class="item">
+  <div class="info">
+    <div class="nm">Raspberry Pi Pico (RP2040)</div>
+    <div class="why">The footswitch brain. Firmware is already written and in the Chorale repo. Buy two so a spare lives in the case.</div>
+    <div class="vend">SP ROAD / ROBU</div>
+  </div>
+  <div class="qbox"><div class="qty">2</div><div class="pr">₹400 ea</div><div class="chk">☐</div></div>
+</div>
+
+<div class="item">
+  <div class="info">
+    <div class="nm">Momentary SPST Footswitch</div>
+    <div class="why">Harmony · Voices · Mode · Doubler · Stage/Studio · Panic. <b>Not the same as</b> the 16mm push button already on the SP Road list — that one is the doorbell.</div>
+    <div class="vend">SP ROAD</div>
+  </div>
+  <div class="qbox"><div class="qty">6</div><div class="pr">₹120 ea</div><div class="chk">☐</div></div>
+</div>
+
+<div class="item">
+  <div class="info">
+    <div class="nm">1590BB Aluminium Enclosure</div>
+    <div class="why">Houses the pedal. Metal, not plastic — it gets stood on.</div>
+    <div class="vend">SP ROAD</div>
+  </div>
+  <div class="qbox"><div class="qty">1</div><div class="pr">₹1,200</div><div class="chk">☐</div></div>
+</div>
+
+<div class="total">Stage group ≈ ₹13,000 · all-or-nothing</div>
+
+<!-- ═══ CORRECT ═══ -->
+<h2>4 · Verified correct <span>— do not let anyone “fix” these</span></h2>
+
+<ul class="ok">
+  <li><b>Two 27W PSUs.</b> Right — you own the Pi 5 board but no supply for it, so the new House Pi and the existing Music Pi each need one.</li>
+  <li><b>One Pi 5 only.</b> Right — you already own the second.</li>
+  <li><b>Six 5V chargers.</b> Exactly matches the six ESP32 house nodes.</li>
+  <li><b>Three microSD cards.</b> House Pi, Music Pi, one spare.</li>
+  <li><b>MQ-6, flagged “NOT MQ-2”.</b> Correct — MQ-6 is the LPG-specific sensor. The owned MQ-2 becomes a spare.</li>
+  <li><b>12 reeds and 9 leak sensors.</b> Matches the corrected inventory from your WhatsApp photo — you own zero reeds and one leak sensor.</li>
+  <li><b>Tablets with no Pi Zeros.</b> Correct — the tablet is screen, computer, touch and battery in one slab.</li>
+  <li><b>Tapo C210 + 16mm push button.</b> Together these are the doorbell; the owned ESP32-CAM stays as the door-frame secondary.</li>
+</ul>
+
+<!-- ═══ BUILD NOTE ═══ -->
+<h2>5 · One wiring note for the builder</h2>
+
+<div class="note amb">
+  <b>The kitchen node carries four MQ-6 sensors.</b> Each has a heater drawing roughly 150&nbsp;mA, so run all four heaters from the <b>5&nbsp;V rail</b>, never through the ESP32's 3.3&nbsp;V regulator — it cannot supply 600&nbsp;mA and will brown out.<br><br>
+  Keep their analogue outputs on <b>ADC1 pins (GPIO 32–39)</b>. ADC2 stops working the moment Wi-Fi is enabled on an ESP32, and this node is Wi-Fi.
+</div>
+
+<footer>
+  Aangan · Nathaniel School of Music, Bangalore<br>
+  Addendum to aangan-list-silverline · aangan-list-sproad · aangan-list-amazon<br>
+  Answer section 1 first — everything else can be ordered in parallel
+</footer>
+
+</div>
+</body>
+</html>
