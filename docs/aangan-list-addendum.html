@@ -55,27 +55,29 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid #e2dcd0;font-size:1
 <div class="w">
 
 <div class="note grn">
-  <b>The three lists are good.</b> Silverline, SP Road and Amazon are internally consistent and the house side is nearly complete — you could build the whole sensor network from them. This sheet covers one decision that must be made first, and a short list of gaps.
+  <b>The three lists are good and cleared to order.</b> Silverline, SP Road and Amazon are internally consistent, the house side is complete, and the audio board is settled. This sheet records that decision and adds three cheap items worth putting on the SP Road order.
 </div>
 
 <!-- ═══ DECISION ═══ -->
-<h2>1 · One decision before ordering <span>— affects the Silverline list only</span></h2>
+<h2>1 · The audio board — decided <span>— Silverline list unchanged</span></h2>
 
-<div class="note red">
-  <b>The Raspberry Pi DAC Pro is output-only.</b> It has no analogue input. If you buy it, the music Pi runs Pianoteq and <b>can never run Chorale</b> — not later, not with software. Only one audio HAT fits the I2S bus, so this is decided at purchase.<br><br>
-  That contradicts the goal you set: <i>"Chorale and Piano Tech should be the first apps that should run successfully on the Pi."</i> Both options below are reasonable — but pick one now.
+<div class="note grn">
+  <b>DECIDED — keep the DAC Pro + XLR board. Order the Silverline list exactly as written.</b> HiFiBerry has no Indian distributor, and this is the better board for the job anyway. Nothing below changes; this section is now a record of the decision and the three checks that still apply.
 </div>
 
 <div class="opt pick">
-  <h3>Option A — Swap to HiFiBerry DAC2 ADC Pro</h3>
-  <p>Line in <b>and</b> line out, 24-bit/192k, studio line level. One Pi runs Pianoteq <i>and</i> Chorale. Still a HAT — nothing external, nothing USB.</p>
-  <div class="res"><b>Cost:</b> remove DAC Pro + XLR board (−₹4,500), add DAC2 ADC Pro (₹7,500 + shipping, direct from hifiberry.com) and 2× Behringer DI400P (₹2,000) to restore balanced XLR into the console. <b>Net ≈ +₹5,000.</b></div>
+  <h3>The decision — DAC Pro + XLR board <span style="font-weight:500;color:#666;font-size:12px">(chosen)</span></h3>
+  <p>Native balanced XLR out, no DI boxes, first-party Raspberry Pi board with the best driver support. <b>The Pi becomes a dedicated Pianoteq stage piano</b> — and native balanced output is exactly what a stage instrument feeding a console wants.</p>
+  <div class="res"><b>What this means for Chorale:</b> it stays on the Mac, where it already works, is notarized, and measured 13% CPU. That was never a compromise — moving it to a Pi was an aspiration, not a need.<br><br>
+  <b>It forecloses nothing.</b> If you later want Chorale on its own Pi, you buy a second Pi with an ADC board then. A Pi 5 is ₹8–10k — cheaper than degrading the piano rig's output today to keep a future option open.<br><br>
+  <b>The footswitch still works.</b> The Pico pedal and the CC map are USB-MIDI, so they drive Chorale on the Mac identically. None of that work is wasted.</div>
 </div>
 
-<div class="opt">
-  <h3>Option B — Keep the DAC Pro + XLR board</h3>
-  <p>Native balanced XLR out, no DI boxes, first-party board. The Pi becomes a dedicated Pianoteq stage piano. Chorale stays on the Mac — where it already works, is notarized, and measured 13% CPU.</p>
-  <div class="res"><b>Cost:</b> no change. Order the Silverline list exactly as written. Honestly a very defensible choice — the Mac is the more reliable harmonizer host anyway.</div>
+<div class="note amb">
+  <b>Three checks before the Silverline order goes in.</b><br><br>
+  <b>1 · Is the XLR daughter board actually in stock?</b> This is the one genuine unknown in the whole build — it is a low-volume item. Ask specifically for the <i>XLR board for the Raspberry Pi DAC Pro</i>, and ask whether they can order it in if not.<br><br>
+  <b>2 · If it cannot be sourced:</b> buy the DAC Pro anyway and feed its RCA output into a passive stereo DI box (Behringer DI400P ×2, ≈₹2,000 on Amazon). You still get true balanced XLR into the console. That fallback is genuinely good, not a downgrade.<br><br>
+  <b>3 · Pre-soldered headers?</b> Newer DAC Pro revisions ship with bare pads instead of a fitted 6-pin female header on P7/P9. Ask which revision they are shipping — if it is the bare-pad version, the 2 headers already on the SP Road list cover it, plus five minutes of soldering.
 </div>
 
 <!-- ═══ ADD ═══ -->
@@ -200,7 +202,7 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid #e2dcd0;font-size:1
 <footer>
   Aangan · Nathaniel School of Music, Bangalore<br>
   Addendum to aangan-list-silverline · aangan-list-sproad · aangan-list-amazon<br>
-  Answer section 1 first — everything else can be ordered in parallel
+  Board decided — all three lists are cleared to order
 </footer>
 
 </div>
