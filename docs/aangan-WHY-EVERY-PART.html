@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aangan · Why every part — and what to change</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ok:#15803d;--ok-bg:#f0fdf4;--ok-ln:#bbf7d0;
+--care:#b45309;--care-bg:#fffbeb;--care-ln:#fde68a;
+--chg:#b91c1c;--chg-bg:#fef2f2;--chg-ln:#fecaca;
+--ink:#1a1a1a;--dim:#6b6b6b;--line:#e2dcd0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#f4f2ed;color:var(--ink);line-height:1.55}
+.w{max-width:780px;margin:0 auto;padding:0 15px 60px}
+header{background:#fff;padding:26px 0 20px;border-bottom:3px solid var(--ink)}
+.hd{max-width:780px;margin:0 auto;padding:0 15px}
+header h1{font-size:26px;font-weight:800;letter-spacing:-.3px}
+header p{color:var(--dim);font-size:12.5px;margin-top:4px}
+.key{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+.k{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;font-family:'IBM Plex Mono',monospace}
+.k.ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-ln)}
+.k.care{background:var(--care-bg);color:var(--care);border:1px solid var(--care-ln)}
+.k.chg{background:var(--chg-bg);color:var(--chg);border:1px solid var(--chg-ln)}
+h2{font-size:17px;font-weight:800;margin-top:32px;padding:10px 14px;background:var(--ink);color:#fff;border-radius:9px}
+h2 span{font-weight:400;font-size:12px;opacity:.7}
+h3{font-size:14.5px;font-weight:800;margin-top:22px;color:var(--ink);border-bottom:2px solid var(--line);padding-bottom:6px}
+p{margin:8px 0;font-size:13px}
+.intro{background:#fff;border:1px solid var(--line);border-radius:11px;padding:15px 17px;margin-top:14px;font-size:13px;line-height:1.6}
+.intro b{font-weight:700}
+.part{background:#fff;border:1px solid var(--line);border-radius:11px;padding:14px 16px;margin-top:11px;border-left:5px solid var(--line)}
+.part.ok{border-left-color:var(--ok)}
+.part.care{border-left-color:var(--care)}
+.part.chg{border-left-color:var(--chg)}
+.ph{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.pn{font-size:14.5px;font-weight:800}
+.pq{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);font-weight:600}
+.badge{font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:20px;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}
+.badge.care{background:var(--care-bg);color:var(--care)}
+.badge.chg{background:var(--chg-bg);color:var(--chg)}
+.row{margin-top:9px;font-size:12.5px;line-height:1.55}
+.row b{font-weight:700;color:var(--ink)}
+.lab{font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;letter-spacing:.5px;
+text-transform:uppercase;color:var(--dim);display:block;margin-bottom:2px}
+.verdict{margin-top:10px;padding:9px 12px;border-radius:8px;font-size:12.5px;line-height:1.55}
+.verdict.ok{background:var(--ok-bg);color:#14532d}
+.verdict.care{background:var(--care-bg);color:#78350f}
+.verdict.chg{background:var(--chg-bg);color:#7f1d1d}
+.verdict b{font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:10px;background:#fff;
+border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--dim);
+background:#faf8f4;padding:8px 11px;border-bottom:1px solid var(--line)}
+td{padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n{font-family:'IBM Plex Mono',monospace;text-align:right;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+.flow{background:#1a1a1a;color:#e8e6df;border-radius:11px;padding:16px 18px;margin-top:12px;
+font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.9;overflow-x:auto;
+white-space:pre}
+.flow b{color:#ffd479;font-weight:600}
+.flow .c{color:#8b9dc3}
+footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);font-size:10.5px;
+color:#999;font-family:'IBM Plex Mono',monospace;line-height:1.7;text-align:center}
+@media print{body{background:#fff}.part,table{break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<header><div class="hd">
+  <h1>Why every part — and what to change</h1>
+  <p>Aangan · component-by-component engineering review · 1 August 2026</p>
+  <div class="key">
+    <span class="k ok">✓ RIGHT CHOICE — buy as listed</span>
+    <span class="k care">⚠ WORKS, NEEDS CARE — buy it, but know this</span>
+    <span class="k chg">✗ CHANGE OR ADD — do not buy as-is</span>
+  </div>
+</div></header>
+
+<div class="w">
+
+<div class="intro">
+  <b>The short version.</b> The lists are about 85% right. Most of the sensor choices are genuinely well made — the reeds, the mmWave, the sound meter, the load-cell gas gauge and the DAC Pro are all the correct part for their job. There are <b>four things I would change</b> and <b>three I would add</b>, totalling roughly ₹9,000, and every one of them exists because a specific feature we have already built would otherwise be unreliable. Those are marked in red below.
+</div>
+
+<!-- ══════════ ARCHITECTURE ══════════ -->
+<h2>1 · How the whole thing works <span>— why it is shaped this way</span></h2>
+
+<p>Three kinds of machine, deliberately separated so that a failure in one cannot take down another.</p>
+
+<div class="flow">
+<b>SENSORS</b> (ESP32 nodes, one per zone)
+   │  Wi-Fi · ESPHome
+   ▼
+<b>HOUSE PI</b> — Home Assistant OS <span class="c">// the brain. Decides everything.</span>
+   │  ├── binary_sensor.studio_ready <span class="c">// the one authoritative verdict</span>
+   │  ├── critical alerts → family phones
+   │  └── HTTP :8126 wrapper
+   ▼
+<b>AANGAN APP</b> (phones, tablets, wall panels) <span class="c">// shows and commands</span>
+
+<b>MUSIC PI</b> — Pianoteq <span class="c">// deliberately NOT on the house Pi</span>
+   └── status server :8951 → one-way cues only
+</div>
+
+<p><b>Why two Pis and not one.</b> The music Pi runs a real-time audio thread. If a doorbell, a sensor poll or a Home Assistant restart could interrupt it, you would hear it as a click in a recording. Separating them means a house event physically cannot touch the audio. The cues that do flow are one-way and advisory — the piano keeps playing even if the house Pi is off.</p>
+
+<p><b>Why ESP32 + ESPHome rather than off-the-shelf smart sensors.</b> Zigbee and Wi-Fi consumer sensors are cheap and easy, but each is a black box with its own battery, cloud and failure mode. ESPHome nodes are mains-powered, report their own online/offline status, and — critically — <b>the house can tell "everything is fine" apart from "the sensor is dead"</b>. That distinction is the whole basis of the studio_ready verdict.</p>
+
+<p><b>Why certified alarms sit outside all of it.</b> Every hobby sensor here is a data source, not a life-safety device. The certified smoke and LPG alarms work standalone with no Pi, no Wi-Fi and no app. The ESP32s only <i>observe</i> them through volt-free relay contacts. If the entire system is switched off, the house is still protected.</p>
+
+<!-- ══════════ SENSORS ══════════ -->
+<h2>2 · The sensors, one by one</h2>
+
+<div class="part ok">
+  <div class="ph"><div><span class="pn">MC-38 reed switch</span> <span class="pq">× 12 · ₹50 ea</span></div><span class="badge ok">✓ RIGHT</span></div>
+  <div class="row"><span class="lab">What it does</span>A magnet on one door leaf, a sealed switch on the other. The circuit breaks the moment the door moves.</div>
+  <div class="row"><span class="lab">Why this part</span>It is the same component used in commercial alarm systems for forty years. No power draw, no electronics to fail, no calibration, and it works down a long cable run because it is just a dry contact. On a <b>double door it mounts at the meeting stiles</b> — the middle, where the two leaves meet — so either leaf opening trips it and one sensor covers the whole doorway.</div>
+  <div class="verdict ok"><b>Verdict: buy exactly as listed.</b> This drives the close-the-door nudge and one of the four studio_ready checks, and it is the most reliable sensor in the entire build.</div>
+</div>
+
+<div class="part chg">
+  <div class="ph"><div><span class="pn">Water-leak / rain-drop sensor</span> <span class="pq">× 9 · ₹80 ea</span></div><span class="badge chg">✗ NEEDS A WIRING CHANGE</span></div>
+  <div class="row"><span class="lab">What it does</span>Two exposed copper traces on a small board. Water bridges them, resistance drops, the node sees a leak.</div>
+  <div class="row"><span class="lab">The problem</span>Those traces are <b>permanently energised</b> in the naive wiring, and in a damp environment that causes electrolysis — the copper corrodes away within months. You get drifting readings, then false alarms, then a sensor that no longer detects anything. This is the single most common failure in DIY leak detection.</div>
+  <div class="verdict chg"><b>Do not change the part — change how it is powered.</b> Wire the sensor's VCC to a spare GPIO instead of the 3.3&nbsp;V rail, and have ESPHome switch it on for ~50&nbsp;ms once every 30 seconds, read it, then switch it off. Duty cycle drops from 100% to about 0.15% and the traces last for years instead of months. It costs nothing but one extra GPIO per sensor and about six lines of YAML. If you would rather not, buy probe-style leak sensors with stainless or gold-plated contacts instead.</div>
+</div>
+
+<div class="part chg">
+  <div class="ph"><div><span class="pn">DHT22 temperature / humidity</span> <span class="pq">× 4 · ₹290 ea</span></div><span class="badge chg">✗ FINE FOR ROOMS, WRONG FOR INSTRUMENTS</span></div>
+  <div class="row"><span class="lab">What it does</span>Reports temperature and relative humidity to the app and to the instrument climate guard.</div>
+  <div class="row"><span class="lab">The problem</span>The DHT22 is a ±2–5% RH part that is known to drift over time and to fail outright after a year or two in humid conditions. For a bedroom that is completely fine. But the <b>instrument climate guard is protecting pianos and guitars worth lakhs</b>, and it fires on a 35–65% band. A sensor that can be 5% out — and drifting — is not good enough to make that decision.</div>
+  <div class="verdict chg"><b>Add one SHT31 or SHT41 (₹500–700) for the music room.</b> It is ±2% RH, I²C rather than the DHT's fussy one-wire protocol, and it holds calibration for years. Keep the four DHT22s for bedrooms, hall and studio-bed where approximate is fine. This is a ₹600 upgrade that decides whether a feature we already built is trustworthy or decorative.</div>
+</div>
+
+<div class="part care">
+  <div class="ph"><div><span class="pn">MQ-6 LPG gas sensor</span> <span class="pq">× 4 · ₹120 ea</span></div><span class="badge care">⚠ WORKS, NEEDS CARE</span></div>
+  <div class="row"><span class="lab">Why MQ-6 and not MQ-2</span>Correct call on the list. MQ-2 responds to a broad mix of combustible gases and smoke; <b>MQ-6 is tuned for LPG and butane</b>, which is what is actually in your kitchen cylinder. Fewer false alarms from cooking fumes.</div>
+  <div class="row"><span class="lab">What to know</span>Three things. It needs a <b>24–48 hour burn-in</b> powered continuously before its readings mean anything. It <b>drifts with temperature and humidity</b>, so treat it as a trend not an absolute. And each one's heater draws about <b>150 mA</b> — four of them is 600 mA, which must come from the 5 V rail, never through the ESP32's 3.3 V regulator. Their analogue outputs must sit on <b>ADC1 pins (GPIO 32–39)</b>, because ADC2 stops working the moment Wi-Fi is enabled.</div>
+  <div class="verdict care"><b>Buy as listed — but this is a data sensor, not a life-safety device.</b> The certified LPG alarm with its own siren stays primary and must work with no Pi and no Wi-Fi. The MQ-6s give you early warning, trend logging and the auto-exhaust trigger. Expect to replace them every 2–3 years.</div>
+</div>
+
+<div class="part chg">
+  <div class="ph"><div><span class="pn">IR flame sensor</span> <span class="pq">× 4 · ₹70 ea</span></div><span class="badge chg">✗ WRONG ROOM</span></div>
+  <div class="row"><span class="lab">What it does</span>An infrared photodiode tuned to the 760–1100 nm band that a flame emits.</div>
+  <div class="row"><span class="lab">The problem</span>The plan puts one in the kitchen. <b>A kitchen has a gas hob, and the hob's flame is a flame.</b> That sensor will trigger every time you cook. It also false-triggers on direct sunlight, incandescent bulbs and hot surfaces, so it is a poor sensor for any room with a window in the sun.</div>
+  <div class="verdict chg"><b>Put flame sensors only where there should never be a flame</b> — studio, teaching room, hall, and a bedroom. In the kitchen, fire detection is the job of the certified heat/smoke alarm plus the MQ-6 plus a temperature spike on the DHT22. Same four sensors, different rooms. Costs nothing to fix — just do not mount one where it can see the hob.</div>
+</div>
+
+<div class="part care">
+  <div class="ph"><div><span class="pn">PIR HC-SR501 motion sensor</span> <span class="pq">× 4 · ₹70 ea</span></div><span class="badge care">⚠ MOTION, NOT PRESENCE</span></div>
+  <div class="row"><span class="lab">What to know</span>A PIR detects <b>change</b> in infrared, which means it detects movement, not occupancy. A student sitting still at the piano vanishes from a PIR after its timeout expires. That is a genuine limitation, not a fault.</div>
+  <div class="verdict care"><b>Buy as listed — the plan already compensates.</b> The studio gets the LD2410 mmWave sensor precisely because it detects a stationary person. Use PIRs for corridors, entrance and rooms where "did someone walk through" is the real question, and let mmWave answer "is someone in here".</div>
+</div>
+
+<div class="part care">
+  <div class="ph"><div><span class="pn">SW-420 vibration sensor</span> <span class="pq">× 5 · ₹70 ea</span></div><span class="badge care">⚠ GOOD FOR APPLIANCES, WEAK FOR SECURITY</span></div>
+  <div class="row"><span class="lab">What to know</span>It is a spring-and-ball switch — crude, binary, and not meaningfully adjustable. It will happily trigger on a slammed door, a passing truck or someone dropping something.</div>
+  <div class="verdict care"><b>Excellent for "washing machine finished" and "fridge door bumped".</b> For perimeter security, do not lean on it — the door reeds and the mmWave sensor are the real security layer, and the latching panic switches are the real emergency layer. Treat SW-420 as a convenience sensor and you will be happy with it.</div>
+</div>
+
+<div class="part ok">
+  <div class="ph"><div><span class="pn">HLK-LD2410 mmWave presence</span> <span class="pq">× 1 · ₹350</span></div><span class="badge ok">✓ RIGHT</span></div>
+  <div class="row"><span class="lab">Why this part</span>It senses micro-movement — breathing, small shifts — so it reports a person who is sitting completely still. That is exactly what the studio needs, and it is the sensor that makes "is the room occupied" trustworthy.</div>
+  <div class="verdict ok"><b>Buy as listed.</b> One tuning note: mmWave sees through plasterboard, so it can pick up someone in the next room. Configure its distance gates during commissioning, or you will get phantom presence.</div>
+</div>
+
+<div class="part ok">
+  <div class="ph"><div><span class="pn">DFRobot Gravity SEN0232 sound meter</span> <span class="pq">× 1 · ₹3,500</span></div><span class="badge ok">✓ RIGHT — AND WORTH THE MONEY</span></div>
+  <div class="row"><span class="lab">Why not just a cheap mic</span>The INMP441 you already own is a raw microphone — it gives you a waveform, not a calibrated level. The SEN0232 outputs a proper <b>A-weighted dB value</b> as an analogue voltage, which is the thing you actually need to say "the room is under 45 dB". A-weighting matters because it approximates how a human ear responds, and it is the standard the whole recording-quiet idea is built on.</div>
+  <div class="verdict ok"><b>Buy as listed — this is the sensor the studio_ready verdict rests on.</b> Calibrate it once against a phone dB meter app in a quiet room and again next to something loud, because the ESP32's own ADC is not perfectly linear. The owned INMP441 stays useful as the teaching-room pilot.</div>
+</div>
+
+<div class="part chg">
+  <div class="ph"><div><span class="pn">Water tank level — JSN-SR04T</span> <span class="pq">× 1 listed · needs 2</span></div><span class="badge chg">✗ BUY ONE MORE</span></div>
+  <div class="row"><span class="lab">The problem</span>The plan uses the waterproof JSN-SR04T for the sump and the <b>owned HC-SR04 for the overhead tank</b>. The HC-SR04 is not waterproof and not condensation-proof. The headspace of a water tank is 100% humidity, permanently. That sensor will corrode and start giving nonsense readings within months — and a wrong tank reading is worse than none, because the pump logic trusts it.</div>
+  <div class="verdict chg"><b>Buy a second JSN-SR04T (₹450) for the overhead tank.</b> Its transducer is sealed and potted specifically for this. Keep the HC-SR04 as a bench spare for prototyping. This is the cheapest fix on this whole page and it protects the dry-run pump protection.</div>
+</div>
+
+<div class="part ok">
+  <div class="ph"><div><span class="pn">HX711 + 50 kg load cells</span> <span class="pq">× 1 set · ₹400</span></div><span class="badge ok">✓ RIGHT — AND GENUINELY CLEVER</span></div>
+  <div class="row"><span class="lab">Why this approach</span>There is no reliable, cheap way to measure the gas <i>inside</i> a steel cylinder. So you weigh it instead. Four 50 kg cells give 200 kg of capacity against a ~30 kg full cylinder, and the HX711 is a 24-bit amplifier accurate enough to see a day's cooking. Subtract the known tare weight of an empty cylinder and you have litres remaining and days left.</div>
+  <div class="verdict ok"><b>Buy as listed.</b> One thing not on any list: the cells need a <b>platform</b> — two pieces of plywood or sheet metal with the cells sandwiched at the corners. Cheap, but somebody has to build it. Calibrate with a known weight before trusting it.</div>
+</div>
+
+<!-- ══════════ AUDIO ══════════ -->
+<h2>3 · The audio chain <span>— the DAC question, answered properly</span></h2>
+
+<div class="part ok">
+  <div class="ph"><div><span class="pn">Raspberry Pi DAC Pro (PCM5242) + XLR board</span> <span class="pq">× 1 each</span></div><span class="badge ok">✓ RIGHT FOR THIS JOB</span></div>
+  <div class="row"><span class="lab">What it does</span>Takes the digital audio Pianoteq computes and turns it into an analogue signal, then the daughter board presents it as <b>true balanced XLR</b> on two locking sockets.</div>
+  <div class="row"><span class="lab">Why balanced matters more than the converter chip</span>This is the reasoning behind the whole choice. A rival board might use a more prestigious converter, but a <b>balanced</b> output carries the signal as two opposite-polarity copies; any interference picked up along the cable hits both equally and is cancelled at the desk. Over a stage-length cable run near lighting and power, that rejection is worth far more than a marginally better DAC chip. It is also why there are no DI boxes in this build — the balanced stage is already on the board.</div>
+  <div class="row"><span class="lab">The trade-off you accepted</span>It is <b>output-only</b>. There is no analogue input, so this Pi can never run Chorale or anything else that needs to hear something. Only one audio HAT fits the I²S bus, so this is settled at purchase.</div>
+  <div class="verdict ok"><b>Correct decision, and it forecloses nothing.</b> Chorale already runs on the Mac, notarized and measured at 13% CPU — that was never a compromise. If you later want Chorale on its own Pi, buy a second Pi with an ADC board then; a Pi 5 costs less than degrading the piano rig's output today to keep an option open. And the footswitch work still applies, because the pedal is plain USB-MIDI and drives Chorale on the Mac identically.</div>
+</div>
+
+<div class="part care">
+  <div class="ph"><div><span class="pn">Active Cooler + DAC Pro + Touch Display, stacked</span></div><span class="badge care">⚠ TEST-FIT BEFORE MOUNTING</span></div>
+  <div class="row"><span class="lab">Why the cooler is not optional</span>A Pi 5 under sustained load throttles without active cooling, and a throttled Pi means audio dropouts mid-performance. It is a required part, not a nice-to-have.</div>
+  <div class="verdict care"><b>Stack it loosely and check clearance before anything is permanent.</b> The XLR daughter board sits <i>above</i> the Pi's USB and Ethernet ports, so <b>no standard closed case will shut over this build</b>. Do not buy an enclosure until the boards are physically in hand and measured.</div>
+</div>
+
+<!-- ══════════ COMPUTE ══════════ -->
+<h2>4 · The computers and screens</h2>
+
+<div class="part care">
+  <div class="ph"><div><span class="pn">Raspberry Pi 5 8GB — House brain</span> <span class="pq">× 1 · ₹8,000</span></div><span class="badge care">⚠ NEEDS POWER PROTECTION</span></div>
+  <div class="row"><span class="lab">Why 8GB and not 4GB</span>Home Assistant itself runs comfortably in 4GB. The extra memory is headroom for adding camera person-detection later, which is memory-hungry. Worth the difference now rather than replacing the board in a year.</div>
+  <div class="verdict care"><b>This machine runs 24/7 unattended, in a city with power cuts.</b> On microSD, an abrupt power loss during a write corrupts the card — and when it does, the entire house goes dumb until someone reflashes it. Ironically the house Pi needs power protection <i>more</i> than a stage rig does, because nobody is standing next to it. See the additions below.</div>
+</div>
+
+<div class="part ok">
+  <div class="ph"><div><span class="pn">Samsung Galaxy Tab A9 door screens</span> <span class="pq">× 2</span></div><span class="badge ok">✓ RIGHT CALL</span></div>
+  <div class="row"><span class="lab">Why a tablet and not a Pi Zero + panel</span>A tablet is screen, computer, touch input, case and battery backup in a single slab with one cable. The Pi Zero route needs a screen, a driver board, a power supply, an HDMI cable, a USB cable, an SD card and an enclosure to hide it all — more money, more parts, more failure points, and it dies instantly in a power cut where the tablet keeps showing the door sign.</div>
+  <div class="verdict ok"><b>Buy as listed.</b> Two setup notes: disable battery optimisation for Fully Kiosk or Android will eventually kill it in the background, and expect the battery to degrade from being permanently on charge — that is a 2–3 year consumable, not a fault.</div>
+</div>
+
+<div class="part ok">
+  <div class="ph"><div><span class="pn">TP-Link Tapo C210</span> <span class="pq">× 1 · ₹2,800</span></div><span class="badge ok">✓ RIGHT</span></div>
+  <div class="row"><span class="lab">Why this over the ₹12,000 option</span>It gives a local RTSP stream, which is the only thing that actually matters — Home Assistant and Frigate read it directly, with no cloud in the loop. A premium doorbell would look nicer and cost four times more for the same function. Your owned ESP32-CAM stays as a secondary at the door frame.</div>
+  <div class="verdict ok"><b>Buy as listed.</b> RTSP has to be switched on in the Tapo app during setup, and it needs a camera account created there first — a five-minute step that is easy to forget.</div>
+</div>
+
+<!-- ══════════ ADDITIONS ══════════ -->
+<h2>5 · What to add, and exactly why</h2>
+
+<p>Seven items. Every one exists because a feature already built would otherwise be unreliable.</p>
+
+<table>
+<tr><th>Add</th><th>Qty</th><th>Why — what breaks without it</th><th class="n">Cost</th></tr>
+<tr><td><b>SHT31 / SHT41 sensor</b></td><td class="n">1–2</td><td>The instrument climate guard fires on a 35–65% humidity band. A DHT22 can be 5% out and drifting, which makes that decision guesswork. This makes it real.</td><td class="n">₹600 ea</td></tr>
+<tr><td><b>JSN-SR04T waterproof ultrasonic</b></td><td class="n">1</td><td>The overhead tank is a permanently 100%-humidity space. The owned HC-SR04 will corrode and feed wrong numbers to the pump logic. A wrong tank reading is worse than none.</td><td class="n">₹450</td></tr>
+<tr><td><b>UPS for the House Pi</b><div style="font-size:11px;color:#777;margin-top:3px">inline USB-C type, not a HAT</div></td><td class="n">1</td><td>Runs 24/7 unattended. A power cut mid-write corrupts the card and the whole house goes dumb until it is reflashed. A HAT version would fight the GPIO header — use inline.</td><td class="n">₹3,500</td></tr>
+<tr><td><b>NVMe HAT + 256GB SSD</b><div style="font-size:11px;color:#777;margin-top:3px">optional if the UPS is bought</div></td><td class="n">1</td><td>Removes the microSD failure mode entirely rather than just protecting against it. Buy this <i>or</i> accept the UPS as the mitigation — you do not strictly need both.</td><td class="n">₹4,500</td></tr>
+<tr><td><b>ESP32 dev boards</b></td><td class="n">3</td><td>You own exactly 6 and the design uses exactly 6. One dead-on-arrival board halts the build until a re-order arrives.</td><td class="n">₹400 ea</td></tr>
+<tr><td><b>Perfboard + solder + flux</b></td><td class="n">6</td><td>Breadboards are for prototyping. These nodes live near a stove, under sinks and in a bathroom — contacts loosen and you end up unable to tell a bad connection from a real alarm.</td><td class="n">₹60 ea</td></tr>
+<tr><td><b>ABS enclosures 100×68×50</b></td><td class="n">6</td><td>One per node. A bare board near a sink or a gas hob is a problem you only get once.</td><td class="n">₹200 ea</td></tr>
+<tr><td><b>Extra 2-core cable</b></td><td class="n">est.</td><td>The 90 m roll is sized for the panic loop. <b>Twelve door reeds also need runs back to their nodes</b> — measure the doors before the shop trip or you will be back the next day.</td><td class="n">₹1,200</td></tr>
+</table>
+
+<p style="margin-top:12px;font-size:12.5px"><b>Total if you take everything: ≈ ₹13,500.</b> If you take only the four that fix a built feature — SHT31, second JSN-SR04T, UPS, and the ESP32 spares — it is <b>≈ ₹5,700</b>, and that is the version I would actually buy.</p>
+
+<!-- ══════════ ORDER ══════════ -->
+<h2>6 · The order to build it in</h2>
+
+<table>
+<tr><th>Stage</th><th>What and why</th></tr>
+<tr><td><b>1 · Safety first</b></td><td>Mount and test the certified smoke and LPG alarms standalone. This protects people immediately and depends on nothing else in the build.</td></tr>
+<tr><td><b>2 · One node of each type</b></td><td>Build a single node on a breadboard for each sensor family and prove it reports into Home Assistant. Find the surprises here, on a bench, not up a ladder.</td></tr>
+<tr><td><b>3 · Burn in the gas sensors</b></td><td>The MQ-6s need 24–48 hours powered before their numbers mean anything. Start this early so it is not the thing holding up commissioning.</td></tr>
+<tr><td><b>4 · Solder and enclose</b></td><td>Transfer each proven circuit to perfboard, into its box, then mount it. Nothing permanent goes in on breadboard.</td></tr>
+<tr><td><b>5 · Calibrate</b></td><td>Sound meter against a phone app, load cells against a known weight, mmWave distance gates, tank sensors against a tape measure.</td></tr>
+<tr><td><b>6 · Electrician last</b></td><td>Panic loop, geyser relays, pump contactor and float switches. A low-voltage or fire-alarm technician, not a general electrician.</td></tr>
+</table>
+
+<footer>
+  Aangan · Nathaniel School of Music, Bangalore · component review 1 August 2026<br>
+  Four changes · three additions · everything else buy exactly as listed<br>
+  Companion files: aangan-BUY-LIST-COMPLETE · aangan-list-addendum
+</footer>
+
+</div>
+</body>
+</html>
