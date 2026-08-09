@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aangan · Day 1 Installation Manual</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#15131c;--dim:#6b6b76;--line:#e4e0d6;--paper:#f5f3ee;--card:#fff;
+--go:#15803d;--go-bg:#f0fdf4;--go-ln:#bbf7d0;
+--warn:#b45309;--warn-bg:#fffbeb;--warn-ln:#fde68a;
+--stop:#b91c1c;--stop-bg:#fef2f2;--stop-ln:#fecaca;
+--blue:#1d4ed8;--blue-bg:#eff6ff;--blue-ln:#bfdbfe;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}
+.w{max-width:780px;margin:0 auto;padding:0 16px 70px}
+header{background:var(--ink);color:#fff;padding:30px 0 26px}
+.hd{max-width:780px;margin:0 auto;padding:0 16px}
+header h1{font-size:29px;font-weight:800;letter-spacing:-.5px}
+header p{color:#b9b6c4;font-size:13.5px;margin-top:6px}
+h2{font-size:19px;font-weight:800;margin-top:34px;padding:12px 16px;background:var(--ink);
+color:#fff;border-radius:10px;letter-spacing:-.2px}
+h3{font-size:16px;font-weight:800;margin-top:24px;color:var(--ink)}
+p{margin:9px 0;font-size:14px}
+.box{border-radius:11px;padding:13px 16px;margin-top:12px;font-size:13.5px;line-height:1.6}
+.box b{font-weight:700}
+.go{background:var(--go-bg);border:1px solid var(--go-ln);color:#14532d}
+.warn{background:var(--warn-bg);border:1px solid var(--warn-ln);color:#78350f}
+.stop{background:var(--stop-bg);border:1px solid var(--stop-ln);color:#7f1d1d}
+.blue{background:var(--blue-bg);border:1px solid var(--blue-ln);color:#1e3a8a}
+.step{background:var(--card);border:1px solid var(--line);border-radius:12px;
+padding:16px 18px 16px 62px;margin-top:12px;position:relative}
+.step:before{content:attr(data-n);position:absolute;left:16px;top:16px;width:32px;height:32px;
+border-radius:9px;background:var(--ink);color:#fff;font-family:'IBM Plex Mono',monospace;
+font-weight:700;font-size:15px;display:grid;place-items:center}
+.step h4{font-size:15.5px;font-weight:800;margin-bottom:5px}
+.step p{font-size:13.5px;margin:6px 0}
+.step .t{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--dim);
+float:right;background:var(--paper);padding:3px 9px;border-radius:6px;margin-left:10px}
+.check{background:var(--go-bg);border-left:4px solid var(--go);border-radius:0 8px 8px 0;
+padding:9px 13px;margin-top:10px;font-size:13px;color:#14532d}
+.check b{font-weight:700}
+.type{font-family:'IBM Plex Mono',monospace;background:#15131c;color:#e8e6df;padding:9px 13px;
+border-radius:8px;font-size:12.5px;margin-top:8px;display:block;word-break:break-all}
+.diag{background:#15131c;color:#e8e6df;border-radius:12px;padding:18px;margin-top:14px;
+font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:2;white-space:pre;overflow-x:auto}
+.diag b{color:#ffd479;font-weight:600}
+.diag .c{color:#8b9dc3}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px;background:var(--card);
+border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);
+background:#faf8f4;padding:9px 12px;border-bottom:1px solid var(--line)}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.tag{display:inline-block;font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:20px;
+font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.t-yes{background:var(--go-bg);color:var(--go)}
+.t-no{background:var(--stop-bg);color:var(--stop)}
+.t-part{background:var(--warn-bg);color:var(--warn)}
+ul{margin:8px 0 8px 20px}li{padding:3px 0;font-size:13.5px}
+footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--line);font-size:11px;
+color:var(--dim);font-family:'IBM Plex Mono',monospace;text-align:center;line-height:1.8}
+@media print{body{background:#fff}.step,table{break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<header><div class="hd">
+<h1>Aangan — Day 1 Installation</h1>
+<p>Nathaniel School of Music · written for someone who is not a coder and not an electrician</p>
+</div></header>
+
+<div class="w">
+
+<h2>READ THIS FIRST — what is and is not ready</h2>
+
+<div class="box stop">
+<b>The Aangan app is not connected to hardware yet, and it will not be tomorrow.</b> It runs in
+simulation. That is not a problem for Day 1 — but it changes what "success" looks like, so please
+read this page before starting.
+</div>
+
+<table>
+<tr><th>Thing</th><th>State</th><th>What that means tomorrow</th></tr>
+<tr><td><b>Home Assistant</b><div style="font-size:11.5px;color:#6b6b76">the actual brain</div></td>
+<td><span class="tag t-yes">READY</span></td>
+<td>Free software, installs from a card. This is what you set up tomorrow, and it has its own
+complete dashboard. <b>Everything on Day 1 is checked here.</b></td></tr>
+<tr><td><b>Aangan web app</b></td><td><span class="tag t-part">SIMULATION</span></td>
+<td>Live at studio-command.vercel.app and fully working — but it is pretending. It has never
+talked to a real sensor. Connecting it is my job, after Day 1.</td></tr>
+<tr><td><b>iPhone / iPad app</b></td><td><span class="tag t-no">DOES NOT EXIST</span></td>
+<td>I have <b>not</b> built a native iOS app. What you get instead: the free
+<b>Home Assistant Companion</b> app from the App Store (this is what makes phones ring for
+emergencies), plus the web app saved to the home screen. The iPad needs nothing special — it
+opens the same web page.</td></tr>
+<tr><td><b>Sensor node code</b></td><td><span class="tag t-part">HALF WRITTEN</span></td>
+<td>Configurations exist for 7 of the 12 doors, 4 of the 9 leak sensors, and the presence and
+sound sensors. <b>Nothing yet exists</b> for the climate sensors, the MQ-6 gas sensors, the water
+tanks or the gas-cylinder scale. I write those — they are not shop-floor work.</td></tr>
+<tr><td><b>Connection between app and house</b></td><td><span class="tag t-no">NOT DONE</span></td>
+<td>Three things block it and all three are mine to fix: seven missing connection points, a
+browser security rule about http versus https, and a wrong port number in the settings.</td></tr>
+</table>
+
+<div class="box go">
+<b>So what is Day 1 actually for?</b> Getting the Raspberry Pi running Home Assistant, and getting
+your first real sensors reporting into it. That is a full, satisfying day's work, it needs nobody
+external, and it de-risks everything that follows. <b>You will see real door-open and door-closed
+readings on a screen by the end of the day.</b>
+</div>
+
+<h2>WHAT YOU ARE BUILDING</h2>
+
+<div class="diag"><b>SENSORS</b>  small boxes on walls, one per area
+   │      <span class="c">they talk over your Wi-Fi</span>
+   ▼
+<b>RASPBERRY PI</b>  running Home Assistant
+   │      <span class="c">this is the brain. It decides everything.</span>
+   │      <span class="c">it has its own dashboard — that is what you use on Day 1</span>
+   ▼
+<b>PHONES · iPAD · WALL SCREENS</b>
+       <span class="c">Home Assistant Companion app (free, App Store)</span>
+       <span class="c">Aangan web app — connected later</span>
+</div>
+
+<p>Each small box is an <b>ESP32</b> — a ₹400 chip with Wi-Fi. Sensors plug into it, it plugs into
+a phone charger, and it reports to the Pi. You have six of them, one per area of the house.</p>
+
+<h2>BEFORE YOU START — lay these out</h2>
+
+<ul>
+<li>The Raspberry Pi 5 and its official white power supply</li>
+<li>One microSD card</li>
+<li>A Mac or laptop, on the <b>same Wi-Fi</b> as everything else</li>
+<li>An ethernet cable, if you can reach the router — makes the first boot much easier</li>
+<li>One ESP32 board and its micro-USB cable</li>
+<li>Two or three MC-38 door sensors and a few jumper wires (for testing on the bench)</li>
+<li>A breadboard</li>
+</ul>
+
+<div class="box warn">
+<b>Do not mount anything on a wall today.</b> Everything on Day 1 happens on a table. Mounting
+comes after each sensor type is proven to work — otherwise you are on a ladder debugging.
+</div>
+
+<h2>STEP 1 · GET THE PI RUNNING</h2>
+
+<div class="step" data-n="1"><span class="t">10 min</span>
+<h4>Install Raspberry Pi Imager on the Mac</h4>
+<p>Download it from raspberrypi.com/software. It is a normal Mac app — drag it to Applications.</p>
+</div>
+
+<div class="step" data-n="2"><span class="t">5 min</span>
+<h4>Choose Home Assistant, not Raspberry Pi OS</h4>
+<p>Open Imager. Click <b>CHOOSE DEVICE</b> → Raspberry Pi 5.</p>
+<p>Click <b>CHOOSE OS</b> → scroll to <b>Other specific-purpose OS</b> → <b>Home assistants and
+home automation</b> → <b>Home Assistant</b> → pick the Raspberry Pi 5 version.</p>
+<div class="box warn" style="margin-top:8px"><b>This is the step people get wrong.</b> Do not pick
+plain "Raspberry Pi OS". Home Assistant is its own operating system and it configures itself.</div>
+</div>
+
+<div class="step" data-n="3"><span class="t">10 min</span>
+<h4>Write it to the card</h4>
+<p>Click <b>CHOOSE STORAGE</b>, pick the SD card, click <b>NEXT</b> and let it write. If it asks
+about custom settings, choose <b>NO</b> — Home Assistant does not need them.</p>
+</div>
+
+<div class="step" data-n="4"><span class="t">15 min waiting</span>
+<h4>First boot</h4>
+<p>Card into the Pi. Ethernet cable to the router if you can. Power in last.</p>
+<p>Now <b>wait</b>. The first boot downloads and installs itself and takes ten to fifteen minutes.
+The screen may show nothing useful. This is normal. Do not unplug it.</p>
+</div>
+
+<div class="step" data-n="5"><span class="t">5 min</span>
+<h4>Open it on the Mac</h4>
+<p>In a browser, type exactly:</p>
+<span class="type">http://homeassistant.local:8123</span>
+<p>Create the admin account. Name the home <b>Aangan</b>, set the location to Bangalore.</p>
+<div class="check"><b>✓ You know it worked when:</b> you see a Home Assistant dashboard with the
+weather and a map. The Pi is now the brain of the house.</div>
+</div>
+
+<h2>STEP 2 · YOUR FIRST SENSOR NODE</h2>
+
+<div class="step" data-n="6"><span class="t">10 min</span>
+<h4>Install the ESPHome add-on</h4>
+<p>In Home Assistant: <b>Settings</b> → <b>Add-ons</b> → <b>Add-on Store</b> → search
+<b>ESPHome Device Builder</b> → <b>Install</b> → <b>Start</b>. Turn on <b>Show in sidebar</b>.</p>
+<p>ESPHome is the tool that programs the little Wi-Fi chips.</p>
+</div>
+
+<div class="step" data-n="7"><span class="t">15 min</span>
+<h4>Program the first ESP32</h4>
+<p>Open <b>ESPHome</b> from the sidebar. Click <b>+ NEW DEVICE</b>, name it <b>studio-doors</b>,
+choose <b>ESP32</b>.</p>
+<p>When it gives you a configuration to edit, delete what is there and paste in the contents of
+<b>studio-doors.yaml</b> — that file is in our project folder under
+<span style="font-family:'IBM Plex Mono',monospace;font-size:12px">pi/house/esphome/</span>.
+Jason or I will hand it to you.</p>
+<p>Plug the ESP32 into the Mac with the micro-USB cable, click <b>INSTALL</b> → <b>Plug into this
+computer</b>, and pick the port that appears.</p>
+<div class="box warn" style="margin-top:8px"><b>If no port appears:</b> the cable is a charge-only
+cable. Swap it for a proper data cable. This wastes more time than any other single problem.</div>
+</div>
+
+<div class="step" data-n="8"><span class="t">10 min</span>
+<h4>Wire two door sensors on the bench</h4>
+<p>An MC-38 has two parts — a switch with two wires, and a plain magnet with none.</p>
+<p>Take the switch part. One wire goes to the pin labelled <b>GPIO25</b>, the other goes to any
+pin labelled <b>GND</b>. That is the whole circuit — no resistors, no polarity, either wire either
+way round.</p>
+<p>Do the same for a second sensor using <b>GPIO26</b>.</p>
+</div>
+
+<div class="step" data-n="9"><span class="t">5 min</span>
+<h4>Adopt it into Home Assistant</h4>
+<p>Go back to Home Assistant → <b>Settings</b> → <b>Devices &amp; Services</b>. A box should appear
+saying a new ESPHome device was discovered. Click <b>Configure</b> and accept.</p>
+<div class="check"><b>✓ You know it worked when:</b> you click into the device and see
+<b>Studio door leaf A</b> and <b>Studio door leaf B</b> listed.</div>
+</div>
+
+<h2>STEP 3 · PROVE IT — the moment that matters</h2>
+
+<div class="step" data-n="10"><span class="t">5 min</span>
+<h4>Move the magnet</h4>
+<p>Hold the magnet against the switch body, then pull it away. Watch the sensor in Home Assistant.</p>
+<div class="check"><b>✓ Magnet touching = Closed. Magnet away = Open.</b> If that changes on
+screen within a second, <b>the entire chain works</b> — sensor, chip, Wi-Fi, Pi, dashboard. Every
+other sensor in this house is a variation of this exact thing.</div>
+<div class="box stop" style="margin-top:8px"><b>If it does not change:</b> check the two wires are
+on GPIO25 and GND and are pushed in properly. Nine times out of ten it is a loose jumper wire.</div>
+</div>
+
+<div class="box go">
+<b>If you get this far, Day 1 is a success.</b> Stop here if you want to. Everything below is
+bonus.
+</div>
+
+<h2>STEP 4 · IF THERE IS TIME — the rest of the day</h2>
+
+<p>Repeat the same pattern for the node configurations that already exist. In priority order:</p>
+
+<table>
+<tr><th>Node</th><th>What it covers</th><th>Ready?</th></tr>
+<tr><td><b>studio-doors</b></td><td>Studio and teaching room doors — 4 reeds</td><td><span class="tag t-yes">YES</span></td></tr>
+<tr><td><b>perimeter</b></td><td>Main door, both balcony doors, 2 vibration, 1 motion</td><td><span class="tag t-yes">YES</span></td></tr>
+<tr><td><b>wet-zones</b></td><td>2 bathroom leaks + geyser overflow</td><td><span class="tag t-yes">YES</span></td></tr>
+<tr><td><b>kitchen-safety</b></td><td>Kitchen flame, sink leak, gas alarm contact</td><td><span class="tag t-part">USES OLD GAS SENSOR — I must update it for MQ-6</span></td></tr>
+<tr><td><b>studio-sense</b></td><td>Sound level and presence</td><td><span class="tag t-part">NEEDS UPDATING for the new ADS1115 board</span></td></tr>
+<tr><td><b>panic-loop</b></td><td>Panic buttons and smoke-alarm contacts</td><td><span class="tag t-no">HOLD — needs the electrician</span></td></tr>
+<tr><td>Climate, tanks, gas scale</td><td>DHT22, SHT31, ultrasonic, load cells</td><td><span class="tag t-no">I HAVE NOT WRITTEN THESE YET</span></td></tr>
+</table>
+
+<div class="box blue">
+<b>Do not try to build what is not ready.</b> Anything marked in red or amber is software I owe
+you, not something the team can solve on the day. Build the green ones, and leave the rest boxed.
+</div>
+
+<h2>HOW TO CHECK EVERYTHING — the daily habit</h2>
+
+<p>Until the Aangan app is connected, <b>Home Assistant's own dashboard is the app</b>. It is
+genuinely good and you lose nothing by using it for now.</p>
+
+<div class="step" data-n="A">
+<h4>On a computer</h4>
+<span class="type">http://homeassistant.local:8123</span>
+<p>Click <b>Settings → Devices &amp; Services → ESPHome</b> to see every node and whether it is
+online. A node that has stopped reporting shows as <b>Unavailable</b> — that is the single most
+useful thing to look at.</p>
+</div>
+
+<div class="step" data-n="B">
+<h4>On a phone or the iPad</h4>
+<p>Install <b>Home Assistant</b> from the App Store — the official one, it is free. Open it, and
+it should find your house on the Wi-Fi automatically. Log in with the account you made in Step 5.</p>
+<div class="box warn" style="margin-top:8px"><b>On iPhones, allow Critical Alerts when it asks.</b>
+That permission is the only thing that lets an emergency ring through Silent mode. If you tap no,
+emergency alerts will be silent — and there is no second prompt.</div>
+</div>
+
+<div class="box blue">
+<b>When the Aangan app is connected later</b>, nothing you set up on Day 1 changes. The app is a
+nicer face on the same Home Assistant underneath. Nothing gets rebuilt.
+</div>
+
+<h2>WHO TO HIRE, AND WHEN</h2>
+
+<table>
+<tr><th>Who</th><th>For what</th><th>When</th></tr>
+<tr><td><b>Nobody</b></td><td>Day 1 is SD cards, USB cables and a breadboard. There is no mains
+electricity involved anywhere in it.</td><td><span class="tag t-yes">TOMORROW</span></td></tr>
+<tr><td><b>Handyman or carpenter</b></td><td>Mounting 12 door sensors neatly, running the thin
+cable inside trunking, drilling for the wall tablets. This is the difference between a proper
+install and wires taped to a wall — and it is honestly the most visible quality difference in the
+whole project.</td><td>After the sensors are proven on the bench</td></tr>
+<tr><td><b>Licensed electrician</b></td><td>Geyser relays and the water-pump contactor. Anything
+that switches mains power.</td><td>Only when that hardware is bought — we deliberately held it</td></tr>
+<tr><td><b>Fire-alarm / security systems technician</b><div style="font-size:11.5px;color:#6b6b76">
+specifically this, not a general electrician</div></td><td>The panic-button loop and wiring the
+certified smoke and gas alarms so the system can read them. They understand normally-closed loops
+and battery-backed sounders; a general electrician usually does not.</td><td>Also held — later phase</td></tr>
+</table>
+
+<div class="box stop">
+<b>The one safety rule that never changes.</b> The certified smoke alarms and the certified LPG
+gas alarm are the real life-safety devices. They must be mounted, tested and working <b>on their
+own</b>, with no Pi, no Wi-Fi and no app. Everything we are building is an extra layer on top that
+watches them. If the whole system is switched off, the house must still be protected.
+</div>
+
+<h2>WHEN SOMETHING GOES WRONG</h2>
+
+<table>
+<tr><th>Problem</th><th>Almost always the cause</th></tr>
+<tr><td>homeassistant.local does not open</td><td>Still booting — wait the full 15 minutes. If it
+still fails, the Mac and the Pi are on different Wi-Fi networks.</td></tr>
+<tr><td>No USB port shows when flashing</td><td>Charge-only cable. Swap it for a data cable.</td></tr>
+<tr><td>ESP32 shows Unavailable</td><td>Weak Wi-Fi where it is sitting, or the charger is too weak.</td></tr>
+<tr><td>Sensor never changes</td><td>Loose jumper wire — reseat both ends.</td></tr>
+<tr><td>Sensor is backwards<div style="font-size:11.5px;color:#6b6b76">shows Open when closed</div></td>
+<td>Harmless, it is a one-word change in the configuration. Note it and move on.</td></tr>
+</table>
+
+<div class="box go">
+<b>Nothing you can do on Day 1 can break anything permanently.</b> The worst case is rewriting the
+SD card, which takes fifteen minutes. Experiment freely.
+</div>
+
+<footer>
+Aangan · Nathaniel School of Music, Bangalore · Day 1 Installation Manual<br>
+Success = Home Assistant running, and one door sensor changing on screen<br>
+The Aangan app connection is a later step and is not needed tomorrow
+</footer>
+
+</div>
+</body>
+</html>
