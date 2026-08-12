@@ -35,11 +35,11 @@ export default function Command({ onSelect, onScene }: Props) {
     <div className="rise-in page-shell page-shell--narrow flex flex-col items-center pt-2 lg:pt-8">
       <StateDial info={stateInfo} committing={committing} chimes={settings.chimes} onSelect={onSelect} />
 
-      <p className="font-display mt-3 text-center text-[15px] italic text-paper/70 lg:text-lg">{meta.tagline}</p>
+      <p className="mt-3 text-center text-sm text-paper/70 lg:text-base">{meta.tagline}</p>
 
       <div className="mt-7 w-full">
         <div className="mb-3 flex items-end justify-between">
-          <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-dim">Conduct the house</div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-dim">Quick scenes</div>
           <button
             onClick={soundA}
             disabled={tonePlaying}
@@ -83,7 +83,7 @@ export default function Command({ onSelect, onScene }: Props) {
           aria-expanded={historyOpen}
         >
           <span>
-            <span className="block font-mono text-[10px] uppercase tracking-[0.28em] text-dim">House memory</span>
+            <span className="block font-mono text-[10px] uppercase tracking-[0.28em] text-dim">Recent activity</span>
             {!historyOpen && history[0] && <span className="mt-1 block text-xs text-paper/70">{history[0].title} · {latestWhen}</span>}
           </span>
           <ChevronDownIcon size={18} className={`shrink-0 text-gold transition-transform ${historyOpen ? "rotate-180" : ""}`} />

@@ -126,14 +126,24 @@ export class LiveAdapter implements ApiAdapter {
     this.base = baseUrl.replace(/\/$/, "");
   }
 
+  private async request(path: string, init?: RequestInit) {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 6000);
+    try {
+      return await fetch(`${this.base}${path}`, { cache: "no-store", ...init, signal: controller.signal });
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  }
+
   private async get<T>(path: string): Promise<T> {
-    const res = await fetch(`${this.base}${path}`, { cache: "no-store" });
+    const res = await this.request(path);
     if (!res.ok) throw new Error(`${path} → ${res.status}`);
     return res.json() as Promise<T>;
   }
 
   private async post<T>(path: string, body?: unknown): Promise<T> {
-    const res = await fetch(`${this.base}${path}`, {
+    const res = await this.request(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -261,11 +271,13 @@ export class LiveAdapter implements ApiAdapter {
 
   private async pollOnce() {
     try {
-      const [state, rooms, safety, preflight, prep, utilities, piano, delivery, displays, sos, fleet, air] = await Promise.all([
+      const [state, rooms, safety, preflight] = await Promise.all([
         this.getState(),
         this.getRooms(),
         this.getSafety(),
         this.getPreflight(),
+      ]);
+      const optional = await Promise.allSettled([
         this.getPreflightPrep(),
         this.getUtilities(),
         this.getPianoRig(),
@@ -278,14 +290,15 @@ export class LiveAdapter implements ApiAdapter {
       this.emit({ type: "state", state });
       this.emit({ type: "rooms", rooms });
       this.emit({ type: "safety", safety });
-      this.emit({ type: "preflight", preflight, prep });
-      this.emit({ type: "utilities", utilities });
-      this.emit({ type: "piano", piano });
-      this.emit({ type: "delivery", delivery });
-      this.emit({ type: "displays", displays });
-      this.emit({ type: "sos", sos });
-      this.emit({ type: "fleet", fleet });
-      this.emit({ type: "air", air });
+      const [prep, utilities, piano, delivery, displays, sos, fleet, air] = optional;
+      if (prep.status === "fulfilled") this.emit({ type: "preflight", preflight, prep: prep.value });
+      if (utilities.status === "fulfilled") this.emit({ type: "utilities", utilities: utilities.value });
+      if (piano.status === "fulfilled") this.emit({ type: "piano", piano: piano.value });
+      if (delivery.status === "fulfilled") this.emit({ type: "delivery", delivery: delivery.value });
+      if (displays.status === "fulfilled") this.emit({ type: "displays", displays: displays.value });
+      if (sos.status === "fulfilled") this.emit({ type: "sos", sos: sos.value });
+      if (fleet.status === "fulfilled") this.emit({ type: "fleet", fleet: fleet.value });
+      if (air.status === "fulfilled") this.emit({ type: "air", air: air.value });
       this.setConnection("online");
     } catch {
       this.setConnection("offline");

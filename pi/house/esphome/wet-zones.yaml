@@ -1,14 +1,15 @@
 # ESP32 node 4 — WET ZONES
-# Water-leak pucks (Jason owns 6) at the floor low point of each bathroom.
-# One node can serve the two bathrooms of ONE apartment (keep runs < ~5 m,
-# use shielded/twisted pairs). Flash this file twice with different names
-# (wet-zones-studio / wet-zones-house) if wiring both flats.
+# Water-leak probes at every low point. GPIO34/35/39 have no internal pull-up:
+# add a 10k resistor from each of those GPIOs to 3.3 V. All probes close to GND
+# when wet. Keep runs short and use twisted pair.
 esphome:
   name: wet-zones
   friendly_name: Wet Zones
 
 esp32:
   board: esp32dev
+  framework:
+    type: esp-idf
 
 logger:
 api:
@@ -39,6 +40,31 @@ binary_sensor:
   - platform: gpio
     name: "Geyser overflow leak"
     pin: { number: GPIO32, mode: { input: true, pullup: true }, inverted: true }
+    device_class: moisture
+    filters: [delayed_on: 500ms]
+  - platform: gpio
+    name: "Washing machine leak"
+    pin: { number: GPIO27, mode: { input: true, pullup: true }, inverted: true }
+    device_class: moisture
+    filters: [delayed_on: 500ms]
+  - platform: gpio
+    name: "Studio sink leak"
+    pin: { number: GPIO33, mode: { input: true, pullup: true }, inverted: true }
+    device_class: moisture
+    filters: [delayed_on: 500ms]
+  - platform: gpio
+    name: "Teaching sink leak"
+    pin: { number: GPIO34, mode: { input: true }, inverted: true }
+    device_class: moisture
+    filters: [delayed_on: 500ms]
+  - platform: gpio
+    name: "House sink leak"
+    pin: { number: GPIO35, mode: { input: true }, inverted: true }
+    device_class: moisture
+    filters: [delayed_on: 500ms]
+  - platform: gpio
+    name: "Floor drain leak"
+    pin: { number: GPIO39, mode: { input: true }, inverted: true }
     device_class: moisture
     filters: [delayed_on: 500ms]
   - platform: status

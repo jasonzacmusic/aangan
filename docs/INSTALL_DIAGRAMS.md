@@ -6,12 +6,12 @@
 flowchart LR
   KB[USB MIDI keyboard] --> PP
   subgraph PP["🎹 PIANO Pi — piano.local"]
-    PT[Pianoteq 9 Pro<br/>48 kHz · 192 frames · multicore max] --> DAC[HiFiBerry DAC2 Pro XLR]
+    PT[Pianoteq 9 Pro<br/>48 kHz · 192 frames · multicore max] --> DAC[Raspberry Pi DAC Pro<br/>+ XLR board]
     ST[piano_status_server.py :8951]
   end
   DAC -->|balanced XLR| CONSOLE[Studio console]
   subgraph HP["🏠 HOUSE Pi — homeassistant.local"]
-    HA[Home Assistant OS 2026.7<br/>studio_ready verdict] --- WR[studio_wrapper.py :8126]
+    HA[Home Assistant OS 2026.7<br/>studio_ready verdict] --- WR[Aangan Bridge app<br/>PWA + API :8126]
   end
   ST <-->|status + cues only<br/>never audio| WR
   E1[ESP32 studio-doors] & E2[ESP32 studio-sense] & E3[ESP32 kitchen-safety] & E4[ESP32 wet-zones] & E5[ESP32 perimeter] & E6[ESP32 panic-loop] -->|ESPHome encrypted API| HA
@@ -45,7 +45,8 @@ drops. Never one reed across both leaves: it goes blind when one leaf opens alon
    └───────────────────────────────┘
 ```
 One SEN0232 in the recording studio, one in the teaching room. Signal: 5 V → SEN0232 →
-0.6–2.6 V analog → ESP32 GPIO34 (12 db attenuation). 10 mV = 1 dBA.
+0.6–2.6 V analog → ESP32 GPIO34/35 (12 dB attenuation). The official transfer is
+50 mV per dBA: `dBA = volts × 50`.
 
 ## Panic loop (wired by the low-voltage technician)
 

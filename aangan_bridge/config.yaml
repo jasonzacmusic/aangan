@@ -1,0 +1,29 @@
+name: Aangan Bridge
+description: Live Aangan control app and Home Assistant API bridge
+version: "1.2.0"
+slug: aangan_bridge
+url: https://github.com/jasonzacmusic/aangan
+startup: application
+boot: auto
+stage: stable
+init: false
+arch:
+  - aarch64
+  - amd64
+homeassistant_api: true
+ports:
+  8126/tcp: 8126
+ports_description:
+  8126/tcp: Aangan web app and API
+webui: http://[HOST]:[PORT:8126]/
+watchdog: http://[HOST]:[PORT:8126]/api/health
+options:
+  piano_url: http://piano.local:8951
+  allowed_origins: ""
+  allow_commissioning: false
+  fleet_targets: "[]"
+schema:
+  piano_url: str
+  allowed_origins: str
+  allow_commissioning: bool
+  fleet_targets: str

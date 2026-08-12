@@ -243,7 +243,7 @@ export default function Settings() {
       <p className="mt-6 pb-4 text-center font-mono text-[9px] leading-relaxed text-dim/60">
         Studio Command · House + Studio · Nathaniel School of Music
         <br />
-        flip USE_MOCK in src/config.ts when the Pi wrapper is live
+        data source: {DATA_SOURCE} · set with VITE_DATA_SOURCE at build time
       </p>
     </div>
   );

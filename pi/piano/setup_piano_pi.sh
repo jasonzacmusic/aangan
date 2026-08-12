@@ -12,10 +12,9 @@ echo "== 1/6 Raspberry Pi DAC Pro overlay in $CONFIG"
 cp "$CONFIG" "$CONFIG.bak.$(date +%s)"
 sed -i 's/^dtparam=audio=on/#dtparam=audio=on  # disabled for DAC Pro/' "$CONFIG"
 sed -i 's/^dtoverlay=vc4-kms-v3d$/dtoverlay=vc4-kms-v3d,noaudio/' "$CONFIG"
-# The DAC Pro (ex-IQaudio) uses the IQaudio overlay family. If aplay -l shows
-# nothing after reboot, verify the current overlay name in the official
-# Raspberry Pi audio docs — names occasionally shift between OS releases.
-grep -q '^dtoverlay=iqaudio-dacplus' "$CONFIG" || echo 'dtoverlay=iqaudio-dacplus' >> "$CONFIG"
+# Current Raspberry Pi OS documents the Raspberry Pi-branded DAC Pro as
+# rpi-dacpro. Avoid adding a second copy when the script is rerun.
+grep -q '^dtoverlay=rpi-dacpro' "$CONFIG" || echo 'dtoverlay=rpi-dacpro' >> "$CONFIG"
 
 echo "== 2/6 realtime audio limits"
 mkdir -p /etc/security/limits.d

@@ -1,55 +1,82 @@
-# HOUSE Pi — Home Assistant + ESPHome + the wrapper
+# HOUSE Pi — Home Assistant, sensors, and Aangan Bridge
 
-The second Raspberry Pi 5 (in stock at Silverline) runs **Home Assistant OS** and watches
-both apartments. The certified alarms stay primary; everything here is the smart overlay.
+The House Pi runs Home Assistant OS. Certified smoke/LPG alarms and physical pump protection remain primary; Aangan is the monitored control layer.
 
 ## Install order
 
-1. **Flash HA OS** with Raspberry Pi Imager → "Other specific-purpose OS → Home Assistant".
-   32 GB+ A2 microSD. Boot with Ethernet if possible, open `http://homeassistant.local:8123`,
-   create the admin account. (NVMe boot exists but is not in the official install doc —
-   start on SD.)
-2. **Add-ons**: install the official **ESPHome** add-on (Settings → Add-ons).
-3. **ESPHome nodes**: copy `esphome/secrets.example.yaml` → `secrets.yaml` in the ESPHome
-   add-on config, generate the api keys (`openssl rand -base64 32` each), then flash the six
-   YAMLs in `esphome/` onto the six ESP32s over USB the first time (OTA after that).
-   Adopt each node in Settings → Devices & Services.
-4. **Package**: copy `homeassistant/packages/studio_command.yaml` to `/config/packages/`
-   (Samba or File editor add-on) and add to `configuration.yaml`:
+```text
+Home Assistant OS
+      ↓
+ESPHome + File editor/Samba
+      ↓
+Six critical ESP32 nodes on breadboards
+      ↓
+studio_command.yaml package + phone alerts
+      ↓
+Aangan Bridge app on port 8126
+      ↓
+Camera, air and House Pulse expansion nodes
+```
+
+1. Open `http://homeassistant.local:8123` and complete Home Assistant onboarding.
+2. Settings → Apps → App store: install **ESPHome Device Builder** and **File editor** (or Samba share).
+3. ESPHome → Secrets: copy `esphome/secrets.example.yaml` to `secrets.yaml`; replace every placeholder. Generate API keys with `openssl rand -base64 32` on a Mac/Linux computer.
+4. Flash and breadboard-test the six critical files in this order:
+   - `studio-doors.yaml`
+   - `studio-sense.yaml`
+   - `kitchen-safety.yaml`
+   - `wet-zones.yaml`
+   - `perimeter.yaml`
+   - `panic-loop.yaml`
+5. Adopt all six devices in Settings → Devices & services → ESPHome.
+6. Copy `homeassistant/packages/studio_command.yaml` to `/config/packages/` and add this once to `/config/configuration.yaml`:
+
    ```yaml
    homeassistant:
      packages: !include_dir_named packages
    ```
-   Fix any entity ids that got different names during adoption, then restart HA.
-5. **Phones**: everyone installs the **Home Assistant Companion** app (iOS + Android), logs
-   into `http://homeassistant.local:8123` on the home Wi-Fi. Edit the `notify:` group in the
-   package so it lists every real phone (`notify.mobile_app_<device_name>`). iOS users must
-   allow **Critical Alerts** when the app asks — that is what rings through silent mode.
-6. **Wrapper** (feeds the Studio Command app):
-   ```bash
-   sudo install -m 755 wrapper/studio_wrapper.py /usr/local/bin/
-   echo 'HA_TOKEN=<long-lived token from your HA profile>' | sudo tee /etc/studio-wrapper.env
-   sudo cp wrapper/studio-wrapper.service /etc/systemd/system/ && sudo systemctl enable --now studio-wrapper
-   ```
-   On HA OS itself you cannot run systemd services — run the wrapper on any always-on
-   Linux box/Pi on the LAN (the piano Pi is fine: it's Nice=10, network-only), or ask for
-   it to be packaged as a local HA add-on. Then set in the app repo:
-   `src/config.ts → USE_MOCK = false; LIVE_BASE_URL = "http://<wrapper-host>:8126"`.
-7. **Displays**: any old iPad/tablet → open the app → Displays → "Open panel" → add to home
-   screen (or use the Companion app's native kiosk mode on current iPads).
 
-## The one authoritative verdict
+7. Replace the two sample `mobile_app_...` phone names in the notify group with the real Companion-app notify services. Run Developer tools → YAML → **Check configuration**, then restart Home Assistant.
+8. Test the alert route on every phone. Do not continue until fire, gas, leak and panic tests identify the correct input and ring every required phone.
+9. Install Aangan Bridge:
+   - Settings → Apps → App store → ⋮ → Repositories
+   - add `https://github.com/jasonzacmusic/aangan`
+   - install **Aangan Bridge**, enable Start on boot and Watchdog, then start it
+   - open `http://homeassistant.local:8126`
+10. Add the live app to each phone/tablet home screen. Use its **More → Install & test** page while commissioning.
 
-`binary_sensor.studio_ready` in the package is **the** studio_ready:
-doors closed AND trained-quiet (with hysteresis) AND every ESP32 node online AND no
-fire/gas/leak/panic. The app's Pre-flight shows all four checks; the Mac agent (see
-`mac-agent/`) blocks Record on the same sensor.
+Keep port 8126 LAN-only. Do not expose an unauthenticated house-control port to
+the public internet; remote access needs a trusted HTTPS/VPN layer.
 
-## Safety wiring rules (non-negotiable)
+The bridge is a real Home Assistant app. It uses Home Assistant's Supervisor token and serves the PWA and API together. No long-lived token and no separate Linux/systemd host are required.
 
-- Certified smoke/heat + LPG alarms are mounted and tested FIRST, standalone.
-- ESP32s read only **volt-free relay contacts** from certified units.
-- The panic loop is wired NC through latching switches to a battery-backed sounder by a
-  **low-voltage/fire-alarm technician** — the ESP32 only observes it.
-- Nothing in this folder switches mains. Pumps/AC/geyser get electrician-fitted
-  contactors with physical protection; HA only asks politely.
+## Nodes and phases
+
+| Phase | File | Board count | What it covers |
+|---|---|---:|---|
+| Critical | `studio-doors.yaml` | 1 | Four studio/teaching door leaves |
+| Critical | `studio-sense.yaml` | 1 | Two sound meters, LD2410, tally strip |
+| Critical | `kitchen-safety.yaml` | 1 | Certified LPG contact, flame, kitchen leak, four MQ-6 trends |
+| Critical | `wet-zones.yaml` | 1 | Eight leak points |
+| Critical | `perimeter.yaml` | 1 | Three doors, five vibration inputs, four PIRs |
+| Critical | `panic-loop.yaml` | 1 | Isolated panic loop, two smoke contacts, three flame inputs |
+| Expansion | `doorbell-cam.yaml` | ESP32-CAM ×1 | Entrance camera |
+| Expansion | `air_node.yaml` | 3 | Studio, kitchen and bedroom air |
+| Expansion | `house-pulse.yaml` | 1 | Tanks, LPG scale, climate |
+
+Complete visual pin maps and breadboard tests: [../../docs/TOMORROW_INSTALL.md](../../docs/TOMORROW_INSTALL.md).
+
+## Acceptance rules
+
+- `binary_sensor.studio_ready` is the sole record-ready verdict: all four doors closed, room quiet for 20 seconds, all six critical nodes online, and all safety inputs clear.
+- A critical node going offline blocks readiness. Optional air/camera/utility nodes show **Not connected**; they do not invent healthy values.
+- Aangan Bridge must not report pre-flight ready until configured doorbell, AC and fan entities have actually confirmed off.
+- Water-pump control stays locked unless a physical dry-run/high-level protection circuit is present and reporting.
+- `allow_commissioning` in the Aangan Bridge options stays off except during a supervised test.
+
+## Electrical boundary
+
+- Breadboards are only for isolated 3.3 V/5 V sensor signals.
+- A certified alarm reaches the ESP32 only through a volt-free contact or optocoupler.
+- The 12 V panic loop, sounder, mains, AC, geyser and pump contactor are technician work.
+- Never connect an MQ-6 analogue output or an ultrasonic 5 V echo directly to an ESP32 ADC pin; use the documented 10 kΩ/20 kΩ divider.

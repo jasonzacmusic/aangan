@@ -4,13 +4,17 @@
 # so the app can ring phones too — the certified unit keeps working with no
 # Wi-Fi, no Pi, no ESP32. Same pattern for the certified smoke alarm's relay
 # output if the model has one.
-# MQ-2 is a SECONDARY hint only (needs 24–48 h burn-in, drifts with humidity).
+# Four MQ-6 modules are SECONDARY hints only. Their heater is 5 V and their
+# analog output can exceed the ESP32's safe input. EACH AO must pass through a
+# divider: MQ AO -- 10k -- GPIO -- 20k -- GND. Never connect AO directly.
 esphome:
   name: kitchen-safety
   friendly_name: Kitchen Safety
 
 esp32:
   board: esp32dev
+  framework:
+    type: esp-idf
 
 logger:
 api:
@@ -50,10 +54,31 @@ binary_sensor:
 sensor:
   - platform: adc
     pin: GPIO34
-    name: "Kitchen MQ-2 raw"
+    name: "Kitchen LPG point 1 raw"
     attenuation: 12db
     update_interval: 5s
     filters:
       - sliding_window_moving_average: { window_size: 6, send_every: 6 }
-    # Uncalibrated smoke/LPG hint. Alert logic in HA treats this as
-    # "secondary evidence", never as the primary trigger.
+  - platform: adc
+    pin: GPIO35
+    name: "Kitchen LPG point 2 raw"
+    attenuation: 12db
+    update_interval: 5s
+    filters:
+      - sliding_window_moving_average: { window_size: 6, send_every: 6 }
+  - platform: adc
+    pin: GPIO36
+    name: "Kitchen LPG point 3 raw"
+    attenuation: 12db
+    update_interval: 5s
+    filters:
+      - sliding_window_moving_average: { window_size: 6, send_every: 6 }
+  - platform: adc
+    pin: GPIO39
+    name: "Kitchen LPG point 4 raw"
+    attenuation: 12db
+    update_interval: 5s
+    filters:
+      - sliding_window_moving_average: { window_size: 6, send_every: 6 }
+    # Raw secondary trends only. The certified standalone LPG alarm contact
+    # above is the trigger for critical alerts.

@@ -1,41 +1,29 @@
 # Studio Command — Delivery Report for Jason Zac
 
-## 22 July 2026 — the finish-line pass (Fable)
+## 12 August 2026 — sensor-day release
 
-**What was already here:** the full v1 app (dial, 5 pages, PWA, mock/live adapter) plus
-Codex's polish pass. **What was missing:** everything physical — no Pi setup, no Home
-Assistant/ESPHome configs, no recording gate, no displays, no delivery hand-off.
+**Software status:** commissioning-ready. The app, live Pi bridge, Home Assistant package,
+Home Assistant app container, and all nine ESPHome node configurations build or validate
+cleanly. The UI now includes a persistent **Install** page with wiring maps, one-node-at-a-time
+breadboard tests, and six saved hand-off checkpoints.
 
-**New in the app (live at studio-command.vercel.app):**
-- **Displays tab** — every wall/door screen is now an assignable panel (Door sign / Studio
-  state / House board / Doorbell cam / Custom message / Clock). Tap "Open panel" on any
-  tablet and it becomes that screen, full-screen, in NSM style.
-- **Delivery OTP hand-off** — Swiggy/Amazon at the gate mid-take? Type the OTP, choose the
-  door display, and the delivery partner reads the code AT the door with your note
-  ("Leave it at the door"). It expires by itself. Nobody opens the door during a take.
-- **Piano Rig card** on Home — the Pianoteq Pi's preset, CPU, temperature and latency,
-  with preset next/prev from the phone. Arming a Rec state cues the rig's tally.
-- **Honest Pre-flight** — the verdict is now the real *studio_ready*: doors AND
-  trained-quiet AND every sensor healthy AND no fire/gas/leak/panic.
+**What is ready in the repository:**
 
-**New around the app (in this repo, ready to install):**
-- `pi/piano/` — the complete Pianoteq 9 stage-rig setup, verified against current Modartt +
-  HiFiBerry docs. One important correction to the build book: the balanced-XLR board is the
-  **HiFiBerry DAC2 Pro XLR** — the DAC2 HD is RCA-only.
-- `pi/house/` — Home Assistant package with the one authoritative studio_ready sensor,
-  critical alerts that ring through silent mode, six ready-to-flash ESPHome zone configs,
-  and the wrapper that makes `USE_MOCK=false` work.
-- `mac-agent/` — the recording-Mac gate: REAPER's Record is physically refused until the
-  house says ready, and the dB threshold is TRAINED from your real takes, never guessed.
-- `hardware/BUY_LIST.md` — checked against Silverline (SP Road, ☎ 7090939819): the 2nd
-  Pi 5, Touch Display 2 and 27W PSUs are in stock there; all sensors in one robu.in order;
-  the DAC2 Pro XLR direct from hifiberry.com.
-- `docs/` — install diagrams (double-door reeds, mic placement, panic loop) and the
-  commissioning test checklist (double-door trap, noise-blocks-record, power-cut drill).
+- `aangan_bridge/` — installable Home Assistant app that serves the live PWA and the complete
+  REST/SSE bridge on port 8126.
+- `pi/house/esphome/` — nine validated node files covering studio sensing, doors, perimeter,
+  wet zones, kitchen safety, panic/fire, air quality, doorbell camera, and utility pulse inputs.
+- `pi/house/homeassistant/packages/` — one authoritative readiness/safety model, repeating alerts,
+  phone groups, and pre-flight prepare/restore actions.
+- `pi/piano/` — Raspberry Pi DAC Pro + balanced XLR installation and verification notes.
+- `mac-agent/` — the recording-Mac gate; REAPER Record is refused until the house reports ready.
+- `docs/TOMORROW_INSTALL.md` — the exact bench order, wiring boundaries, and pass/fail sequence.
+- `hardware/BUY_LIST.md` — quantities split into sensor-day essentials and later expansion.
 
-**Safety stance unchanged and non-negotiable:** certified alarms + the wired panic loop
-protect the house with no Pi, no Wi-Fi, no software. Nothing here is "safe" until they are
-mounted and every test in `docs/TEST_CHECKLIST.md` passes.
+**Still requires physical acceptance tomorrow:** exact Home Assistant entity adoption, Wi-Fi
+signal at each final location, sensor calibration, every family phone notification route, and
+the full power-cut/false-alarm drill. This software is not a substitute for certified fire/LPG
+alarms, physical motor protection, or electrician-installed mains switching.
 
 ---
 

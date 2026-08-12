@@ -39,7 +39,7 @@ export default function RoomCard({ room, threshold, onOpen }: Props) {
           <span className="pulse-dot h-2.5 w-2.5 rounded-full" style={{ background: room.signColor, boxShadow: `0 0 10px ${room.signColor}` }} />
           <span className="font-display text-lg">{room.name}</span>
         </div>
-        <span className="font-mono text-xs text-dim">{room.tempC.toFixed(1)}°C</span>
+        <span className="font-mono text-xs text-dim">{room.tempC == null ? "temp —" : `${room.tempC.toFixed(1)}°C`}</span>
       </div>
 
       <div className="mt-3 flex items-center gap-4 font-mono text-[11px]">

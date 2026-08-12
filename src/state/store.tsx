@@ -120,9 +120,13 @@ function mergeHistory(current: ActivityEvent[], incoming: ActivityEvent[]) {
 }
 
 function safetySummary(safety: Safety) {
+  if (safety.fire) return "Smoke or flame detected";
   if (safety.gas) return "Gas detected in the kitchen";
+  if (safety.panic) return "The wired panic loop was opened";
   if (safety.leakKitchen) return "Water detected on the kitchen floor";
   if (safety.leakBath) return "Water detected on the bathroom floor";
+  if (safety.leakGeyser) return "Water detected near the geyser";
+  if (safety.perimeter) return "A perimeter vibration sensor was triggered";
   return null;
 }
 
@@ -201,12 +205,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       while (!cancelled) {
         setConnectionStatus(attempt === 0 ? "connecting" : "reconnecting");
         try {
-          const [st, rm, pf, prep, sf, db, events, util, piano, del, disp, sosNow, fleetNow, airNow] = await Promise.all([
+          // State, rooms, pre-flight and safety are the control surface's core.
+          // Optional systems must never blank the whole app if one is not yet
+          // commissioned (for example Piano Pi or the future tank sensors).
+          const [st, rm, pf, sf] = await Promise.all([
             api.getState(),
             api.getRooms(),
             api.getPreflight(),
-            api.getPreflightPrep(),
             api.getSafety(),
+          ]);
+          const optional = await Promise.allSettled([
+            api.getPreflightPrep(),
             api.getDoorbell(),
             api.getHistory(),
             api.getUtilities(),
@@ -221,18 +230,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           setStateInfo(st);
           setRooms(rm);
           setPreflight(pf);
-          setPreflightPrep(prep);
-          prepRef.current = prep;
           applySafety(sf, false);
-          setDoorbell(db);
-          setHistory(events);
-          setUtilities(util);
-          setPianoRig(piano);
-          setDeliveryState(del);
-          setDisplays(disp);
-          setSos(sosNow);
-          setFleet(fleetNow);
-          setAir(airNow);
+          const [prep, db, events, util, piano, del, disp, sosNow, fleetNow, airNow] = optional;
+          if (prep.status === "fulfilled") {
+            setPreflightPrep(prep.value);
+            prepRef.current = prep.value;
+          }
+          if (db.status === "fulfilled") setDoorbell(db.value);
+          if (events.status === "fulfilled") setHistory(events.value);
+          if (util.status === "fulfilled") setUtilities(util.value);
+          if (piano.status === "fulfilled") setPianoRig(piano.value);
+          if (del.status === "fulfilled") setDeliveryState(del.value);
+          if (disp.status === "fulfilled") setDisplays(disp.value);
+          if (sosNow.status === "fulfilled") setSos(sosNow.value);
+          if (fleetNow.status === "fulfilled") setFleet(fleetNow.value);
+          if (airNow.status === "fulfilled") setAir(airNow.value);
           const music = rm.find((room) => room.id === "music");
           if (music?.dbLevel != null) setDbHistory([music.dbLevel]);
           setConnected(true);

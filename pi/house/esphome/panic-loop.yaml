@@ -10,6 +10,8 @@ esphome:
 
 esp32:
   board: esp32dev
+  framework:
+    type: esp-idf
 
 logger:
 api:
@@ -52,6 +54,10 @@ binary_sensor:
   - platform: gpio
     name: "Teaching room flame sensor"
     pin: { number: GPIO33, mode: { input: true, pullup: true }, inverted: true }
+    filters: [delayed_on: 200ms]
+  - platform: gpio
+    name: "Hall flame sensor"
+    pin: { number: GPIO21, mode: { input: true, pullup: true }, inverted: true }
     filters: [delayed_on: 200ms]
   - platform: status
     name: "Panic loop node online"

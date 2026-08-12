@@ -1,0 +1,109 @@
+# ESP32 node 10 — HOUSE PULSE (optional phase after the six critical nodes)
+#
+# Two JSN-SR04T tank sensors + HX711 LPG scale + DHT22 climate.
+# IMPORTANT: JSN echo is 5 V logic. EACH echo must use a divider:
+# echo -- 10k -- GPIO34/35 -- 20k -- GND. Do not connect echo directly.
+# HX711 is powered from 3.3 V so its DOUT is safe for the ESP32.
+
+substitutions:
+  # Measure these from the mounted sensor face to the water surface.
+  sump_empty_m: "1.80"
+  sump_full_m: "0.25"
+  overhead_empty_m: "1.50"
+  overhead_full_m: "0.22"
+
+esphome:
+  name: house-pulse
+  friendly_name: House Pulse
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+api:
+  encryption:
+    key: !secret api_key_house_pulse
+ota:
+  - platform: esphome
+    password: !secret ota_password
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "house-pulse setup"
+    password: !secret ap_password
+captive_portal:
+
+sensor:
+  - platform: ultrasonic
+    id: sump_distance
+    name: "Sump water distance"
+    trigger_pin: GPIO25
+    echo_pin: GPIO34
+    pulse_time: 20us
+    timeout: 3.5m
+    update_interval: 30s
+    unit_of_measurement: m
+    accuracy_decimals: 2
+  - platform: template
+    name: "Sump level"
+    unit_of_measurement: "%"
+    device_class: humidity
+    state_class: measurement
+    update_interval: 30s
+    accuracy_decimals: 0
+    lambda: |-
+      if (isnan(id(sump_distance).state)) return {};
+      const float pct = (${sump_empty_m} - id(sump_distance).state) /
+                        (${sump_empty_m} - ${sump_full_m}) * 100.0f;
+      return std::max(0.0f, std::min(100.0f, pct));
+
+  - platform: ultrasonic
+    id: overhead_distance
+    name: "Overhead water distance"
+    trigger_pin: GPIO26
+    echo_pin: GPIO35
+    pulse_time: 20us
+    timeout: 3.5m
+    update_interval: 30s
+    unit_of_measurement: m
+    accuracy_decimals: 2
+  - platform: template
+    name: "Overhead tank level"
+    unit_of_measurement: "%"
+    device_class: humidity
+    state_class: measurement
+    update_interval: 30s
+    accuracy_decimals: 0
+    lambda: |-
+      if (isnan(id(overhead_distance).state)) return {};
+      const float pct = (${overhead_empty_m} - id(overhead_distance).state) /
+                        (${overhead_empty_m} - ${overhead_full_m}) * 100.0f;
+      return std::max(0.0f, std::min(100.0f, pct));
+
+  # First commissioning: leave this raw, record the reading with the platform
+  # empty and with one known mass, then add calibrate_linear per the install guide.
+  - platform: hx711
+    name: "LPG scale raw"
+    id: lpg_scale_raw
+    dout_pin: GPIO18
+    clk_pin: GPIO19
+    gain: 128
+    update_interval: 5s
+    filters:
+      - sliding_window_moving_average: { window_size: 6, send_every: 6 }
+
+  - platform: dht
+    pin: GPIO23
+    model: DHT22
+    temperature:
+      name: "House pulse temperature"
+    humidity:
+      name: "House pulse humidity"
+    update_interval: 30s
+
+binary_sensor:
+  - platform: status
+    name: "House pulse node online"

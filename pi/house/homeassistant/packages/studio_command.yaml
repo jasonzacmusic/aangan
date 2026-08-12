@@ -55,7 +55,7 @@ template:
         state: >
           {% set db = states('sensor.studio_sound_level') | float(999) %}
           {% set thr = states('input_number.studio_db_threshold') | float(45) %}
-          {% if is_state('binary_sensor.studio_quiet', 'on') %}
+          {% if this.state == 'on' %}
             {{ db < thr + 1 }}
           {% else %}
             {{ db < thr - 2 }}
@@ -78,10 +78,42 @@ template:
              and is_state('binary_sensor.kitchen_flame_sensor', 'off')
              and is_state('binary_sensor.studio_flame_sensor', 'off')
              and is_state('binary_sensor.teaching_room_flame_sensor', 'off')
+             and is_state('binary_sensor.hall_flame_sensor', 'off')
              and is_state('binary_sensor.panic_loop_broken', 'off')
              and is_state('binary_sensor.bathroom_1_leak', 'off')
              and is_state('binary_sensor.bathroom_2_leak', 'off')
+             and is_state('binary_sensor.geyser_overflow_leak', 'off')
+             and is_state('binary_sensor.washing_machine_leak', 'off')
+             and is_state('binary_sensor.studio_sink_leak', 'off')
+             and is_state('binary_sensor.teaching_sink_leak', 'off')
+             and is_state('binary_sensor.house_sink_leak', 'off')
+             and is_state('binary_sensor.floor_drain_leak', 'off')
              and is_state('binary_sensor.kitchen_sink_leak', 'off') }}
+
+      - name: house_fire_any
+        unique_id: house_fire_any
+        device_class: smoke
+        state: >
+          {{ is_state('binary_sensor.smoke_alarm_studio_flat', 'on')
+             or is_state('binary_sensor.smoke_alarm_house_flat', 'on')
+             or is_state('binary_sensor.kitchen_flame_sensor', 'on')
+             or is_state('binary_sensor.studio_flame_sensor', 'on')
+             or is_state('binary_sensor.teaching_room_flame_sensor', 'on')
+             or is_state('binary_sensor.hall_flame_sensor', 'on') }}
+
+      - name: house_water_leak_any
+        unique_id: house_water_leak_any
+        device_class: moisture
+        state: >
+          {{ is_state('binary_sensor.kitchen_sink_leak', 'on')
+             or is_state('binary_sensor.bathroom_1_leak', 'on')
+             or is_state('binary_sensor.bathroom_2_leak', 'on')
+             or is_state('binary_sensor.geyser_overflow_leak', 'on')
+             or is_state('binary_sensor.washing_machine_leak', 'on')
+             or is_state('binary_sensor.studio_sink_leak', 'on')
+             or is_state('binary_sensor.teaching_sink_leak', 'on')
+             or is_state('binary_sensor.house_sink_leak', 'on')
+             or is_state('binary_sensor.floor_drain_leak', 'on') }}
 
 # ── critical alerts: repeat until acknowledged, bypass silent mode ───────────
 alert:
@@ -106,22 +138,22 @@ alert:
     repeat: [1, 2]
     can_acknowledge: true
     notifiers: [all_family_critical]
-
-# helper the fire alert watches
-binary_sensor:
-  - platform: template
-    sensors:
-      house_fire_any:
-        friendly_name: "Any fire signal"
-        device_class: smoke
-        value_template: >
-          {{ is_state('binary_sensor.smoke_alarm_studio_flat', 'on')
-             or is_state('binary_sensor.smoke_alarm_house_flat', 'on')
-             or is_state('binary_sensor.kitchen_flame_sensor', 'on')
-             or is_state('binary_sensor.studio_flame_sensor', 'on')
-             or is_state('binary_sensor.teaching_room_flame_sensor', 'on') }}
+  water_leak_alarm:
+    name: "WATER LEAK detected"
+    entity_id: binary_sensor.house_water_leak_any
+    state: "on"
+    repeat: [2, 5, 15]
+    can_acknowledge: true
+    notifiers: [all_family_critical]
 
 notify:
+  - name: all_family
+    platform: group
+    services:
+      # The same real phone services as the critical group, without bypassing
+      # silent mode. Air/class/perimeter nudges use this route.
+      - action: mobile_app_jasons_iphone
+      - action: mobile_app_family_android
   - name: all_family_critical
     platform: group
     services:
@@ -129,15 +161,61 @@ notify:
       # and Android use the alarm channel (verified Companion-app syntax):
       - action: mobile_app_jasons_iphone
         data:
-          push:
-            sound: { name: default, critical: 1, volume: 1.0 }
+          data:
+            push:
+              sound: { name: default, critical: 1, volume: 1.0 }
       - action: mobile_app_family_android
         data:
-          ttl: 0
-          priority: high
-          channel: alarm_stream
+          data:
+            ttl: 0
+            priority: high
+            channel: alarm_stream
+
+script:
+  studio_silence_room:
+    alias: "Studio · silence room and remember devices"
+    mode: single
+    sequence:
+      - action: scene.create
+        data:
+          scene_id: aangan_before_silence
+          snapshot_entities:
+            - switch.doorbell_chime
+            - climate.studio_ac
+            - fan.studio_fan
+      - action: switch.turn_off
+        target: { entity_id: switch.doorbell_chime }
+      - action: climate.turn_off
+        target: { entity_id: climate.studio_ac }
+      - action: fan.turn_off
+        target: { entity_id: fan.studio_fan }
+
+  studio_restore_room:
+    alias: "Studio · restore devices after recording"
+    mode: restart
+    sequence:
+      - action: scene.turn_on
+        target: { entity_id: scene.aangan_before_silence }
 
 automation:
+  - id: critical_sensor_sets_emergency
+    alias: "Critical sensor → emergency state"
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.house_fire_any
+          - binary_sensor.lpg_detector_alarm_contact
+          - binary_sensor.panic_loop_broken
+          - binary_sensor.house_water_leak_any
+        to: "on"
+    action:
+      - action: input_select.select_option
+        target: { entity_id: input_select.studio_state }
+        data: { option: emergency }
+      - action: input_text.set_value
+        target: { entity_id: input_text.studio_state_set_by }
+        data: { value: "Safety · {{ trigger.to_state.name }}" }
+
   - id: studio_state_lights
     alias: "Studio state → room signs + tally"
     trigger:

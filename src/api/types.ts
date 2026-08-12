@@ -20,7 +20,8 @@ export interface Room {
   name: string;
   doorOpen: boolean;
   presence: boolean;
-  tempC: number;
+  /** Null means the room does not have a commissioned temperature sensor yet. */
+  tempC: number | null;
   signColor: string; // hex the WS2812B sign is showing
   dbLevel?: number; // music room only
 }
@@ -35,14 +36,20 @@ export interface Preflight {
   /** The one authoritative studio_ready verdict — all four checks green. */
   ready: boolean;
   openDoors: RoomId[]; // which doors are the problem
+  /** Exact physical inputs where available (for example "Studio door · leaf B"). */
+  openDoorNames?: string[];
   dbLevel: number;
   dbThreshold: number;
 }
 
 export interface Safety {
+  fire: boolean;
   gas: boolean; // true = ALERT
+  panic: boolean;
   leakKitchen: boolean;
   leakBath: boolean;
+  leakGeyser: boolean;
+  perimeter: boolean;
 }
 
 /** A family SOS raised from any phone on the house Wi-Fi (the #/sos page). */
@@ -95,6 +102,7 @@ export interface PreflightPrep {
 
 export interface Utilities {
   water: {
+    online: boolean;
     sumpPct: number;
     overheadPct: number;
     pumpRunning: boolean;
@@ -102,6 +110,7 @@ export interface Utilities {
     lastFillTs: number;
   };
   power: {
+    online: boolean;
     mainsOnline: boolean;
     voltage: number;
     inverterPct: number;
@@ -109,10 +118,12 @@ export interface Utilities {
     surgeProtected: boolean;
   };
   lpg: {
+    online: boolean;
     remainingPct: number;
     estimatedDays: number;
   };
   air: {
+    online: boolean;
     aqi: number;
     pm25: number;
     tempC: number;

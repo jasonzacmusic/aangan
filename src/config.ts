@@ -1,15 +1,21 @@
 /**
- * ─────────────────────────────────────────────────────────────
- *  STUDIO COMMAND — data source switch
+ * One build-time switch keeps page code independent from the data source.
  *
- *  USE_MOCK = true   → fully simulated house (works anywhere)
- *  USE_MOCK = false  → talks to the Raspberry Pi wrapper at
- *                      LIVE_BASE_URL (http://studio.local:8123)
+ * Local/demo build (the safe default):
+ *   VITE_DATA_SOURCE=mock
  *
- *  That one flag is the ONLY thing to change when the Pi
- *  wrapper goes live. Everything else stays identical.
- * ─────────────────────────────────────────────────────────────
+ * House app build (served by the bridge, same origin):
+ *   VITE_DATA_SOURCE=live VITE_LIVE_BASE_URL=""
+ *
+ * Separate web host on the home LAN:
+ *   VITE_DATA_SOURCE=live VITE_LIVE_BASE_URL=http://homeassistant.local:8126
  */
-export const USE_MOCK = true;
+const requestedSource = String(import.meta.env.VITE_DATA_SOURCE ?? "mock").toLowerCase();
 
-export const LIVE_BASE_URL = "http://studio.local:8123";
+export const USE_MOCK = requestedSource !== "live";
+
+// Port 8123 is Home Assistant. Aangan Bridge listens on 8126.
+// An empty value intentionally means "use this page's origin".
+export const LIVE_BASE_URL = String(
+  import.meta.env.VITE_LIVE_BASE_URL ?? "http://homeassistant.local:8126",
+).replace(/\/$/, "");

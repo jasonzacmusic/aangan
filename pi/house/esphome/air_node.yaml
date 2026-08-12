@@ -23,11 +23,13 @@ esphome:
 
 esp32:
   board: esp32dev
+  framework:
+    type: esp-idf
 
 logger:
 api:
   encryption:
-    key: !secret air_${room}_api_key
+    key: !secret api_key_air_nodes
 ota:
   - platform: esphome
     password: !secret ota_password
@@ -37,7 +39,8 @@ wifi:
   # A dropped node must never silently report stale air.
   ap:
     ssid: "air-${room} fallback"
-    password: !secret fallback_password
+    password: !secret ap_password
+captive_portal:
 
 i2c:
   sda: GPIO21

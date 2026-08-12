@@ -16,8 +16,8 @@ export default function Home() {
 
   return (
     <div className="rise-in page-shell">
-      <h2 className="font-display mb-1 text-2xl lg:text-3xl">The House</h2>
-      <p className="mb-5 font-mono text-[11px] text-dim">5 zones · live from the room sensors</p>
+      <h2 className="font-display mb-1 text-2xl lg:text-3xl">House overview</h2>
+      <p className="mb-5 font-mono text-[11px] text-dim">rooms · air · equipment · utilities</p>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {rooms.map((r) => (
@@ -57,7 +57,7 @@ export default function Home() {
               {[
                 { k: "Door", v: live.doorOpen ? "OPEN" : "Closed", warn: live.doorOpen },
                 { k: "Presence", v: live.presence ? "Present" : "Empty", warn: false },
-                { k: "Temp", v: `${live.tempC.toFixed(1)}°C`, warn: false },
+                { k: "Temp", v: live.tempC == null ? "Not fitted" : `${live.tempC.toFixed(1)}°C`, warn: false },
               ].map((c) => (
                 <div key={c.k} className="rounded-xl border border-line bg-surface2 px-2 py-3">
                   <div className="font-mono text-[9px] uppercase tracking-widest text-dim">{c.k}</div>

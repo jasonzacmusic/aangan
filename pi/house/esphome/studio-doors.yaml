@@ -7,7 +7,9 @@ esphome:
   friendly_name: Studio Doors
 
 esp32:
-  board: esp32dev # ESP-IDF is the default framework in ESPHome ≥2026.1
+  board: esp32dev
+  framework:
+    type: esp-idf
 
 logger:
 api:

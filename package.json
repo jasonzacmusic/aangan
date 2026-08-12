@@ -6,21 +6,28 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/stamp-sw.mjs",
+    "build:addon": "VITE_DATA_SOURCE=live VITE_LIVE_BASE_URL= npm run build && node scripts/build-addon.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:wrapper": "python3 -m unittest pi.house.wrapper.test_studio_wrapper",
+    "check": "npm run typecheck && npm run test:wrapper && npm run build",
     "preview": "vite preview --port 4173"
   },
   "dependencies": {
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/inter": "^5.3.0",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.0",
+    "@tailwindcss/vite": "^4.3.3",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
-    "tailwindcss": "^4.1.0",
+    "@vitejs/plugin-react": "^6.0.5",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5.6.3",
-    "vite": "^5.4.11"
+    "vite": "^8.2.1"
   }
 }

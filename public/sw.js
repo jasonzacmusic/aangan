@@ -16,7 +16,19 @@ self.addEventListener("install", (event) => {
       await cache.put(OFFLINE_SHELL, response);
       const assetPaths = [...html.matchAll(/(?:src|href)=["'](\/assets\/[^"']+)["']/g)].map((match) => match[1]);
       await Promise.all(assetPaths.map(async (path) => {
-        try { await cache.add(new Request(path, { cache: "reload" })); } catch { /* one optional asset must not block install */ }
+        try {
+          const asset = await fetch(new Request(path, { cache: "reload" }));
+          if (!asset.ok) return;
+          await cache.put(path, asset.clone());
+          if (asset.headers.get("Content-Type")?.includes("text/css")) {
+            const css = await asset.text();
+            const nestedAssets = [...css.matchAll(/url\(["']?(\/assets\/[^)'"?]+)["']?\)/g)].map((match) => match[1]);
+            await Promise.all([...new Set(nestedAssets)].map(async (nestedPath) => {
+              const nested = await fetch(new Request(nestedPath, { cache: "reload" }));
+              if (nested.ok) await cache.put(nestedPath, nested);
+            }));
+          }
+        } catch { /* one optional asset must not block install */ }
       }));
       // Do not activate over a running recording session. The app displays a
       // refresh prompt and sends SKIP_WAITING when Jason chooses the moment.

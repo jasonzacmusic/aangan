@@ -85,14 +85,22 @@ export class MockAdapter implements ApiAdapter {
     { id: "bathroom", name: "Bathroom", doorOpen: false, presence: false, tempC: 25.0, signColor: STATE_META.available.color },
   ];
 
-  private safety: Safety = { gas: false, leakKitchen: false, leakBath: false };
+  private safety: Safety = {
+    fire: false,
+    gas: false,
+    panic: false,
+    leakKitchen: false,
+    leakBath: false,
+    leakGeyser: false,
+    perimeter: false,
+  };
   private doorbell: Doorbell = { snapshotUrl: doorbellSvg(Date.now() - 3 * 60 * 1000), ts: Date.now() - 3 * 60 * 1000 };
   private prep: PreflightPrep = { active: false, status: "idle", mutedDoorbell: false, acOff: false, fanOff: false };
   private utilities: Utilities = {
-    water: { sumpPct: 74, overheadPct: 61, pumpRunning: false, dryRunProtected: true, lastFillTs: Date.now() - 7 * 60 * 60 * 1000 },
-    power: { mainsOnline: true, voltage: 231, inverterPct: 86, estimatedMinutes: 128, surgeProtected: true },
-    lpg: { remainingPct: 38, estimatedDays: 12 },
-    air: { aqi: 62, pm25: 21, tempC: 24.3, humidityPct: 58, purifierOn: false },
+    water: { online: true, sumpPct: 74, overheadPct: 61, pumpRunning: false, dryRunProtected: true, lastFillTs: Date.now() - 7 * 60 * 60 * 1000 },
+    power: { online: true, mainsOnline: true, voltage: 231, inverterPct: 86, estimatedMinutes: 128, surgeProtected: true },
+    lpg: { online: true, remainingPct: 38, estimatedDays: 12 },
+    air: { online: true, aqi: 62, pm25: 21, tempC: 24.3, humidityPct: 58, purifierOn: false },
   };
   private history: ActivityEvent[] = [
     { id: "welcome", type: "system", title: "House online", detail: "All five zones checked in", ts: Date.now() - 44 * 60 * 1000, severity: "success" },
@@ -367,7 +375,7 @@ export class MockAdapter implements ApiAdapter {
     const doorsClosed = openDoors.length === 0;
     const quietEnough = dbLevel < this.dbThreshold;
     const sensorsHealthy = this.sensorsHealthy;
-    const safetyClear = !Object.values(this.safety).some(Boolean);
+    const safetyClear = !this.safety.fire && !this.safety.gas && !this.safety.panic && !this.safety.leakKitchen && !this.safety.leakBath && !this.safety.leakGeyser;
     return {
       doorsClosed,
       quietEnough,
@@ -375,6 +383,7 @@ export class MockAdapter implements ApiAdapter {
       safetyClear,
       ready: doorsClosed && quietEnough && sensorsHealthy && safetyClear,
       openDoors,
+      openDoorNames: openDoors.map((id) => `${this.rooms.find((room) => room.id === id)?.name ?? id} door`),
       dbLevel,
       dbThreshold: this.dbThreshold,
     };
@@ -385,7 +394,15 @@ export class MockAdapter implements ApiAdapter {
   }
 
   private setSafety(kind: SafetyAlertKind, source: string) {
-    const next: Safety = { gas: false, leakKitchen: false, leakBath: false };
+    const next: Safety = {
+      fire: false,
+      gas: false,
+      panic: false,
+      leakKitchen: false,
+      leakBath: false,
+      leakGeyser: false,
+      perimeter: false,
+    };
     if (kind !== "clear") next[kind] = true;
     this.safety = next;
     this.emit({ type: "safety", safety: { ...this.safety } });
@@ -393,9 +410,13 @@ export class MockAdapter implements ApiAdapter {
       this.addHistory({ type: "safety", title: "Safety clear", detail: `${source} reset · all sensors normal`, severity: "success" });
     } else {
       const details: Record<Exclude<SafetyAlertKind, "clear">, string> = {
+        fire: "A smoke or flame input changed to alert",
         gas: "Kitchen gas sensor crossed its alert threshold",
+        panic: "The wired panic loop opened",
         leakKitchen: "Kitchen floor sensor detected water",
         leakBath: "Bathroom floor sensor detected water",
+        leakGeyser: "The geyser overflow sensor detected water",
+        perimeter: "A perimeter vibration input changed to alert",
       };
       this.addHistory({ type: "safety", title: "Safety alert", detail: details[kind], severity: "critical" });
     }
@@ -425,7 +446,7 @@ export class MockAdapter implements ApiAdapter {
     music.dbLevel = Math.max(30, Math.min(92, Math.round((this.musicBase() + swell + jitter) * 10) / 10));
 
     this.rooms.forEach((r) => {
-      r.tempC = Math.round((r.tempC + (Math.random() - 0.5) * 0.06) * 10) / 10;
+      if (r.tempC != null) r.tempC = Math.round((r.tempC + (Math.random() - 0.5) * 0.06) * 10) / 10;
     });
     if (Math.random() < 0.02) {
       const candidates = this.rooms.filter((r) => r.id !== "music");
@@ -444,7 +465,7 @@ export class MockAdapter implements ApiAdapter {
     }
 
     if (this.tick > 12 && !Object.values(this.safety).some(Boolean) && Math.random() < 0.0007) {
-      const kinds: Exclude<SafetyAlertKind, "clear">[] = ["gas", "leakKitchen", "leakBath"];
+      const kinds: Exclude<SafetyAlertKind, "clear">[] = ["fire", "gas", "panic", "leakKitchen", "leakBath", "leakGeyser", "perimeter"];
       this.setSafety(kinds[Math.floor(Math.random() * kinds.length)], "Sensor");
     }
     if (this.utilities.power.mainsOnline && Math.random() < 0.00045) {

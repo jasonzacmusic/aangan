@@ -1,9 +1,9 @@
 # PIANO Pi — the Pianoteq stage rig
 
 Turns the Raspberry Pi 5 (8GB, from Silverline) into a silent, fanless stage piano:
-USB MIDI keyboard in → Pianoteq 9 Pro → HiFiBerry DAC2 Pro XLR → balanced XLR → console.
+USB MIDI keyboard in → Pianoteq 9 Pro → Raspberry Pi DAC Pro + optional XLR board → balanced XLR → console.
 
-**Verified against official docs July 2026** (Modartt forum + HiFiBerry docs + Raspberry Pi docs).
+**Verified against official docs August 2026** (Modartt + Raspberry Pi docs).
 Anything marked ⚠ was community-sourced, not official — test before trusting.
 
 ## Hardware for this rig
@@ -11,7 +11,7 @@ Anything marked ⚠ was community-sourced, not official — test before trusting
 | Part | Note |
 |---|---|
 | Raspberry Pi 5 8GB | Jason already owns (Silverline) |
-| **HiFiBerry DAC2 Pro XLR** | The balanced-XLR board. The DAC2 HD and plain DAC2 Pro are RCA-only — do **not** buy those for this rig. Order direct from hifiberry.com (no Indian distributor). |
+| **Raspberry Pi DAC Pro + optional XLR board** | Current PCM5242 board, previously IQaudio DAC Pro. The XLR daughter board connects to P7/P9 for balanced output. |
 | Raspberry Pi Touch Display 2 (5" or 7") | DSI cable + GPIO 5V. Autodetected on Bookworm, zero config. In stock at Silverline. |
 | Fanless aluminium case with HAT + display room | Argon NEO 5 (robu.in) or EDATEC fanless. Must clear the XLR connectors. |
 | A2 microSD 32–64 GB, official 27W USB-C PSU | Silverline. |
@@ -20,7 +20,7 @@ Anything marked ⚠ was community-sourced, not official — test before trusting
 
 1. **Flash**: Raspberry Pi Imager → **Raspberry Pi OS Lite (64-bit)** (headless — Pianoteq runs its own touchscreen UI? No: Lite has no desktop. If you want the Pianoteq GUI on the touch display, flash **Raspberry Pi OS (64-bit) Desktop** instead and let the setup script trim it. For a pure headless rig controlled from the app, Lite is cleaner. **Default here: Desktop**, because the on-rig touchscreen for patch switching is part of the design.)
    In the Imager's gear menu: hostname `piano.local`, enable SSH, set Wi-Fi.
-2. **Mount** the DAC2 Pro XLR on the GPIO header, connect the Touch Display 2 to the DSI port.
+2. **Mount** the DAC Pro on the GPIO header, fit the XLR daughter board to P7/P9, and connect the Touch Display 2 to the DSI port.
 3. Copy this folder to the Pi (`scp -r pi/piano pi@piano.local:~/`) and run:
    ```
    sudo bash setup_piano_pi.sh
@@ -32,25 +32,23 @@ Anything marked ⚠ was community-sourced, not official — test before trusting
    script unpacks whatever zip it finds there. First launch needs internet once for
    activation with Jason's Pro licence; after that it runs fully offline.
 5. Reboot. Pianoteq auto-starts full screen on the touch display; `aplay -l` should show
-   the HiFiBerry as the only card.
+   the Raspberry Pi DAC Pro as the output card.
 6. Plug any USB MIDI keyboard in, XLR out to the console. Play.
 
 ## What the setup script writes into /boot/firmware/config.txt
 
 ```
-# onboard audio OFF, HiFiBerry ON  (HiFiBerry official docs)
+# onboard audio OFF, Raspberry Pi DAC Pro ON
 dtoverlay=vc4-kms-v3d,noaudio
-dtoverlay=hifiberry-dacplus-pro
-# only if the driver fails to load:
-# force_eeprom_read=0
+dtoverlay=rpi-dacpro
 ```
-`dtparam=audio=on` is removed. The DAC2 Pro XLR uses the DAC2 Pro driver
-(`hifiberry-dacplus-pro` on Bookworm's kernel ≥ 6.1.77). ⚠ If the XLR board ships with a
-different recommended overlay on its datasheet, follow the datasheet.
+`dtparam=audio=on` is disabled. Current Raspberry Pi documentation lists `rpi-dacpro`
+for the Raspberry Pi-branded DAC Pro. Run `dtoverlay -h rpi-dacpro` on the installed OS;
+if the board's own EEPROM already configures it, avoid loading a second overlay.
 
 ## Audio settings inside Pianoteq (Devices)
 
-- Device: the HiFiBerry (ALSA direct — no JACK needed for a solo instrument)
+- Device: Raspberry Pi DAC Pro (ALSA direct — no JACK needed for a solo instrument)
 - Sample rate **48000**, buffer **192 samples** (~4 ms) — proven stable on Pi 5 ⚠ community
 - Performance → multicore **max** (better than "on" on Pi 5 under heavy playing) ⚠ community
 - Headless benchmark: `./Pianoteq --headless --multicore max --play-and-quit`

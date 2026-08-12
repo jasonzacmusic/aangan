@@ -1,4 +1,4 @@
-# What to buy — and what NOT to re-buy (revised 28 Jul 2026)
+# What to buy — and what NOT to re-buy (commissioning revision, 12 Aug 2026)
 
 Silverline Electronics = India's only approved Raspberry Pi channel partner.
 SP Road retail: 139/5 VT Complex, opp. Karthik Plaza, Nagarathpete — **call/WhatsApp
@@ -12,7 +12,7 @@ import, no Neutrik/soldering kit. The full build is documented in
 
 ## ✅ Already owned — do NOT buy again
 
-Pi 5 8GB (becomes the **PIANO Pi**) · **Pianoteq Pro licence** · ESP32 ×6 · ESP32-CAM ·
+Pi 5 8GB (becomes the **PIANO Pi**) · **HOUSE Pi installed with its SD card and ready** · **Pianoteq Pro licence** · ESP32 ×6 · ESP32-CAM ·
 MC-38 reed ×9 · water-leak ×6 · WS2812B strip + aluminium LED channel · 74AHCT level
 shifters · 5V SMPS · DHT22 · PIR HC-SR501 ×4 · MQ-2 · INMP441 · jumper/PCB/adapters/
 enclosures · acoustic weatherstrip ×4 · old iPad (Wall iPad panel) ·
@@ -41,13 +41,16 @@ canonical clickable list.
 (Cables — keyboard USB A→B, XLR, USB-C 100W — plus USB SSD, gaffer and velcro are
 already owned; nothing to buy there.)
 
-## 🏠 HOUSE Pi (buy tomorrow at Silverline)
+## 🏠 HOUSE Pi core (ready — do not re-buy)
+
+The House Pi and its SD card are installed. Before sensor day, confirm its official PSU,
+Ethernet/Wi-Fi access, `homeassistant.local:8123`, a reserved router address, and one cloned
+spare SD card. Buy a spare card only if the ready system has not yet been cloned.
+
+## 🏠 Remaining house-computer/display items
 
 | Item | Qty | Note |
-|---|---|---|
-| Raspberry Pi 5 8GB | 1 | runs Home Assistant OS — 8GB is plenty |
-| Official 27W USB-C PSU | 1 | |
-| A2 microSD 64GB | 1 | |
+|---|---:|---|
 | Raspberry Pi Zero 2 W | 2 | kiosk driver for each fixed display (robu.in if Silverline lacks stock) |
 | Micro-HDMI → HDMI cable | 2 | Pi Zero → display |
 
@@ -57,7 +60,7 @@ already owned; nothing to buy there.)
 |---|---|---|---|
 | Waveshare 10.1" HD (G) 1920×1200, optically-bonded toughened glass | 2 | robu.in | one outside the studio door, one at the front door (OTP + sign). Driven by the Pi Zeros in kiosk mode at `/#/display/<id>` |
 
-## 🛒 robu.in sensor order (one order covers everything)
+## 🛒 Critical sensor-day order
 
 | Item | Qty | Why |
 |---|---|---|
@@ -71,13 +74,43 @@ already owned; nothing to buy there.)
 | HX711 + 50 kg load cells | 1 set | LPG cylinder scale |
 | Argon NEO 5 case | 1 | if the piano stack won't live in the transport case full-time |
 
+## 🔌 Small parts required before breadboarding
+
+| Item | Qty | Why |
+|---|---:|---|
+| Solderless breadboards | 6–10 | keep one labelled board per node during acceptance |
+| 10 kΩ resistors | 25 | pull-ups and the top leg of 5 V→3.3 V dividers |
+| 20 kΩ resistors | 15 | bottom leg of every MQ-6 and ultrasonic divider |
+| Fused 5 V USB supplies, ≥1 A | 6 | one stable supply per critical node; MQ heaters do not use ESP32 3V3 |
+| USB data cables matching the ESP32 boards | 6 | first flash and diagnosis |
+| Lever terminals / screw terminals | 30+ | strain-relieved field cable transitions; no loose Dupont leads in walls |
+| Ferrules, labels and heat-shrink | 1 kit each | label both ends; make every installed join serviceable |
+| Perfboard or DIN terminal carriers | 6 | move passed circuits off breadboards before permanent installation |
+| 10-core alarm cable / low-voltage cable | measured on site | reeds, dry contacts and isolated digital inputs |
+| USB-to-serial adapter | 1 | first flash of the owned AI-Thinker ESP32-CAM |
+
+## 🌬 Phase-two air order (optional; does not block tomorrow)
+
+| Item | Qty | Why |
+|---|---:|---|
+| ESP32 DevKit | 4 | three air nodes + one House Pulse node; existing six remain dedicated to critical nodes |
+| PMS5003 | 3 | PM2.5/dust for studio, kitchen and bedroom |
+| SCD41 | 3 | true CO₂; purifier alone cannot remove CO₂ |
+| SGP41 | 3 | VOC/NOx trend |
+| SHT45 breakout | 3 | stable temperature/humidity compensation |
+
+If budget is tight, build the **studio air node first** and buy the other two sets after it
+has run for a week. The two JSN-SR04T, HX711/load-cell set and owned DHT22 already cover
+the House Pulse sensor parts; the extra ESP32 above completes it.
+
 ## 🚪 Double doors (4 of them) — how the sensors mount
 
-MC-38 reed pairs mount at the **meeting stiles — the middle where the two leaves meet**:
-switch on one leaf, magnet on the other. Either leaf opening breaks the contact, so one
-sensor covers the whole double door. The owned ×9 covers all 4 double doors + the front
-door with spares. The app pairs each door with the room mic: door open + room above the
-dB threshold → "Please close the door" appears on the wall panels and phones.
+Use **two reeds per monitored double door: one for each leaf**. Mount each reed on the
+frame and its magnet on that leaf. A single pair placed across the meeting stiles cannot
+identify the open leaf and can miss some two-leaf movement. The current critical firmware
+uses four owned reeds for the studio and teaching doors; the remaining five cover the
+front/balcony doors with two spares. The app pairs the leaves with the room mic: leaf open
++ room above the dB threshold → "Please close the door" appears on panels and phones.
 
 ## 🛠 Electrician / low-voltage technician (they source these)
 
@@ -88,6 +121,6 @@ switches · any mains relays · **verify the studio socket's earth**. Book a
 
 ## ❌ Removed from the plan (do not buy)
 
-HiFiBerry DAC2 Pro XLR (replaced by DAC Pro + XLR board) · Neutrik NC3MD connectors ·
+HiFiBerry DAC2 Pro XLR (replaced by DAC Pro + XLR board) · another House Pi or SD card (unless no clone exists) · Neutrik NC3MD connectors ·
 project box + soldering kit · any USB audio interface (MOTU/Behringer) — the DAC Pro
 build replaces all of it.

@@ -15,6 +15,10 @@ function LevelBar({ label, value, color = "#3b82f6" }: { label: string; value: n
   );
 }
 
+function NotConnected({ children }: { children: React.ReactNode }) {
+  return <div className="mt-4 rounded-xl border border-dashed border-line px-3 py-4 text-center text-xs text-dim">{children}</div>;
+}
+
 export default function UtilitiesPanel() {
   const { utilities, runUtilityAction } = useStore();
   if (!utilities) return null;
@@ -37,28 +41,33 @@ export default function UtilitiesPanel() {
           <div className="flex items-start justify-between">
             <div>
               <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-dim">Water system</div>
-              <div className="font-display mt-1 text-xl">Tanks protected</div>
+              <div className="font-display mt-1 text-xl">{water.online ? "Tank levels" : "Not connected"}</div>
             </div>
             <span className={`rounded-full px-2 py-1 font-mono text-[8px] uppercase tracking-wider ${water.pumpRunning ? "bg-st-class/15 text-st-class" : "bg-surface2 text-dim"}`}>
               {water.pumpRunning ? "Pump filling" : "Pump idle"}
             </span>
           </div>
-          <div className="mt-4 space-y-3">
-            <LevelBar label="Overhead" value={water.overheadPct} color="#3b82f6" />
-            <LevelBar label="Sump" value={water.sumpPct} color="#2fbf71" />
-          </div>
-          <button
-            onClick={() => runUtilityAction("water_pump_toggle")}
-            className="mt-4 w-full rounded-xl border border-st-class/35 bg-st-class/10 px-3 py-2.5 text-xs font-semibold text-st-class active:scale-[0.99]"
-          >
-            {water.pumpRunning ? "Stop pump" : "Fill overhead tank"}
-          </button>
-          <div className="mt-2 text-center font-mono text-[8px] uppercase tracking-wider text-dim">dry-run cutoff {water.dryRunProtected ? "armed" : "unavailable"}</div>
+          {water.online ? (
+            <>
+              <div className="mt-4 space-y-3">
+                <LevelBar label="Overhead" value={water.overheadPct} color="#3b82f6" />
+                <LevelBar label="Sump" value={water.sumpPct} color="#2fbf71" />
+              </div>
+              <button
+                onClick={() => runUtilityAction("water_pump_toggle")}
+                disabled={!water.dryRunProtected}
+                className="mt-4 w-full rounded-xl border border-st-class/35 bg-st-class/10 px-3 py-2.5 text-xs font-semibold text-st-class active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {water.pumpRunning ? "Stop pump" : "Fill overhead tank"}
+              </button>
+              <div className="mt-2 text-center font-mono text-[8px] uppercase tracking-wider text-dim">dry-run cutoff {water.dryRunProtected ? "armed" : "unavailable · pump locked"}</div>
+            </>
+          ) : <NotConnected>Install the House Pulse node and calibrate both tank depths.</NotConnected>}
         </article>
 
-        <article className={`rounded-2xl border bg-surface/80 p-4 backdrop-blur ${power.mainsOnline ? "border-line" : "emergency-flash border-st-meeting/60"}`}>
+        <article className={`rounded-2xl border bg-surface/80 p-4 backdrop-blur ${!power.online || power.mainsOnline ? "border-line" : "emergency-flash border-st-meeting/60"}`}>
           <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-dim">Power & inverter</div>
-          <div className="mt-2 flex items-end justify-between">
+          {power.online ? <><div className="mt-2 flex items-end justify-between">
             <div>
               <div className={`font-display text-2xl ${power.mainsOnline ? "text-st-available" : "text-st-meeting"}`}>{power.mainsOnline ? "Mains stable" : "On inverter"}</div>
               <div className="mt-1 text-xs text-dim">{power.mainsOnline ? `${power.voltage.toFixed(0)} V · surge guard online` : `${power.estimatedMinutes} min estimated runtime`}</div>
@@ -67,20 +76,21 @@ export default function UtilitiesPanel() {
           </div>
           <div className="mt-4"><LevelBar label="Inverter battery" value={power.inverterPct} color={power.mainsOnline ? "#c9a84c" : "#f5a623"} /></div>
           <div className="mt-4 rounded-xl border border-line bg-ink/60 px-3 py-2 text-xs text-dim">Recording guard: {power.mainsOnline ? "full power available" : "finish the take or pause safely"}</div>
+          </> : <NotConnected>No inverter or mains-voltage integration is configured yet.</NotConnected>}
         </article>
 
         <article className="rounded-2xl border border-line bg-surface/80 p-4 backdrop-blur">
           <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-dim">LPG cylinder</div>
-          <div className="mt-2 flex items-baseline justify-between">
+          {lpg.online ? <><div className="mt-2 flex items-baseline justify-between">
             <div className="font-display text-2xl" style={{ color: gasColor }}>{lpg.estimatedDays} days</div>
             <div className="font-mono text-xs" style={{ color: gasColor }}>{Math.round(lpg.remainingPct)}% left</div>
           </div>
           <div className="mt-3"><LevelBar label="Load-cell estimate" value={lpg.remainingPct} color={gasColor} /></div>
-          <p className="mt-3 text-xs text-dim">A low-cylinder nudge arrives before the flame runs out.</p>
+          <p className="mt-3 text-xs text-dim">Low-cylinder warnings use the calibrated load-cell value.</p></> : <NotConnected>Fit and calibrate the HX711 platform before trusting a percentage.</NotConnected>}
         </article>
 
         <article className="rounded-2xl border border-line bg-surface/80 p-4 backdrop-blur">
-          <div className="flex items-start justify-between">
+          {air.online ? <><div className="flex items-start justify-between">
             <div>
               <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-dim">Music-room air</div>
               <div className="font-display mt-1 text-2xl" style={{ color: airColor }}>AQI {air.aqi}</div>
@@ -95,6 +105,7 @@ export default function UtilitiesPanel() {
           >
             Turn purifier {air.purifierOn ? "off" : "on"}
           </button>
+          </> : <NotConnected>No PM2.5/AQI sensor is commissioned for this room.</NotConnected>}
         </article>
       </div>
     </section>

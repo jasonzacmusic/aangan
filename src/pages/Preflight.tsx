@@ -47,12 +47,15 @@ export default function Preflight({ onSelect }: Props) {
   const doorsClosed = preflight.doorsClosed;
   const ready = doorsClosed && quiet && preflight.sensorsHealthy && preflight.safetyClear;
 
-  const openList = preflight.openDoors.map((id) => ROOM_NAMES[id]).join(", ");
+  const openDoorNames = preflight.openDoorNames?.length
+    ? preflight.openDoorNames
+    : preflight.openDoors.map((id) => `${ROOM_NAMES[id]} door`);
+  const openList = openDoorNames.join(", ");
 
   return (
     <div className="rise-in page-shell page-shell--narrow">
-      <h2 className="font-display mb-1 text-2xl lg:text-3xl">Pre-flight</h2>
-      <p className="mb-5 font-mono text-[11px] text-dim">go / no-go before tape rolls</p>
+      <h2 className="font-display mb-1 text-2xl lg:text-3xl">Ready to record?</h2>
+      <p className="mb-5 font-mono text-[11px] text-dim">four checks · one clear answer</p>
 
       {/* The verdict */}
       <div
@@ -75,7 +78,7 @@ export default function Preflight({ onSelect }: Props) {
         <CheckRow
           ok={doorsClosed}
           title={doorsClosed ? "All doors closed" : `Door open: ${openList}`}
-          detail={doorsClosed ? "Every reed switch reads shut." : `Close the ${openList} door${preflight.openDoors.length > 1 ? "s" : ""} to seal the room.`}
+          detail={doorsClosed ? "Every reed switch reads shut." : `Close: ${openList}.`}
         />
         <CheckRow
           ok={quiet}

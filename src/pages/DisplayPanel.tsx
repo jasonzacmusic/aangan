@@ -154,7 +154,7 @@ export default function DisplayPanel({ id }: { id: string }) {
               <div key={r.id} className={`rounded-2xl border p-4 text-left ${r.doorOpen ? "border-st-meeting/50 bg-st-meeting/10" : "border-line bg-surface/70"}`}>
                 <div className="font-display text-xl">{r.name}</div>
                 <div className="mt-1 font-mono text-xs text-dim">
-                  {r.doorOpen ? "door OPEN" : "door closed"} · {r.presence ? "occupied" : "empty"} · {r.tempC.toFixed(1)}°C
+                  {r.doorOpen ? "door OPEN" : "door closed"} · {r.presence ? "occupied" : "empty"} · {r.tempC == null ? "temp not fitted" : `${r.tempC.toFixed(1)}°C`}
                 </div>
               </div>
             ))}
@@ -162,7 +162,7 @@ export default function DisplayPanel({ id }: { id: string }) {
               <div className="rounded-2xl border border-line bg-surface/70 p-4 text-left">
                 <div className="font-display text-xl">House pulse</div>
                 <div className="mt-1 font-mono text-xs leading-relaxed text-dim">
-                  water {Math.round(utilities.water.overheadPct)}% · {utilities.power.mainsOnline ? `mains ${Math.round(utilities.power.voltage)}V` : "ON INVERTER"} · LPG {utilities.lpg.remainingPct}% · AQI {utilities.air.aqi}
+                  {utilities.water.online ? `water ${Math.round(utilities.water.overheadPct)}%` : "water not fitted"} · {utilities.power.online ? (utilities.power.mainsOnline ? `mains ${Math.round(utilities.power.voltage)}V` : "ON INVERTER") : "power not fitted"} · {utilities.lpg.online ? `LPG ${utilities.lpg.remainingPct}%` : "LPG scale not fitted"} · {utilities.air.online ? `AQI ${utilities.air.aqi}` : "air not fitted"}
                 </div>
               </div>
             )}

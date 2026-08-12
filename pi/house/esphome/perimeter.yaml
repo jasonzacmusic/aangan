@@ -8,6 +8,8 @@ esphome:
 
 esp32:
   board: esp32dev
+  framework:
+    type: esp-idf
 
 logger:
 api:
@@ -42,17 +44,44 @@ binary_sensor:
     filters: [delayed_on: 50ms, delayed_off: 50ms]
   - platform: gpio
     name: "Main door vibration"
-    pin: { number: GPIO32, mode: { input: true, pullup: true } }
+    pin: { number: GPIO32, mode: { input: true } }
     device_class: vibration
     filters: [delayed_off: 3s] # latch a knock burst into one clean event
   - platform: gpio
     name: "Balcony vibration"
-    pin: { number: GPIO33, mode: { input: true, pullup: true } }
+    pin: { number: GPIO33, mode: { input: true } }
+    device_class: vibration
+    filters: [delayed_off: 3s]
+  - platform: gpio
+    name: "Studio window vibration"
+    pin: { number: GPIO34, mode: { input: true } }
+    device_class: vibration
+    filters: [delayed_off: 3s]
+  - platform: gpio
+    name: "House window vibration"
+    pin: { number: GPIO35, mode: { input: true } }
+    device_class: vibration
+    filters: [delayed_off: 3s]
+  - platform: gpio
+    name: "Rear access vibration"
+    pin: { number: GPIO39, mode: { input: true } }
     device_class: vibration
     filters: [delayed_off: 3s]
   - platform: gpio
     name: "Entrance PIR"
-    pin: { number: GPIO35, mode: { input: true } } # HC-SR501 has push-pull out; GPIO35 is input-only
+    pin: { number: GPIO13, mode: { input: true } }
+    device_class: motion
+  - platform: gpio
+    name: "Hall PIR"
+    pin: { number: GPIO14, mode: { input: true } }
+    device_class: motion
+  - platform: gpio
+    name: "Kitchen PIR"
+    pin: { number: GPIO18, mode: { input: true } }
+    device_class: motion
+  - platform: gpio
+    name: "Bedroom PIR"
+    pin: { number: GPIO19, mode: { input: true } }
     device_class: motion
   - platform: status
     name: "Perimeter node online"

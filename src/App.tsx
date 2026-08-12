@@ -10,8 +10,10 @@ import Command from "./pages/Command";
 import DisplayPanel from "./pages/DisplayPanel";
 import Displays from "./pages/Displays";
 import Home from "./pages/Home";
+import More from "./pages/More";
 import Preflight from "./pages/Preflight";
 import Safety from "./pages/Safety";
+import Setup from "./pages/Setup";
 import Settings from "./pages/Settings";
 import SosPage from "./pages/SosPage";
 import GuestPage from "./pages/GuestPage";
@@ -147,12 +149,20 @@ export default function App() {
 
   const emergencyCause = sos?.active
     ? `SOS — ${sos.who}${sos.message ? `: “${sos.message}”` : " needs help"}`
-    : safety?.gas
+    : safety?.fire
+      ? "Smoke or flame sensor triggered"
+      : safety?.gas
       ? "Kitchen gas sensor triggered"
+      : safety?.panic
+        ? "Wired panic button triggered"
       : safety?.leakKitchen
         ? "Kitchen water sensor triggered"
         : safety?.leakBath
           ? "Bathroom water sensor triggered"
+          : safety?.leakGeyser
+            ? "Geyser water sensor triggered"
+            : safety?.perimeter
+              ? "Perimeter vibration sensor triggered"
           : "Emergency was triggered manually";
 
   const statusLabel = connected
@@ -189,12 +199,14 @@ export default function App() {
         {tab === "preflight" && <Preflight onSelect={requestState} />}
         {tab === "displays" && <Displays />}
         {tab === "safety" && <Safety />}
+        {tab === "setup" && <Setup />}
         {tab === "settings" && <Settings />}
+        {tab === "more" && <More onOpen={setTab} />}
       </main>
 
       <NudgeBanner />
       <Nav tab={tab} setTab={setTab} />
-      <VoiceButton onCommand={requestState} />
+      {tab === "command" ? <VoiceButton onCommand={requestState} /> : null}
       <PwaUpdatePrompt />
 
       {lastError && (
