@@ -56,6 +56,12 @@ i2c:
 sensor:
   - platform: sht3xd
     address: 0x44
+    # The GY-SHT31-D boards from Robu are generic clones: they do not answer the
+    # serial-number read and they reject the heater command, which marks the
+    # whole component FAILED even when the sensor is wired correctly. Turning
+    # the heater off skips that step. The heater is only for de-condensing in
+    # extreme damp and is not wanted in a music room anyway.
+    heater_enabled: false
     temperature:
       name: "Music room temperature"
       accuracy_decimals: 1
