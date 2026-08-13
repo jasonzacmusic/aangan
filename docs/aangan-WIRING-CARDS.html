@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aangan · Wiring cards</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#f4f2ed;color:#1a1a1a;line-height:1.5}
+.w{max-width:860px;margin:0 auto;padding:0 14px 70px}
+header{background:#fff;padding:26px 0 20px;border-bottom:3px solid #1a1a1a}
+.hd{max-width:860px;margin:0 auto;padding:0 14px}
+header h1{font-size:27px;font-weight:800;letter-spacing:-.4px}
+header p{color:#666;font-size:13px;margin-top:5px}
+.intro{background:#faf8f3;border:1px solid #e2dcd0;border-radius:10px;padding:14px 16px;margin-top:14px;
+font-size:13px;color:#5c5344;line-height:1.7}
+.intro b{color:#1a1a1a}
+.card{background:#fff;border:1px solid #e2dcd0;border-radius:13px;padding:20px 22px;margin-top:22px}
+.top{display:flex;gap:15px;align-items:flex-start;flex-wrap:wrap}
+.num{font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:800;color:#fff;background:#1a1a1a;
+border-radius:11px;min-width:60px;height:60px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.who{flex:1;min-width:200px}
+.who h2{font-size:20px;font-weight:800;letter-spacing:-.2px}
+.who .id{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#666;margin-top:5px;line-height:1.7}
+.who .id b{color:#1a1a1a}
+table{width:100%;border-collapse:collapse;margin-top:15px;border:1px solid #e2dcd0;border-radius:10px;overflow:hidden}
+th{font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+color:#6b5b3e;background:#faf8f3;text-align:left;padding:9px 12px;border-bottom:1px solid #e2dcd0}
+td{padding:11px 12px;font-size:13.5px;border-bottom:1px solid #f0ece3;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+td.pin{font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:16px;color:#b45309;background:#fffbeb;
+text-align:center;white-space:nowrap;width:78px}
+td.nm{font-weight:600}
+td.how{font-size:12.5px;color:#666}
+.tick{width:34px;text-align:center}
+.tick input{width:21px;height:21px;accent-color:#166534}
+.warn{background:#fef2f2;border:1px solid #fecaca;border-radius:9px;padding:12px 15px;margin-top:14px;
+font-size:12.5px;color:#7f1d1d;line-height:1.7}
+.warn b{color:#b91c1c}
+.note{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;padding:12px 15px;margin-top:14px;
+font-size:12.5px;color:#14532d;line-height:1.7}
+.note b{color:#166534}
+footer{margin-top:32px;padding-top:16px;border-top:1px solid #e2dcd0;font-size:12px;color:#666;
+font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
+@media print{body{background:#fff}.card{break-inside:avoid}}</style></head><body>
+<header><div class="hd"><h1>Aangan — wiring cards</h1>
+<p>Six boards, 36 sensors · generated from the firmware actually flashed · 13 August 2026</p>
+<div class="intro"><b>How to use this.</b> One card per board. Find the number on the tape, wire each row, tick it.
+Every pin number is printed in tiny white text along the edge of the board — look for the bare number, so
+<b>25</b> may read D25, G25 or IO25.<br><br>
+<b>The one rule:</b> only ever connect a sensor between a numbered pin and a <b>GND</b> pin. Never touch
+<b>3V3</b>, <b>5V</b> or <b>VIN</b> to ground — that is a short circuit and kills the board.<br><br>
+Each board runs from any <b>micro-USB phone charger</b>. Test on the bench before anything goes on a wall.</div>
+</div></header><div class="w"><div class="card"><div class="top">
+<div class="num">1</div>
+<div class="who"><h2>Studio</h2>
+<div class="id">board <b>8c:94:df:69:20:20</b><br>page <b><a href="http://192.168.0.158/">http://192.168.0.158/</a></b></div></div></div>
+<table><tr><th>Pin</th><th>What connects here</th><th>Wires</th><th class="tick">OK</th></tr><tr><td class="pin">21 + 22</td><td class="nm">Studio temperature</td><td class="how">4 pins: SDA SCL 3V3 GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">34</td><td class="nm">Studio sound level</td><td class="how">signal wire (see note)</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">25</td><td class="nm">Studio door leaf A</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">26</td><td class="nm">Studio door leaf B</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">27</td><td class="nm">Studio sink leak</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">16 + 17</td><td class="nm">Studio presence</td><td class="how">4 pins: TX RX 5V GND</td><td class="tick"><input type="checkbox"></td></tr></table>
+<div class="note"><b>The sound meter is the priority sensor.</b> Its signal wire goes to pin 34; the meter itself takes 5V and ground. No resistors needed here — its output stays inside a safe range.</div></div><div class="card"><div class="top">
+<div class="num">2</div>
+<div class="who"><h2>Music room</h2>
+<div class="id">board <b>00:70:07:a2:73:98</b><br>page <b><a href="http://192.168.0.153/">http://192.168.0.153/</a></b></div></div></div>
+<table><tr><th>Pin</th><th>What connects here</th><th>Wires</th><th class="tick">OK</th></tr><tr><td class="pin">21 + 22</td><td class="nm">Music room temperature</td><td class="how">4 pins: SDA SCL 3V3 GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">25</td><td class="nm">Teaching door leaf A</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">26</td><td class="nm">Teaching door leaf B</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">27</td><td class="nm">Music room leak</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">33</td><td class="nm">Music room flame</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr></table>
+</div><div class="card"><div class="top">
+<div class="num">3</div>
+<div class="who"><h2>Bathrooms A + geyser</h2>
+<div class="id">board <b>00:70:07:a2:6f:04</b><br>page <b><a href="http://192.168.0.154/">http://192.168.0.154/</a></b></div></div></div>
+<table><tr><th>Pin</th><th>What connects here</th><th>Wires</th><th class="tick">OK</th></tr><tr><td class="pin">25</td><td class="nm">Bathroom A1 leak</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">26</td><td class="nm">Bathroom A2 leak</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">27</td><td class="nm">Geyser overflow</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">32</td><td class="nm">Bathroom 3 temperature</td><td class="how">3 pins: data + 3V3 + GND</td><td class="tick"><input type="checkbox"></td></tr></table>
+<div class="note">Each leak probe is <b>two pieces joined by a cable</b>: the flat comb goes on the floor, the small board with the blue knob stays dry near the ESP32. Only the comb should ever get wet. Mount the board high, ideally just outside the door.</div></div><div class="card"><div class="top">
+<div class="num">4</div>
+<div class="who"><h2>Bathrooms B + washing machine</h2>
+<div class="id">board <b>00:70:07:a2:90:dc</b><br>page <b><a href="http://192.168.0.156/">http://192.168.0.156/</a></b></div></div></div>
+<table><tr><th>Pin</th><th>What connects here</th><th>Wires</th><th class="tick">OK</th></tr><tr><td class="pin">25</td><td class="nm">Bathroom B1 leak</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">26</td><td class="nm">Bathroom B2 leak</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">27</td><td class="nm">Washing machine leak</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">32</td><td class="nm">Washing machine running</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">33</td><td class="nm">Bathroom 4 temperature</td><td class="how">3 pins: data + 3V3 + GND</td><td class="tick"><input type="checkbox"></td></tr></table>
+<div class="note">Same as board 3: only the flat comb goes on the floor. The vibration sensor for the washing machine sticks to its casing.</div></div><div class="card"><div class="top">
+<div class="num">5</div>
+<div class="who"><h2>Kitchen</h2>
+<div class="id">board <b>88:f1:55:30:7f:84</b><br>page <b><a href="http://192.168.0.157/">http://192.168.0.157/</a></b></div></div></div>
+<table><tr><th>Pin</th><th>What connects here</th><th>Wires</th><th class="tick">OK</th></tr><tr><td class="pin">34</td><td class="nm">Gas sensor 1 (hob left)</td><td class="how">signal wire (see note)</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">35</td><td class="nm">Gas sensor 2 (hob right)</td><td class="how">signal wire (see note)</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">36</td><td class="nm">Gas sensor 3 (cylinder)</td><td class="how">signal wire (see note)</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">39</td><td class="nm">Gas sensor 4 (floor level)</td><td class="how">signal wire (see note)</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">18, 19</td><td class="nm">Gas cylinder raw</td><td class="how">4 pins: DT SCK 3V3 GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">23</td><td class="nm">Kitchen temperature</td><td class="how">3 pins: data + 3V3 + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">25</td><td class="nm">Kitchen sink leak</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">26</td><td class="nm">Kitchen flame</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">27</td><td class="nm">Kitchen motion</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr></table>
+<div class="warn"><b>This is the only board needing a soldering iron.</b> Each of the four gas sensors needs two resistors between it and its pin: sensor output to a 10k, then the pin, then a 20k down to ground. Without them the sensor can push 5V into a 3.3V pin and damage the board. The four heaters also need their own 5V supply, not the ESP32 — they draw about 600mA together. <br><br><b>Do not aim the flame sensor at the hob</b>, or it will alarm every time you cook.</div><div class="note"><b>Power this board tonight, even bare.</b> The gas sensors need 24-48 hours of continuous power before their readings settle.</div></div><div class="card"><div class="top">
+<div class="num">6</div>
+<div class="who"><h2>Hall / entrance</h2>
+<div class="id">board <b>8c:94:df:69:1e:5c</b><br>page <b>assigned on first boot</b></div></div></div>
+<table><tr><th>Pin</th><th>What connects here</th><th>Wires</th><th class="tick">OK</th></tr><tr><td class="pin">25</td><td class="nm">Main door</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">26</td><td class="nm">Doorbell pressed</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">27</td><td class="nm">Hall motion</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">32</td><td class="nm">Entrance motion</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">33</td><td class="nm">Hall flame</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">18</td><td class="nm">Main door disturbed</td><td class="how">2 wires: pin + GND</td><td class="tick"><input type="checkbox"></td></tr><tr><td class="pin">19</td><td class="nm">Hall temperature</td><td class="how">3 pins: data + 3V3 + GND</td><td class="tick"><input type="checkbox"></td></tr></table>
+</div>
+<footer>Aangan · Nathaniel School of Music, Bangalore<br>
+Generated from pi/house/esphome/*.yaml — if the firmware changes, this page is regenerated, not edited<br>
+Pins 25, 26 and 27 are the doors-and-probes pins on almost every board</footer>
+</div></body></html>
