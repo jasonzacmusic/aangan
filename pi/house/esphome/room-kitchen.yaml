@@ -1,0 +1,152 @@
+# AANGAN · ROOM NODE — KITCHEN
+#
+# Label this board KITCHEN. Get it powered TONIGHT even if nothing else is
+# wired: the MQ-6 heaters need 24-48 hours of continuous power before their
+# readings settle. Starting them now buys a day.
+#
+# READ THIS BEFORE WIRING THE GAS SENSORS:
+#   The MQ-6 modules are SECONDARY. They are trend hints, not a safety device.
+#   The primary protection is a CERTIFIED LPG detector with its own siren,
+#   mounted LOW because LPG is heavier than air. That unit has not been bought
+#   yet, and nothing here replaces it.
+#
+#   Each MQ-6 heater draws about 150 mA at 5V. Four of them is 600 mA — far
+#   more than the ESP32's regulator will give. Power all four from an external
+#   5V supply, and join its ground to the ESP32's ground.
+#
+#   The analogue output can rise above 3.3V and would damage the pin. EVERY
+#   AO line needs a divider:   AO --[10k]--+-- GPIO --[20k]-- GND
+#
+# WIRING:
+#   GPIO34/35/36/39  MQ-6 analogue outputs, each through the divider above
+#   GPIO25           kitchen sink leak probe, pin to GND
+#   GPIO26           IR flame sensor D0  (see the warning below)
+#   GPIO27           PIR motion module OUT
+#   GPIO18/19        HX711 gas cylinder scale: DOUT to 18, SCK to 19
+#
+# DO NOT point the flame sensor at the hob. It will see the cooking flame and
+# alarm every time you cook. Aim it away from the burners, or leave it off this
+# node entirely and use the certified heat alarm for the kitchen.
+esphome:
+  name: room-kitchen
+  friendly_name: Kitchen
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+  level: INFO
+
+api:
+  encryption:
+    key: !secret api_key_kitchen_safety
+  reboot_timeout: 0s   # no Home Assistant in this setup
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+  reboot_timeout: 5min
+  ap:
+    ssid: "room-kitchen setup"
+    password: !secret ap_password
+captive_portal:
+
+web_server:
+  port: 80
+
+sensor:
+  # Raw voltages, deliberately not converted to ppm. An MQ-6 cannot give a
+  # trustworthy ppm figure without a calibrated clean-air baseline taken after
+  # burn-in. Watching these four settle over the first two days IS the
+  # calibration, and the numbers only mean something relative to that baseline.
+  - platform: adc
+    pin: GPIO34
+    name: "Gas sensor 1 (hob left)"
+    unit_of_measurement: "V"
+    attenuation: 12db
+    update_interval: 10s
+    accuracy_decimals: 3
+    filters: [sliding_window_moving_average: { window_size: 6, send_every: 3 }]
+  - platform: adc
+    pin: GPIO35
+    name: "Gas sensor 2 (hob right)"
+    unit_of_measurement: "V"
+    attenuation: 12db
+    update_interval: 10s
+    accuracy_decimals: 3
+    filters: [sliding_window_moving_average: { window_size: 6, send_every: 3 }]
+  - platform: adc
+    pin: GPIO36
+    name: "Gas sensor 3 (cylinder)"
+    unit_of_measurement: "V"
+    attenuation: 12db
+    update_interval: 10s
+    accuracy_decimals: 3
+    filters: [sliding_window_moving_average: { window_size: 6, send_every: 3 }]
+  - platform: adc
+    pin: GPIO39
+    name: "Gas sensor 4 (floor level)"
+    unit_of_measurement: "V"
+    attenuation: 12db
+    update_interval: 10s
+    accuracy_decimals: 3
+    filters: [sliding_window_moving_average: { window_size: 6, send_every: 3 }]
+
+  # LPG CYLINDER SCALE. Raw counts until it is calibrated against a known
+  # weight — see the note at the bottom of this file.
+  - platform: hx711
+    name: "Gas cylinder raw"
+    dout_pin: GPIO18
+    clk_pin: GPIO19
+    gain: 128
+    update_interval: 60s
+    accuracy_decimals: 0
+
+binary_sensor:
+  - platform: gpio
+    name: "Kitchen sink leak"
+    pin: { number: GPIO25, mode: { input: true, pullup: true }, inverted: true }
+    device_class: moisture
+    filters: [delayed_on: 500ms]
+  - platform: gpio
+    name: "Kitchen flame"
+    pin: { number: GPIO26, mode: { input: true, pullup: true }, inverted: true }
+    device_class: heat
+    filters: [delayed_on: 200ms]
+  - platform: gpio
+    name: "Kitchen motion"
+    pin: { number: GPIO27, mode: { input: true } }
+    device_class: motion
+
+  # CERTIFIED LPG DETECTOR CONTACT — NOT BUILT, because the detector has not
+  # been bought. This is the input that actually matters. Uncomment the day a
+  # certified unit with a volt-free relay output is installed.
+  # - platform: gpio
+  #   name: "LPG detector alarm contact"
+  #   pin: { number: GPIO32, mode: { input: true, pullup: true }, inverted: true }
+  #   device_class: gas
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP address"
+      on_value:
+        then:
+          - logger.log:
+              level: INFO
+              format: "AANGAN READY - open http://%s/ on any phone"
+              args: ["x.c_str()"]
+
+# CALIBRATING THE CYLINDER SCALE, once the platform is built:
+#   1. Note "Gas cylinder raw" with the platform empty.
+#   2. Put a known weight on it (a filled cylinder is roughly 29.5 kg; a 5 kg
+#      bag of rice works for a first pass) and note the raw value again.
+#   3. Send me both numbers and I will add the conversion, so the app reports
+#      kilograms remaining and days left instead of raw counts.

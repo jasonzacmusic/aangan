@@ -1,0 +1,125 @@
+# AANGAN · ROOM NODE — MUSIC / TEACHING ROOM
+#
+# Board MAC 00:70:07:a2:73:98. Label this board MUSIC.
+# Everything here is cabled to this one board, which lives in the music room.
+# No cable leaves the room; one 5V USB charger powers it.
+#
+# WIRING:
+#   GPIO25  teaching door, leaf A    reed between pin and GND
+#   GPIO26  teaching door, leaf B    reed between pin and GND
+#   GPIO27  sink / floor leak probe  probe between pin and GND
+#   GPIO33  IR flame sensor D0       module D0 to pin; 5V + GND to module
+#   GPIO21  SHT31 SDA  }             precise temp + humidity for the instruments
+#   GPIO22  SHT31 SCL  }             3.3V + GND to the sensor
+#
+# The instrument climate guard lives here: this room holds instruments, and an
+# SHT31 holds calibration for years where a DHT22 drifts.
+esphome:
+  name: room-music
+  friendly_name: Music Room
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+  level: INFO
+
+api:
+  encryption:
+    key: !secret api_key_studio_doors
+  reboot_timeout: 0s   # no Home Assistant in this setup
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+  reboot_timeout: 5min
+  ap:
+    ssid: "room-music setup"
+    password: !secret ap_password
+captive_portal:
+
+web_server:
+  port: 80
+
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+
+sensor:
+  - platform: sht3xd
+    address: 0x44
+    temperature:
+      name: "Music room temperature"
+      accuracy_decimals: 1
+    humidity:
+      name: "Music room humidity"
+      id: music_rh
+      accuracy_decimals: 1
+    update_interval: 30s
+
+  # SECOND SOUND METER — NOT BUILT. Only one SEN0232 was bought; this room's
+  # meter (about Rs 4,799) has not been ordered. Left commented, because an ADC
+  # pin with nothing on it reports convincing nonsense.
+  # - platform: adc
+  #   pin: GPIO34
+  #   name: "Music room sound level"
+  #   unit_of_measurement: "dBA"
+  #   device_class: sound_pressure
+  #   attenuation: 12db
+  #   update_interval: 200ms
+  #   filters:
+  #     - multiply: 50.0
+  #     - sliding_window_moving_average: { window_size: 10, send_every: 5 }
+  #   accuracy_decimals: 1
+
+binary_sensor:
+  # NOT inverted: reed closed (magnet present, door shut) pulls the pin to GND
+  # and reads as closed. Confirm on the bench with the first reed.
+  - platform: gpio
+    name: "Teaching door leaf A"
+    pin: { number: GPIO25, mode: { input: true, pullup: true } }
+    device_class: door
+    filters: [delayed_on: 50ms, delayed_off: 50ms]
+  - platform: gpio
+    name: "Teaching door leaf B"
+    pin: { number: GPIO26, mode: { input: true, pullup: true } }
+    device_class: door
+    filters: [delayed_on: 50ms, delayed_off: 50ms]
+  - platform: gpio
+    name: "Music room leak"
+    pin: { number: GPIO27, mode: { input: true, pullup: true }, inverted: true }
+    device_class: moisture
+    filters: [delayed_on: 500ms]
+  - platform: gpio
+    name: "Music room flame"
+    pin: { number: GPIO33, mode: { input: true, pullup: true }, inverted: true }
+    device_class: heat
+    filters: [delayed_on: 200ms]
+
+  # Instrument climate guard: instruments want roughly 35-65% relative humidity.
+  # This is a plain reading, not an alert — the app decides what to do with it.
+  - platform: template
+    name: "Music room humidity out of safe band"
+    device_class: problem
+    lambda: |-
+      if (isnan(id(music_rh).state)) return {};
+      return id(music_rh).state < 35.0 || id(music_rh).state > 65.0;
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP address"
+      on_value:
+        then:
+          - logger.log:
+              level: INFO
+              format: "AANGAN READY - open http://%s/ on any phone"
+              args: ["x.c_str()"]
