@@ -28,8 +28,8 @@
 # alarm every time you cook. Aim it away from the burners, or leave it off this
 # node entirely and use the certified heat alarm for the kitchen.
 esphome:
-  name: room-kitchen
-  friendly_name: Kitchen
+  name: node-5-kitchen
+  friendly_name: 5 Kitchen
 
 esp32:
   board: esp32dev
@@ -54,7 +54,7 @@ wifi:
   power_save_mode: none
   reboot_timeout: 5min
   ap:
-    ssid: "room-kitchen setup"
+    ssid: "node-5 setup"
     password: !secret ap_password
 captive_portal:
 

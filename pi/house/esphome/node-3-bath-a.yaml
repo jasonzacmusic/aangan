@@ -1,0 +1,88 @@
+# AANGAN · NODE 3 — BATHROOMS A  (sticker: 3)
+#
+# Board MAC 00:70:07:a2:6f:04
+#
+# There are FOUR bathrooms in this house, so they are split across two boards.
+# This one takes the two bathrooms that are CLOSEST TOGETHER, plus the geyser.
+# Node 4 takes the other two. Which pair goes on which board is decided on the
+# day by whichever two are nearest each other — the firmware does not care.
+#
+# WIRING — each probe goes between its pin and GND:
+#   GPIO25  bathroom A1 floor        (nearest the board)
+#   GPIO26  bathroom A2 floor
+#   GPIO27  geyser overflow / drip tray
+#
+# Each raindrop probe is TWO pieces joined by a short cable: the flat comb that
+# lies on the floor, and the small board with the blue knob. Keep the small
+# board and the ESP32 DRY and high up — ideally just outside the bathroom door.
+# Only the comb goes on the floor.
+#
+# Power: one 5V USB charger. No mains work, no electrician.
+esphome:
+  name: node-3-bath-a
+  friendly_name: 3 Bathrooms A
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+  level: INFO
+
+api:
+  encryption:
+    key: !secret api_key_wet_zones
+  reboot_timeout: 0s   # no Home Assistant in this setup
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+  reboot_timeout: 5min
+  ap:
+    ssid: "node-3 setup"
+    password: !secret ap_password
+captive_portal:
+
+web_server:
+  port: 80
+
+binary_sensor:
+  # Probes close to GND when wet. All three pins have working internal
+  # pull-ups, so nothing extra needs soldering.
+  - platform: gpio
+    name: "Bathroom A1 leak"
+    pin: { number: GPIO25, mode: { input: true, pullup: true }, inverted: true }
+    device_class: moisture
+    filters: [delayed_on: 500ms]
+  - platform: gpio
+    name: "Bathroom A2 leak"
+    pin: { number: GPIO26, mode: { input: true, pullup: true }, inverted: true }
+    device_class: moisture
+    filters: [delayed_on: 500ms]
+  - platform: gpio
+    name: "Geyser overflow"
+    pin: { number: GPIO27, mode: { input: true, pullup: true }, inverted: true }
+    device_class: moisture
+    filters: [delayed_on: 500ms]
+
+  # Only three probes are defined because only three are being wired to this
+  # board. An unwired input would sit there reporting a reassuring "dry" for a
+  # sensor that does not exist, which is worse than showing nothing. Spare pins
+  # GPIO32 and GPIO33 are free — say the word and I will add them in a minute.
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP address"
+      on_value:
+        then:
+          - logger.log:
+              level: INFO
+              format: "AANGAN READY - open http://%s/ on any phone"
+              args: ["x.c_str()"]

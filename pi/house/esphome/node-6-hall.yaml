@@ -1,0 +1,103 @@
+# AANGAN · NODE 6 — HALL / ENTRANCE  (sticker: 6)
+#
+# The front of the house: who came in, who is moving about, and the doorbell.
+# Everything here is within a couple of metres of one board near the front door.
+#
+# WIRING:
+#   GPIO25  main door reed              reed between pin and GND
+#   GPIO26  doorbell push button        button between pin and GND
+#   GPIO27  hall PIR motion module OUT  (module also needs 5V + GND)
+#   GPIO32  entrance PIR motion OUT
+#   GPIO33  IR flame sensor D0
+#   GPIO18  SW-420 vibration on the main door — a second opinion to the reed:
+#           someone knocking, forcing or bumping the door registers here even
+#           if the door never actually opens.
+#
+# Power: one 5V USB charger (micro-USB).
+#
+# HONEST SCOPE: this is a light awareness layer that tells your phones
+# something happened. It is not a certified intrusion alarm and must not be
+# described as one.
+esphome:
+  name: node-6-hall
+  friendly_name: 6 Hall
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+  level: INFO
+
+api:
+  encryption:
+    key: !secret api_key_panic_loop
+  reboot_timeout: 0s   # no Home Assistant in this setup
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+  reboot_timeout: 5min
+  ap:
+    ssid: "node-6 setup"
+    password: !secret ap_password
+captive_portal:
+
+web_server:
+  port: 80
+
+binary_sensor:
+  # NOT inverted: reed closed (magnet present, door shut) pulls the pin to GND
+  # and reads as closed.
+  - platform: gpio
+    name: "Main door"
+    pin: { number: GPIO25, mode: { input: true, pullup: true } }
+    device_class: door
+    filters: [delayed_on: 50ms, delayed_off: 50ms]
+
+  - platform: gpio
+    name: "Doorbell pressed"
+    pin: { number: GPIO26, mode: { input: true, pullup: true }, inverted: true }
+    filters:
+      - delayed_on: 30ms      # debounce the switch
+      - delayed_off: 2s       # hold long enough for the app to notice
+
+  - platform: gpio
+    name: "Hall motion"
+    pin: { number: GPIO27, mode: { input: true } }
+    device_class: motion
+  - platform: gpio
+    name: "Entrance motion"
+    pin: { number: GPIO32, mode: { input: true } }
+    device_class: motion
+
+  - platform: gpio
+    name: "Hall flame"
+    pin: { number: GPIO33, mode: { input: true, pullup: true }, inverted: true }
+    device_class: heat
+    filters: [delayed_on: 200ms]
+
+  - platform: gpio
+    name: "Main door disturbed"
+    pin: { number: GPIO18, mode: { input: true, pullup: true }, inverted: true }
+    device_class: vibration
+    filters:
+      - delayed_on: 100ms
+      - delayed_off: 3s
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP address"
+      on_value:
+        then:
+          - logger.log:
+              level: INFO
+              format: "AANGAN READY - open http://%s/ on any phone"
+              args: ["x.c_str()"]
