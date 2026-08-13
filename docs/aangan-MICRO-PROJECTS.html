@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aangan · Micro-projects board</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#f4f2ed;color:#1a1a1a;line-height:1.5}
+.w{max-width:840px;margin:0 auto;padding:0 14px 70px}
+header{background:#fff;padding:26px 0 20px;border-bottom:3px solid #1a1a1a}
+.hd{max-width:840px;margin:0 auto;padding:0 14px}
+header h1{font-size:27px;font-weight:800;letter-spacing:-.4px}
+header p{color:#666;font-size:13px;margin-top:5px}
+
+section{margin-top:32px}
+.h{border-left:5px solid var(--c);padding:3px 0 3px 13px}
+.h h2{font-size:21px;font-weight:800;color:var(--c);letter-spacing:-.2px}
+.h p{font-size:13px;color:#666;margin-top:5px;line-height:1.6}
+
+.verdict{background:#1a1a1a;color:#fff;border-radius:13px;padding:22px 24px;margin-top:16px}
+.verdict h3{font-size:19px;font-weight:800;letter-spacing:-.3px;line-height:1.3}
+.verdict p{font-size:14px;margin-top:11px;line-height:1.7;color:#e5e0d6}
+.verdict p b{color:#fff}
+.verdict .hl{color:#86efac;font-weight:700}
+
+table{width:100%;border-collapse:collapse;margin-top:14px;background:#fff;border:1px solid #e2dcd0;
+border-radius:11px;overflow:hidden}
+th{font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:700;letter-spacing:.7px;
+text-transform:uppercase;color:#6b5b3e;background:#faf8f3;text-align:left;padding:10px 12px;
+border-bottom:1px solid #e2dcd0}
+td{padding:12px;font-size:13.5px;border-bottom:1px solid #f0ece3;vertical-align:top;line-height:1.55}
+tr:last-child td{border-bottom:none}
+td.w{font-weight:700}
+td.y{color:#166534;font-weight:700}
+td.n{color:#b91c1c;font-weight:700}
+
+.proj{background:#fff;border:1px solid #e2dcd0;border-radius:12px;padding:18px 20px;margin-top:12px}
+.ptop{display:flex;gap:14px;align-items:flex-start}
+.rank{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:800;color:var(--c);
+background:var(--cb);border:1px solid var(--cl);border-radius:10px;min-width:52px;height:52px;
+display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.pbody{flex:1;min-width:0}
+.pbody h3{font-size:17px;font-weight:800;letter-spacing:-.2px;line-height:1.3}
+.pbody .sub{font-size:13px;color:#666;margin-top:4px;line-height:1.55}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:700;padding:4px 9px;
+border-radius:20px;border:1px solid}
+.chip.go{background:#f0fdf4;color:#166534;border-color:#bbf7d0}
+.chip.wait{background:#fffbeb;color:#b45309;border-color:#fde68a}
+.chip.block{background:#fef2f2;color:#b91c1c;border-color:#fecaca}
+.chip.neutral{background:#faf8f3;color:#6b5b3e;border-color:#e2dcd0}
+.out{font-size:13px;color:#14532d;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;
+padding:9px 12px;margin-top:11px;line-height:1.6}
+.out b{color:#166534}
+.job{font-size:13px;color:#5c5344;background:#faf8f3;border:1px solid #e2dcd0;border-radius:8px;
+padding:9px 12px;margin-top:8px;line-height:1.6}
+
+.note{background:#faf8f3;border:1px solid #e2dcd0;border-radius:10px;padding:14px 16px;margin-top:14px;
+font-size:13px;color:#5c5344;line-height:1.7}
+.warn{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;margin-top:14px;
+font-size:13px;color:#7f1d1d;line-height:1.7}
+.warn b{color:#b91c1c}
+.good{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 16px;margin-top:14px;
+font-size:13px;color:#14532d;line-height:1.7}
+.good b{color:#166534}
+
+footer{margin-top:34px;padding-top:16px;border-top:1px solid #e2dcd0;font-size:12px;color:#666;
+font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
+@media print{body{background:#fff}.proj{break-inside:avoid}}
+</style></head><body>
+
+<header><div class="hd">
+  <h1>Aangan — micro-projects, and the Raspberry Pi question</h1>
+  <p>Seven small wins ranked by what you actually care about · Nathaniel School of Music · 13 August 2026</p>
+</div></header>
+
+<div class="w">
+
+<!-- ===== THE PI QUESTION ===== -->
+<section style="--c:#1d4ed8">
+  <div class="h">
+    <h2>Do you need a Raspberry Pi?</h2>
+    <p>You asked the right question. Here is the honest answer rather than the defensive one.</p>
+  </div>
+
+  <div class="verdict">
+    <h3>For the studio — the sound meter, the doors, presence, the recording verdict: <span class="hl">no. You do not need one.</span></h3>
+    <p>Each ESP32 already runs its own small web server. You saw it: Node 1 is live at
+    <b>192.168.0.158</b> with no Pi anywhere. Every node can publish its readings straight onto your
+    Wi-Fi, and the app can read them directly. Nothing is missing for the studio.</p>
+    <p><b>My recommendation: skip the Pi for now.</b> Build the studio on Wi-Fi alone. Revisit the
+    question the day you hit something that genuinely needs an always-on brain. When that day comes, try your studio Mac mini before spending ₹10,000 on a Pi.</p>
+  </div>
+
+  <table>
+    <tr><th>What you want</th><th>Works with no Pi?</th><th>Why</th></tr>
+    <tr><td class="w">Live sound level on your phone</td><td class="y">YES</td>
+      <td>The node serves the reading itself. The app reads it directly.</td></tr>
+    <tr><td class="w">Which door is open</td><td class="y">YES</td>
+      <td>Same. Already proven on Node 1.</td></tr>
+    <tr><td class="w">Is anyone in the studio</td><td class="y">YES</td>
+      <td>Same board as the sound meter.</td></tr>
+    <tr><td class="w">"Can I record right now?"</td><td class="y">YES</td>
+      <td>The app combines the three answers. That maths belongs in the app anyway.</td></tr>
+    <tr><td class="w">Red tally light when recording</td><td class="y">MOSTLY</td>
+      <td>One node can drive its own light. A light reacting to a <i>different</i> node needs either the app open or a brain.</td></tr>
+    <tr><td class="w">Phone alert for gas, fire or a leak<br>when nobody has the app open</td><td class="n">NEEDS WORK</td>
+      <td>This is the real gap. See below. It is solvable without a Pi, but not by ignoring it.</td></tr>
+    <tr><td class="w">History: sound over a session,<br>gas trends, take markers</td><td class="n">NO</td>
+      <td>An ESP32 has almost no storage. Something has to keep the record.</td></tr>
+  </table>
+
+  <div class="warn">
+    <b>The one thing I will not let you skip quietly.</b> If the safety logic lives only in the app,
+    then a gas leak at three in the morning with every phone locked means <b>nothing happens</b>. That
+    is not a smaller version of the feature. It is the absence of it.<br><br>
+    It is fixable without a Pi: an ESP32 can send a notification straight to your phones by itself,
+    through a free push service, with no hub and no account. I have not built that yet, but it is a small job, and it is the piece that makes a Pi-free house honest rather than just cheaper.
+  </div>
+
+  <div class="good">
+    <b>Nothing you build now is a bet on this decision.</b> These nodes work both ways. Every one you
+    wire today serves its own page over Wi-Fi, and if you later add a brain, whether a Pi or the studio Mac, it adopts them as they are. No rewiring, no reflashing, no wasted work. So build, and decide the
+    brain question later with real experience behind it.
+  </div>
+</section>
+
+<!-- ===== THE MICRO PROJECTS ===== -->
+<section style="--c:#166534">
+  <div class="h">
+    <h2>The seven micro-projects</h2>
+    <p>Ranked by what you said matters and what your team has actually shown up for. Each one is a
+    finished, visible thing, not a step toward something distant.</p>
+  </div>
+
+  <div class="proj">
+    <div class="ptop">
+      <div class="rank" style="--c:#166534;--cb:#f0fdf4;--cl:#bbf7d0">1</div>
+      <div class="pbody">
+        <h3>The Quiet Meter</h3>
+        <div class="sub">Live decibels from the recording room, on every phone. You told me this is
+        the one that matters most, so it goes first.</div>
+        <div class="meta">
+          <span class="chip go">ALL PARTS IN HAND</span>
+          <span class="chip neutral">SEN0232 + ESP32</span>
+          <span class="chip neutral">HALF A DAY</span>
+          <span class="chip go">NO PI NEEDED</span>
+        </div>
+        <div class="out"><b>Finished looks like:</b> open your phone, see a number that moves when
+        someone speaks, and a clear verdict: quiet enough to record, or not.</div>
+        <div class="job"><b>The team's real job here is calibration, and it is the interesting part.</b>
+        The sensor gives a voltage; turning that into a trustworthy decibel number means comparing it
+        against a phone sound-level app in a silent room, then during an actual noisy take, and
+        recording what threshold really separates a usable take from a ruined one. That number cannot
+        be looked up. Only your room can tell you.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="proj">
+    <div class="ptop">
+      <div class="rank" style="--c:#166534;--cb:#f0fdf4;--cl:#bbf7d0">2</div>
+      <div class="pbody">
+        <h3>The Door Board</h3>
+        <div class="sub">Which of the four door leaves is open, named exactly. Already programmed and
+        on your Wi-Fi — only the wiring is left.</div>
+        <div class="meta">
+          <span class="chip go">ALREADY FLASHED &amp; LIVE</span>
+          <span class="chip neutral">4 reeds of 12</span>
+          <span class="chip neutral">ONE HOUR</span>
+          <span class="chip go">NO PI NEEDED</span>
+        </div>
+        <div class="out"><b>Finished looks like:</b> the page names the exact leaf someone left open,
+        not just "a door".</div>
+        <div class="job">Bench-test all four with the magnets before anything goes on a door frame.
+        Permanent mounting waits on two-core cable, which was never ordered.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="proj">
+    <div class="ptop">
+      <div class="rank" style="--c:#166534;--cb:#f0fdf4;--cl:#bbf7d0">3</div>
+      <div class="pbody">
+        <h3>Is Anyone In There</h3>
+        <div class="sub">Radar presence — detects a person sitting completely still, by their breathing. Shares a board with the Quiet Meter, so it is nearly free once #1 is done.</div>
+        <div class="meta">
+          <span class="chip go">PART IN HAND</span>
+          <span class="chip neutral">LD2410</span>
+          <span class="chip neutral">TWO HOURS</span>
+          <span class="chip go">NO PI NEEDED</span>
+        </div>
+        <div class="out"><b>Finished looks like:</b> the studio knows it is occupied even when nobody
+        moves, something a motion sensor never manages.</div>
+        <div class="job">Needs tuning: radar sees through plasterboard and will happily report someone
+        in the next room. Setting the distance limits is a genuine afternoon of experimenting.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="proj">
+    <div class="ptop">
+      <div class="rank" style="--c:#166534;--cb:#f0fdf4;--cl:#bbf7d0">4</div>
+      <div class="pbody">
+        <h3>The Green Light</h3>
+        <div class="sub">The one that turns three sensors into a product: <i>can I record right now?</i>
+        Doors shut, room quiet, someone present, nodes alive.</div>
+        <div class="meta">
+          <span class="chip go">NEEDS 1 + 2 + 3</span>
+          <span class="chip neutral">APP WORK, MINE</span>
+          <span class="chip neutral">ONE DAY</span>
+          <span class="chip go">NO PI NEEDED</span>
+        </div>
+        <div class="out"><b>Finished looks like:</b> one glance before a take, and a named reason when the answer is no, such as "teaching door leaf B is open" rather than a red cross.</div>
+        <div class="job">This is my job, not the team's. It is where Aangan stops being sensors and
+        starts being the thing you actually use.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="proj">
+    <div class="ptop">
+      <div class="rank" style="--c:#b45309;--cb:#fffbeb;--cl:#fde68a">5</div>
+      <div class="pbody">
+        <h3>The Gas Cylinder Scale</h3>
+        <div class="sub">Weighs the LPG cylinder so the app can say how much is left and roughly how
+        many days. The most satisfying build on the list.</div>
+        <div class="meta">
+          <span class="chip go">ALL PARTS IN HAND</span>
+          <span class="chip neutral">HX711 + 4 load cells</span>
+          <span class="chip wait">NEEDS A PLATFORM BUILT</span>
+        </div>
+        <div class="out"><b>Finished looks like:</b> "about 6.4 kg left, roughly 11 days" instead of
+        finding out mid-cooking.</div>
+        <div class="job">Somebody has to build a physical platform — two boards with the load cells
+        sandwiched at the corners, then calibrate it with a known weight. Hands-on, visible, and a
+        good project for whoever on the team likes making things rather than wiring them.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="proj">
+    <div class="ptop">
+      <div class="rank" style="--c:#b45309;--cb:#fffbeb;--cl:#fde68a">6</div>
+      <div class="pbody">
+        <h3>The Instrument Guard</h3>
+        <div class="sub">Precise humidity in the rooms holding the piano and guitars, with an alert
+        outside a safe band.</div>
+        <div class="meta">
+          <span class="chip go">PARTS IN HAND</span>
+          <span class="chip neutral">2 × SHT31</span>
+          <span class="chip neutral">HALF A DAY</span>
+        </div>
+        <div class="out"><b>Finished looks like:</b> a warning before the humidity does damage to
+        instruments worth lakhs, not after.</div>
+        <div class="job">Quick to build, but it needs weeks of readings before the alert thresholds
+        mean anything. Start it early precisely because it takes time to become useful.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="proj">
+    <div class="ptop">
+      <div class="rank" style="--c:#b45309;--cb:#fffbeb;--cl:#fde68a">7</div>
+      <div class="pbody">
+        <h3>Water Watch</h3>
+        <div class="sub">Eight leak probes under sinks, bathrooms, the geyser and the washing machine.</div>
+        <div class="meta">
+          <span class="chip go">ALL PARTS IN HAND</span>
+          <span class="chip neutral">9 probes, 8 used</span>
+          <span class="chip wait">HOUSE, NOT STUDIO</span>
+        </div>
+        <div class="out"><b>Finished looks like:</b> you hear about a leak in minutes rather than
+        when the ceiling stains.</div>
+        <div class="job">Repetitive but easy: the same two-wire pattern eight times. Good for a
+        session where the team wants an obvious win. Three of the probes need a resistor each.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== BLOCKED ===== -->
+<section style="--c:#b91c1c">
+  <div class="h">
+    <h2>Not projects yet — these are purchases</h2>
+    <p>No amount of team energy moves these. Listing them so nobody starts one by mistake.</p>
+  </div>
+  <table>
+    <tr><th>Would-be project</th><th>What is actually missing</th></tr>
+    <tr><td class="w">Teaching room sound meter</td>
+      <td>A second SEN0232, about ₹4,799. One was bought; the design reads two rooms.</td></tr>
+    <tr><td class="w">Kitchen gas safety</td>
+      <td>The certified LPG detector with a relay output. The MQ-6 sensors you have are secondary
+        hints only. They are not the safety device.</td></tr>
+    <tr><td class="w">Fire and panic</td>
+      <td>Certified smoke alarms, panic switches, and a licensed low-voltage technician. Not a team job
+        under any circumstances.</td></tr>
+    <tr><td class="w">Air quality — CO₂, dust, smell</td>
+      <td>The CO₂, particulate and VOC sensors were never ordered. About ₹22,500.</td></tr>
+    <tr><td class="w">Water tank levels</td>
+      <td>Two waterproof ultrasonic sensors, never ordered.</td></tr>
+    <tr><td class="w">Doorbell camera</td>
+      <td>An ESP32-CAM — a different board from the nine you have.</td></tr>
+    <tr><td class="w">Recording tally light</td>
+      <td>The LED strip and its level shifter were on the "already owned" list that turned out to be
+        wrong.</td></tr>
+  </table>
+</section>
+
+<footer>
+  Aangan · Nathaniel School of Music, Bangalore<br>
+  Node 1 live at 192.168.0.158 · nine ESP32s in hand · no Raspberry Pi required for projects 1–4<br>
+  Ranked 13 August 2026 against parts actually in the building
+</footer>
+
+</div>
+</body></html>
