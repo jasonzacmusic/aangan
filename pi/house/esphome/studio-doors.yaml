@@ -12,6 +12,7 @@ esp32:
     type: esp-idf
 
 logger:
+  level: INFO
 api:
   encryption:
     key: !secret api_key_studio_doors
@@ -21,6 +22,14 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  # The house runs a 4-AP mesh, all advertising the same SSID. Two settings
+  # matter here and both were learned the hard way on 13 Aug:
+  #   power_save_mode: none  — the ESP32's default Wi-Fi power saving drops the
+  #     association on a mesh and then loops on "attempt 2/3" forever.
+  #   reboot_timeout          — if it ever does get properly stuck, reboot rather
+  #     than sit there unreachable.
+  power_save_mode: none
+  reboot_timeout: 5min
   ap:
     ssid: "studio-doors setup"
     password: !secret ap_password
@@ -55,3 +64,16 @@ binary_sensor:
     filters: [delayed_on: 50ms, delayed_off: 50ms]
   - platform: status
     name: "Studio doors node online"
+
+# Shows the node's own address on its web page, and announces it over USB on
+# boot so the address can be found without guessing.
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP address"
+      on_value:
+        then:
+          - logger.log:
+              level: INFO
+              format: "AANGAN READY - open http://%s/ on any phone"
+              args: ["x.c_str()"]

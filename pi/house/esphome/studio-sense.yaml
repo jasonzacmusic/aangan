@@ -17,7 +17,9 @@ esp32:
     type: esp-idf
 
 logger:
-  baud_rate: 0 # UART0 logging off — keeps hardware UARTs clean for the LD2410
+  level: INFO
+  # USB logging stays ON. The LD2410 uses UART2 on GPIO16/17; UART0 (USB) is
+  # free, and we need it to read the node's address during commissioning.
 
 api:
   encryption:
@@ -28,10 +30,18 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  # 4-AP mesh: default Wi-Fi power saving drops the association and loops forever.
+  power_save_mode: none
+  reboot_timeout: 5min
   ap:
     ssid: "studio-sense setup"
     password: !secret ap_password
 captive_portal:
+
+# Live page at http://<its-ip>/ so the meter can be read and calibrated from a
+# phone with no Home Assistant and no Raspberry Pi.
+web_server:
+  port: 80
 
 uart:
   id: ld2410_uart
@@ -60,20 +70,24 @@ sensor:
           window_size: 10
           send_every: 5
     accuracy_decimals: 1
-  - platform: adc
-    pin: GPIO35
-    name: "Teaching sound level"
-    id: teaching_dba
-    unit_of_measurement: "dBA"
-    device_class: sound_pressure
-    attenuation: 12db
-    update_interval: 200ms
-    filters:
-      - multiply: 50.0
-      - sliding_window_moving_average:
-          window_size: 10
-          send_every: 5
-    accuracy_decimals: 1
+  # TEACHING ROOM METER — NOT BUILT. Only one SEN0232 was bought; the second
+  # (about ₹4,799) has not been ordered. Left commented rather than active,
+  # because an ADC pin with nothing wired to it reports convincing nonsense and
+  # someone will believe it. Uncomment the day the second meter arrives.
+  # - platform: adc
+  #   pin: GPIO35
+  #   name: "Teaching sound level"
+  #   id: teaching_dba
+  #   unit_of_measurement: "dBA"
+  #   device_class: sound_pressure
+  #   attenuation: 12db
+  #   update_interval: 200ms
+  #   filters:
+  #     - multiply: 50.0
+  #     - sliding_window_moving_average:
+  #         window_size: 10
+  #         send_every: 5
+  #   accuracy_decimals: 1
 
 binary_sensor:
   - platform: ld2410
@@ -83,15 +97,30 @@ binary_sensor:
   - platform: status
     name: "Studio sense node online"
 
-light:
-  - platform: esp32_rmt_led_strip
-    id: tally_strip_raw
-    chipset: ws2812
-    rgb_order: GRB
-    pin: GPIO18
-    num_leds: 60
-    name: "Studio tally strip"
-    default_transition_length: 400ms
+# Shows the address on the node's own page and announces it over USB on boot.
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP address"
+      on_value:
+        then:
+          - logger.log:
+              level: INFO
+              format: "AANGAN READY - open http://%s/ on any phone"
+              args: ["x.c_str()"]
+
+# TALLY LIGHT — NOT BUILT. The WS2812B strip and its 74AHCT level shifter were
+# both on the "already owned" list that turned out to be wrong, so neither is in
+# the building. Uncomment when they are.
+# light:
+#   - platform: esp32_rmt_led_strip
+#     id: tally_strip_raw
+#     chipset: ws2812
+#     rgb_order: GRB
+#     pin: GPIO18
+#     num_leds: 60
+#     name: "Studio tally strip"
+#     default_transition_length: 400ms
 
 # ---------------------------------------------------------------------------
 # INMP441 pilot (optional, on a spare ESP32): relative loud/quiet only — the

@@ -12,6 +12,7 @@ esp32:
     type: esp-idf
 
 logger:
+  level: INFO
 api:
   encryption:
     key: !secret api_key_wet_zones
@@ -21,6 +22,9 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  # 4-AP mesh: default Wi-Fi power saving drops the association and loops forever.
+  power_save_mode: none
+  reboot_timeout: 5min
   ap:
     ssid: "wet-zones setup"
     password: !secret ap_password
@@ -74,3 +78,15 @@ binary_sensor:
     filters: [delayed_on: 500ms]
   - platform: status
     name: "Wet zones node online"
+
+# Shows the address on the node's own page and announces it over USB on boot.
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP address"
+      on_value:
+        then:
+          - logger.log:
+              level: INFO
+              format: "AANGAN READY - open http://%s/ on any phone"
+              args: ["x.c_str()"]
