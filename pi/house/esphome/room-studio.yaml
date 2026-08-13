@@ -59,7 +59,27 @@ uart:
 ld2410:
   uart_id: ld2410_uart
 
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+
 sensor:
+  # Second SHT31 lives here: the studio holds instruments too, and this is the
+  # precise sensor the climate guard needs. heater_enabled off because the Robu
+  # boards are generic clones that reject the heater command.
+  - platform: sht3xd
+    address: 0x44
+    heater_enabled: false
+    temperature:
+      name: "Studio temperature"
+      accuracy_decimals: 1
+    humidity:
+      name: "Studio humidity"
+      id: studio_rh
+      accuracy_decimals: 1
+    update_interval: 30s
+
   # DFRobot SEN0232: 0.6-2.6 V spans 30-130 dBA, so dBA = volts x 50.
   - platform: adc
     pin: GPIO34
@@ -99,6 +119,15 @@ binary_sensor:
     has_target:
       name: "Studio presence"
       device_class: occupancy
+
+  # Instrument climate guard. Instruments want roughly 35-65% relative
+  # humidity. A plain reading — the app decides what to do about it.
+  - platform: template
+    name: "Studio humidity out of safe band"
+    device_class: problem
+    lambda: |-
+      if (isnan(id(studio_rh).state)) return {};
+      return id(studio_rh).state < 35.0 || id(studio_rh).state > 65.0;
 
 text_sensor:
   - platform: wifi_info

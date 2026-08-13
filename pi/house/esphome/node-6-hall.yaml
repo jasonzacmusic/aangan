@@ -101,3 +101,16 @@ text_sensor:
               level: INFO
               format: "AANGAN READY - open http://%s/ on any phone"
               args: ["x.c_str()"]
+
+sensor:
+  # Hall climate — DHT22 on GPIO19 (data pin; module needs 3.3V + GND).
+  - platform: dht
+    pin: GPIO19
+    model: DHT22
+    temperature:
+      name: "Hall temperature"
+      accuracy_decimals: 1
+    humidity:
+      name: "Hall humidity"
+      accuracy_decimals: 1
+    update_interval: 30s

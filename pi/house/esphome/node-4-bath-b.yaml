@@ -91,3 +91,18 @@ text_sensor:
               level: INFO
               format: "AANGAN READY - open http://%s/ on any phone"
               args: ["x.c_str()"]
+
+sensor:
+  # Bathroom climate — DHT22 on GPIO33 (data pin; module needs 3.3V + GND).
+  # Persistent high humidity in a bathroom is an early sign of a slow leak or
+  # bad ventilation, long before a probe ever gets wet.
+  - platform: dht
+    pin: GPIO33
+    model: DHT22
+    temperature:
+      name: "Bathroom 4 temperature"
+      accuracy_decimals: 1
+    humidity:
+      name: "Bathroom 4 humidity"
+      accuracy_decimals: 1
+    update_interval: 60s

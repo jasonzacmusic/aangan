@@ -109,6 +109,20 @@ sensor:
     update_interval: 60s
     accuracy_decimals: 0
 
+  # Kitchen climate — DHT22 on GPIO23 (data pin; module needs 3.3V + GND).
+  # Worth having on its own, and a sharp heat-plus-humidity rise is a useful
+  # second opinion on the flame sensor.
+  - platform: dht
+    pin: GPIO23
+    model: DHT22
+    temperature:
+      name: "Kitchen temperature"
+      accuracy_decimals: 1
+    humidity:
+      name: "Kitchen humidity"
+      accuracy_decimals: 1
+    update_interval: 30s
+
 binary_sensor:
   - platform: gpio
     name: "Kitchen sink leak"
@@ -150,3 +164,4 @@ text_sensor:
 #      bag of rice works for a first pass) and note the raw value again.
 #   3. Send me both numbers and I will add the conversion, so the app reports
 #      kilograms remaining and days left instead of raw counts.
+
