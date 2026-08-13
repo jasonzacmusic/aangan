@@ -77,3 +77,4 @@ text_sensor:
               level: INFO
               format: "AANGAN READY - open http://%s/ on any phone"
               args: ["x.c_str()"]
+
