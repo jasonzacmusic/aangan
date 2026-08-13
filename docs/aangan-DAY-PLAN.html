@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aangan · Tomorrow, step by step</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#f4f2ed;color:#1a1a1a;line-height:1.5}
+.w{max-width:820px;margin:0 auto;padding:0 14px 70px}
+header{background:#fff;padding:26px 0 20px;border-bottom:3px solid #1a1a1a}
+.hd{max-width:820px;margin:0 auto;padding:0 14px}
+header h1{font-size:28px;font-weight:800;letter-spacing:-.4px}
+header p{color:#666;font-size:13px;margin-top:5px}
+
+section{margin-top:34px}
+.h{border-left:5px solid var(--c);padding:3px 0 3px 13px}
+.h h2{font-size:21px;font-weight:800;color:var(--c);letter-spacing:-.2px}
+.h p{font-size:13px;color:#666;margin-top:5px;line-height:1.6}
+
+.big{background:#1a1a1a;color:#fff;border-radius:13px;padding:22px 24px;margin-top:16px}
+.big h3{font-size:20px;font-weight:800;letter-spacing:-.3px;line-height:1.35}
+.big p{font-size:14.5px;margin-top:11px;line-height:1.75;color:#e5e0d6}
+.big p b{color:#fff}
+.big .hl{color:#86efac;font-weight:700}
+
+.card{background:#fff;border:1px solid #e2dcd0;border-radius:12px;padding:20px 22px;margin-top:14px}
+.card h3{font-size:17px;font-weight:800;letter-spacing:-.2px}
+.card h3 .n{font-family:'IBM Plex Mono',monospace;color:#b45309;margin-right:8px}
+.card p{font-size:14px;color:#444;margin-top:9px;line-height:1.7}
+.card p b{color:#1a1a1a}
+
+.step{display:flex;gap:14px;align-items:flex-start;padding:15px 0;border-bottom:1px solid #f0ece3}
+.step:last-child{border-bottom:none}
+.sn{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:800;color:#fff;background:var(--c);
+border-radius:50%;min-width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.sb{flex:1;min-width:0}
+.sb .t{font-size:15px;font-weight:700;line-height:1.4}
+.sb .d{font-size:13.5px;color:#555;margin-top:5px;line-height:1.7}
+.sb .d b{color:#1a1a1a}
+.chk{font-size:13px;color:#14532d;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;
+padding:9px 12px;margin-top:9px;line-height:1.6}
+.chk b{color:#166534}
+
+table{width:100%;border-collapse:collapse;margin-top:14px;background:#fff;border:1px solid #e2dcd0;
+border-radius:11px;overflow:hidden}
+th{font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:700;letter-spacing:.7px;
+text-transform:uppercase;color:#6b5b3e;background:#faf8f3;text-align:left;padding:10px 12px;
+border-bottom:1px solid #e2dcd0}
+td{padding:11px 12px;font-size:13.5px;border-bottom:1px solid #f0ece3;vertical-align:top;line-height:1.6}
+tr:last-child td{border-bottom:none}
+td.pin{font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:16px;color:#b45309;
+background:#fffbeb;text-align:center;white-space:nowrap;width:72px}
+td.w{font-weight:700}
+
+.warn{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;margin-top:14px;
+font-size:13.5px;color:#7f1d1d;line-height:1.75}
+.warn b{color:#b91c1c}
+.note{background:#faf8f3;border:1px solid #e2dcd0;border-radius:10px;padding:14px 16px;margin-top:14px;
+font-size:13.5px;color:#5c5344;line-height:1.75}
+.note b{color:#1a1a1a}
+.good{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 16px;margin-top:14px;
+font-size:13.5px;color:#14532d;line-height:1.75}
+.good b{color:#166534}
+
+footer{margin-top:36px;padding-top:16px;border-top:1px solid #e2dcd0;font-size:12px;color:#666;
+font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
+@media print{body{background:#fff}.card,.step{break-inside:avoid}}
+</style></head><body>
+
+<header><div class="hd">
+  <h1>Tomorrow, step by step</h1>
+  <p>Assume you have never done this before. Nothing here is skipped or assumed.</p>
+</div></header>
+
+<div class="w">
+
+<!-- ===== ELECTRICIAN ===== -->
+<section style="--c:#166534">
+  <div class="h">
+    <h2>First: the electrician question</h2>
+  </div>
+  <div class="big">
+    <h3>You do not need an electrician tomorrow. <span class="hl">Not for any of it.</span></h3>
+    <p>Everything you are doing runs on <b>5 volts from a phone charger</b> — the same voltage as a
+    USB cable. You cannot get a shock from it and you cannot damage the house with it. Nothing goes
+    inside a wall, nothing connects to mains wiring, nothing needs a licence.</p>
+    <p>The only jobs that ever need a licensed technician are the <b>panic-button loop, the geyser
+    switching and the water pump</b>. None of those are happening tomorrow, or this month. They are
+    a separate project with separate parts you have not bought.</p>
+    <p>Your gas detector plugs into a normal socket like a phone charger. Your smoke alarms run on
+    AA batteries. <b>Neither needs an electrician either.</b></p>
+  </div>
+</section>
+
+<!-- ===== TABLE ===== -->
+<section style="--c:#b45309">
+  <div class="h">
+    <h2>What goes on the table</h2>
+    <p>Work at a dining table, not on the floor and not up a ladder. Everything happens here first.</p>
+  </div>
+  <table>
+    <tr><th>Item</th><th>Why</th></tr>
+    <tr><td class="w">1 ESP32 board</td><td>Just one. Start with the board labelled <b>1</b>.</td></tr>
+    <tr><td class="w">1 USB charger + micro-USB cable</td><td>This is the only power involved.</td></tr>
+    <tr><td class="w">1 breadboard</td><td>The white block full of little holes. No soldering needed.</td></tr>
+    <tr><td class="w">Jumper wires</td><td>The rainbow ribbon. Peel off what you need.</td></tr>
+    <tr><td class="w">The sensors for that room only</td><td>Leave the others in the bag.</td></tr>
+    <tr><td class="w">A phone</td><td>On the same Wi-Fi. This is your screen.</td></tr>
+    <tr><td class="w">Tape and a pen</td><td>Label everything as you go.</td></tr>
+  </table>
+  <div class="warn">
+    <b>The white boxes stay in their packet tomorrow.</b> Do not put anything inside a box, and do
+    not screw anything to a wall. Boxes and walls come <i>after</i> everything works on the table.
+    Putting it in a box first is the single most common way to spend a day chasing a fault you
+    cannot see.
+  </div>
+</section>
+
+<!-- ===== THE ONE RULE ===== -->
+<section style="--c:#b91c1c">
+  <div class="h">
+    <h2>The one rule that protects the boards</h2>
+  </div>
+  <div class="card">
+    <p>Along the edges of the ESP32 you will see tiny white labels: numbers like <b>25</b>, <b>26</b>,
+    <b>34</b>, and words like <b>GND</b>, <b>3V3</b>, <b>5V</b>, <b>VIN</b>.</p>
+    <p><b>Sensors always connect between a NUMBERED pin and a GND pin.</b> That is the pattern, every
+    time, on every board.</p>
+    <div class="warn">
+      <b>Never join 3V3, 5V or VIN directly to GND.</b> Those carry power. Connecting one straight to
+      ground is a short circuit and kills the board instantly. If you are not sure what a pin says,
+      stop and photograph it for Jason rather than guessing. A number may be printed as
+      <b>25</b>, <b>D25</b>, <b>G25</b> or <b>IO25</b> — all the same pin.
+    </div>
+    <div class="good">
+      <b>You cannot hurt yourself.</b> The worst possible outcome is a dead ₹400 board, and you have
+      three spares. Nothing here is dangerous to a person.
+    </div>
+  </div>
+</section>
+
+<!-- ===== THE DAY ===== -->
+<section style="--c:#1d4ed8">
+  <div class="h">
+    <h2>The plan: one room, fully working, then the next</h2>
+    <p>Two hours is realistic for <b>two rooms</b>, not six. Getting one completely right is worth
+    more than six half-done.</p>
+  </div>
+  <div class="card">
+    <h3><span class="n">1</span>Studio — the priority room</h3>
+    <p>Doors, sound level, presence, humidity, sink leak. This is the room Jason cares about most
+    and it proves everything.</p>
+  </div>
+  <div class="card">
+    <h3><span class="n">2</span>Music room — the same pattern, faster</h3>
+    <p>Doors, humidity, leak, flame. By now the team knows the routine.</p>
+  </div>
+  <div class="note">
+    <b>Stop there.</b> Bathrooms, kitchen and hall are another session. The kitchen especially —
+    its gas sensors need someone to build small resistor circuits, and it deserves a fresh start.
+  </div>
+</section>
+
+<!-- ===== STUDIO STEPS ===== -->
+<section style="--c:#166534">
+  <div class="h">
+    <h2>Board 1 · Studio — do these in order</h2>
+    <p>Add <b>one</b> sensor. Test it. Only then add the next. If something stops working you will
+    know exactly which step caused it.</p>
+  </div>
+
+  <div class="card" style="--c:#166534">
+    <div class="step" style="--c:#166534"><div class="sn">1</div><div class="sb">
+      <div class="t">Power it up. Nothing else.</div>
+      <div class="d">Plug the micro-USB cable into the board and the charger into the wall. A small
+      red light comes on.</div>
+      <div class="chk"><b>Test:</b> open <b>http://192.168.0.158</b> on your phone. You should see a
+      page titled <b>Studio</b> with a list of sensor names. <b>If this does not load, stop and tell
+      Jason.</b> Nothing else will work until it does.</div>
+    </div></div>
+
+    <div class="step" style="--c:#166534"><div class="sn">2</div><div class="sb">
+      <div class="t">Sit the board on the breadboard</div>
+      <div class="d">Push the ESP32 gently into the breadboard so its pins go into the holes, straddling
+      the channel down the middle. If it will not fit, leave it beside the breadboard instead and use
+      jumper wires — it works either way.</div>
+    </div></div>
+
+    <div class="step" style="--c:#166534"><div class="sn">3</div><div class="sb">
+      <div class="t">First door sensor — pin 25</div>
+      <div class="d">A reed switch is <b>two white bars</b>. One has two wires, the other has none.
+      The one with wires is the switch. Connect <b>one wire to pin 25</b> and the <b>other wire to any
+      GND pin</b>. It does not matter which way round.</div>
+      <div class="chk"><b>Test:</b> hold the plain white bar (the magnet) against the switch, then pull
+      it away, while watching <b>Studio door leaf A</b> on your phone. It must change.
+      <b>Write down which way it went</b> — magnet on = ? and magnet off = ? Jason needs that.</div>
+    </div></div>
+
+    <div class="step" style="--c:#166534"><div class="sn">4</div><div class="sb">
+      <div class="t">Second door sensor — pin 26</div>
+      <div class="d">Exactly the same, on pin 26 instead.</div>
+      <div class="chk"><b>Test:</b> <b>Studio door leaf B</b> changes, and leaf A does <i>not</i>.
+      If both move together, the two are touching — separate them.</div>
+    </div></div>
+
+    <div class="step" style="--c:#166534"><div class="sn">5</div><div class="sb">
+      <div class="t">The sound meter — the important one</div>
+      <div class="d">The black board labelled <b>Gravity Sound Level Meter</b>. It has three wires:
+      <b>red to 5V</b>, <b>black to GND</b>, and the <b>third wire to pin 34</b>.</div>
+      <div class="chk"><b>Test:</b> watch <b>Studio sound level</b> on your phone. Stay silent — note
+      the number. Now clap or talk loudly — it must jump up, then settle. <b>Write down the quiet
+      number and the loud number.</b> That is the measurement Jason needs to set the recording
+      threshold, and only your room can provide it.</div>
+    </div></div>
+
+    <div class="step" style="--c:#166534"><div class="sn">6</div><div class="sb">
+      <div class="t">The presence radar</div>
+      <div class="d">The small green board with a silvery pattern printed on it. Four wires:
+      <b>5V</b>, <b>GND</b>, then its <b>TX to pin 16</b> and its <b>RX to pin 17</b>.
+      Those two cross over — TX goes to 16, RX goes to 17.</div>
+      <div class="chk"><b>Test:</b> stand still in front of it for twenty seconds. <b>Studio presence</b>
+      should stay on the whole time. Walk right away from it and it should eventually go off. It will
+      probably detect people in the next room too — that is normal and Jason tunes it later.</div>
+    </div></div>
+
+    <div class="step" style="--c:#166534"><div class="sn">7</div><div class="sb">
+      <div class="t">The humidity sensor</div>
+      <div class="d">Tiny board with four pins marked VIN, GND, SCL, SDA.
+      <b>VIN to 3V3</b> (not 5V), <b>GND to GND</b>, <b>SDA to pin 21</b>, <b>SCL to pin 22</b>.</div>
+      <div class="chk"><b>Test:</b> <b>Studio temperature</b> and <b>Studio humidity</b> should show
+      real numbers within a minute. Breathe on it gently — humidity rises. If they stay blank, the
+      four wires are in the wrong order.</div>
+    </div></div>
+
+    <div class="step" style="--c:#166534"><div class="sn">8</div><div class="sb">
+      <div class="t">The leak probe — last</div>
+      <div class="d">Two pieces joined by a cable: a flat comb and a small board with a blue knob.
+      The small board has pins: <b>VCC to 3V3</b>, <b>GND to GND</b>, <b>DO to pin 27</b>.</div>
+      <div class="chk"><b>Test:</b> touch the flat comb with a damp cloth. <b>Studio sink leak</b> must
+      change. Dry it and it goes back. <b>Use a damp cloth, never a running tap.</b></div>
+    </div></div>
+  </div>
+
+  <div class="good">
+    <b>When all eight are done:</b> photograph the breadboard from directly above, photograph the phone
+    screen showing everything working, and send both to Jason with your three written numbers —
+    door direction, quiet dB, loud dB. That is the studio finished.
+  </div>
+</section>
+
+<!-- ===== MUSIC ROOM ===== -->
+<section style="--c:#b45309">
+  <div class="h">
+    <h2>Board 2 · Music room</h2>
+    <p>Same routine. Page is <b>http://192.168.0.153</b></p>
+  </div>
+  <table>
+    <tr><th>Pin</th><th>What goes here</th><th>Wires</th></tr>
+    <tr><td class="pin">25</td><td class="w">Teaching door leaf A</td><td>reed: one wire here, one to GND</td></tr>
+    <tr><td class="pin">26</td><td class="w">Teaching door leaf B</td><td>reed: one wire here, one to GND</td></tr>
+    <tr><td class="pin">27</td><td class="w">Music room leak probe</td><td>DO here · VCC to 3V3 · GND to GND</td></tr>
+    <tr><td class="pin">33</td><td class="w">Flame sensor</td><td>DO here · VCC to 3V3 · GND to GND</td></tr>
+    <tr><td class="pin">21 + 22</td><td class="w">Humidity sensor</td><td>SDA to 21 · SCL to 22 · VIN to 3V3 · GND to GND</td></tr>
+  </table>
+  <div class="note">
+    <b>Testing the flame sensor:</b> a lighter held about 30 cm away, briefly, is enough. It has
+    <b>one</b> dark bulb pointing forward — if yours has two side by side, it is the wrong module.
+  </div>
+</section>
+
+<!-- ===== IF STUCK ===== -->
+<section style="--c:#1a1a1a">
+  <div class="h">
+    <h2>If something does not work</h2>
+  </div>
+  <table>
+    <tr><th>What you see</th><th>What it usually means</th></tr>
+    <tr><td class="w">The page will not load at all</td><td>The board is not on Wi-Fi. Unplug it, wait five seconds, plug it back in. Still nothing after two minutes — tell Jason.</td></tr>
+    <tr><td class="w">A sensor never changes</td><td>One of its wires is in the wrong hole, or in the row next to the right one. Check the pin number again.</td></tr>
+    <tr><td class="w">A sensor is stuck ON</td><td>Usually its two wires are touching each other somewhere.</td></tr>
+    <tr><td class="w">It works backwards</td><td><b>Perfectly normal. Do not rewire it.</b> Write down what it does and Jason flips it in the software in under a minute.</td></tr>
+    <tr><td class="w">Numbers look mad</td><td>Expected on anything not yet connected. Ignore sensors you have not wired.</td></tr>
+    <tr><td class="w">The board gets warm</td><td>Normal. Hot enough to hurt is not — unplug it and tell Jason.</td></tr>
+  </table>
+  <div class="note">
+    <b>Nothing you do here is permanent.</b> No holes, no glue, no soldering. If it goes wrong, pull the
+    wire out and start that step again. Photograph anything confusing rather than guessing.
+  </div>
+</section>
+
+<footer>
+  Aangan · Nathaniel School of Music, Bangalore<br>
+  Board 1 studio 192.168.0.158 · Board 2 music room 192.168.0.153<br>
+  No electrician, no mains, no soldering, no drilling. All of it runs on a phone charger.
+</footer>
+
+</div>
+</body></html>
