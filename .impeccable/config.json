@@ -1,0 +1,23 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-08-13T13:07:18.477Z",
+        "reason": "User confirmed Inter is intentional — matches the existing nine-document Aangan family"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "docs/aangan-*.html"
+        ],
+        "createdAt": "2026-08-13T13:07:23.432Z",
+        "reason": "Heading rules and margin-note stripes inherited from the existing Aangan document family; user confirmed intentional"
+      }
+    ]
+  }
+}
