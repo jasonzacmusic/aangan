@@ -6,6 +6,13 @@ Aangan (आंगन — the courtyard, the heart of an Indian home) is the mobi
 
 Every state recolors the five room signs, changes the house behavior, protects teaching or recording, and leaves a clear activity trail. The app is a dark, installable PWA built with React 18, TypeScript, Tailwind v4, and Vite.
 
+> ### ⚠ Read [INVENTORY.md](INVENTORY.md) first
+> **What hardware physically exists, what is on order, what is missing, and the gotchas that cost
+> us days.** This README and the buy lists in `docs/` describe intentions; `INVENTORY.md` describes
+> reality. Several features documented below — the air quality behaviours in particular — are built
+> and shipped with **no sensors bought for them**. Check there before recommending a purchase,
+> writing a node config, or telling anyone something is ready.
+
 ## What is in the app
 
 - **Command** — the accessible rotary state dial, state-by-state house preview, signature chords, editable house scenes, A440 reference tone, and recent activity history.
