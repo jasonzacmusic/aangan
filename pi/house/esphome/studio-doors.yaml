@@ -26,6 +26,12 @@ wifi:
     password: !secret ap_password
 captive_portal:
 
+# Commissioning aid: this node serves its own live page at http://<its-ip>/ so
+# the doors can be tested and mounted from a phone BEFORE the House Pi exists.
+# Harmless once Home Assistant adopts the node — leave it on.
+web_server:
+  port: 80
+
 binary_sensor:
   - platform: gpio
     name: "Studio door leaf A"

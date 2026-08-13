@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aangan · Goods Inward Check</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#f4f2ed;color:#1a1a1a;line-height:1.5}
+.w{max-width:800px;margin:0 auto;padding:0 14px 70px}
+header{background:#fff;padding:26px 0 20px;border-bottom:3px solid #1a1a1a}
+.hd{max-width:800px;margin:0 auto;padding:0 14px}
+header h1{font-size:27px;font-weight:800;letter-spacing:-.4px}
+header p{color:#777;font-size:12.5px;margin-top:5px}
+.who{font-size:12.5px;color:#444;margin-top:12px;background:#faf8f3;border:1px solid #e2dcd0;
+border-radius:9px;padding:11px 14px;line-height:1.6}
+.who b{color:#1a1a1a}
+
+.bar{position:sticky;top:0;z-index:20;background:rgba(244,242,237,.97);backdrop-filter:blur(8px);
+border-bottom:1px solid #e2dcd0;padding:10px 0}
+.barin{max-width:800px;margin:0 auto;padding:0 14px;display:flex;gap:10px;align-items:center;
+font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#666}
+.track{flex:1;height:7px;background:#e2dcd0;border-radius:99px;overflow:hidden}
+.fill{height:100%;width:0;background:#16a34a;border-radius:99px;transition:width .25s}
+#reset{border:1px solid #e2dcd0;background:#fff;border-radius:7px;padding:4px 10px;font-size:10.5px;
+cursor:pointer;color:#888;font-family:'IBM Plex Mono',monospace}
+
+section{margin-top:28px}
+.box{border-left:5px solid var(--c);padding:4px 0 4px 13px}
+.box h2{font-size:20px;font-weight:800;color:var(--c);letter-spacing:-.2px}
+.box .meta{font-size:12px;color:#777;margin-top:4px;line-height:1.6}
+.box .meta b{color:#444}
+.stamp{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.8px;
+text-transform:uppercase;color:#fff;background:var(--c);border-radius:5px;padding:3px 9px;
+display:inline-block;margin-bottom:7px}
+.cnt{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--c);background:var(--cb);
+border:1px solid var(--cl);border-radius:7px;padding:5px 11px;display:inline-block;margin-top:9px;
+font-weight:700}
+
+.row{display:flex;gap:11px;align-items:flex-start;background:#fff;border:1px solid #e2dcd0;
+border-radius:11px;padding:12px 14px;margin-top:9px;cursor:pointer;transition:opacity .18s,border-color .18s}
+.row:has(.cb:checked){opacity:.42;border-color:var(--c)}
+.row:has(.cb:checked) .nm{text-decoration:line-through}
+.cb{width:23px;height:23px;flex:0 0 auto;margin-top:2px;accent-color:var(--c);cursor:pointer}
+.body{flex:1;min-width:0}
+.nm{font-weight:700;font-size:14px;line-height:1.35}
+.look{font-size:11.5px;color:#6b5b3e;margin-top:5px;padding:6px 10px;background:#faf7f0;
+border-radius:6px;line-height:1.5;border-left:3px solid #d4c9b0}
+.warn{font-size:11.5px;color:#7f1d1d;margin-top:5px;padding:6px 10px;background:#fef2f2;
+border-radius:6px;line-height:1.5;border-left:3px solid #fca5a5}
+.qbox{flex:0 0 auto;text-align:center}
+.qty{font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:21px;color:var(--c);
+background:var(--cb);padding:4px 11px;border-radius:8px;min-width:48px;line-height:1.25}
+.qty small{display:block;font-size:8.5px;font-weight:600;letter-spacing:.5px;opacity:.7;
+text-transform:uppercase}
+.got{margin-top:5px}
+.got input{width:52px;border:1px solid #d8d0c0;border-radius:6px;padding:4px 6px;text-align:center;
+font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#1a1a1a;background:#fff}
+.got span{display:block;font-family:'IBM Plex Mono',monospace;font-size:8px;color:#aaa;
+letter-spacing:.5px;margin-top:2px;text-transform:uppercase}
+
+.sub{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:700;letter-spacing:.8px;
+text-transform:uppercase;color:var(--c);background:var(--cb);border:1px solid var(--cl);
+border-radius:9px;padding:8px 13px;margin-top:16px;text-align:center}
+
+.callout{background:#fffbeb;border:1px solid #fde68a;border-radius:9px;
+padding:12px 15px;margin-top:12px;font-size:12.5px;color:#78350f;line-height:1.65}
+.callout b{color:#92400e}
+.stop{background:#fef2f2;border:1px solid #fecaca;border-radius:9px;
+padding:12px 15px;margin-top:12px;font-size:12.5px;color:#7f1d1d;line-height:1.65}
+.stop b{color:#b91c1c}
+.calm{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;
+padding:12px 15px;margin-top:12px;font-size:12.5px;color:#14532d;line-height:1.65}
+.calm b{color:#166534}
+
+.eta{width:100%;border-collapse:collapse;margin-top:13px;background:#fff;border:1px solid #e2dcd0;
+border-radius:11px;overflow:hidden}
+.eta th{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.7px;
+text-transform:uppercase;color:#8a7a5e;background:#faf8f3;text-align:left;padding:9px 12px;
+border-bottom:1px solid #e2dcd0}
+.eta td{padding:11px 12px;font-size:13px;border-bottom:1px solid #f0ece3;vertical-align:top}
+.eta tr:last-child td{border-bottom:none}
+.eta td b{display:block;font-size:13.5px}
+.eta td small{color:#888;font-size:11px}
+.pill{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:3px 8px;
+border-radius:20px;white-space:nowrap}
+.pill.g{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+.pill.a{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
+.pill.r{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+
+.signoff{background:#fff;border:2px dashed #c9c0ad;border-radius:12px;padding:20px 22px;margin-top:28px}
+.signoff h3{font-size:15px;font-weight:800;margin-bottom:5px}
+.signoff p{font-size:12px;color:#777;line-height:1.6}
+.sigrow{display:flex;gap:16px;margin-top:18px;flex-wrap:wrap}
+.sigrow div{flex:1;min-width:180px}
+.sigline{border-bottom:1.5px solid #1a1a1a;height:30px}
+.siglbl{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#999;letter-spacing:.7px;
+text-transform:uppercase;margin-top:5px}
+
+footer{margin-top:32px;padding-top:16px;border-top:1px solid #e2dcd0;font-size:10.5px;color:#999;
+font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
+@media print{body{background:#fff}.bar{display:none}.row{break-inside:avoid;opacity:1!important}}
+</style></head><body>
+
+<header><div class="hd">
+  <h1>Aangan — Goods Inward Check</h1>
+  <p>Count it, identify it, tick it · Nathaniel School of Music · 12 August 2026</p>
+  <div class="who">
+    <b>How to use this.</b> One person opens the boxes and reads aloud, a second person ticks. Write the
+    actual count you find in the small box — not the number we expected. If a count is short or the label
+    on a board does not match, do not tick it; note it and move on. Ticks are saved on this device.
+  </div>
+</div></header>
+
+<div class="bar"><div class="barin">
+  <span id="count">0 / 28 checked</span>
+  <div class="track"><div class="fill" id="fill"></div></div>
+  <button id="reset">reset</button>
+</div></div>
+
+<div class="w">
+
+<!-- ============ ETA TABLE ============ -->
+<section>
+  <div class="box" style="--c:#1a1a1a;--cb:#faf8f3;--cl:#e2dcd0">
+    <h2>Where each order is, right now</h2>
+    <div class="meta">Traced from vendor email on the morning of 12 August. Three purchase orders exist
+    in total — no others were found.</div>
+  </div>
+  <table class="eta">
+    <tr><th>Order</th><th>Status</th><th>Expected</th></tr>
+    <tr>
+      <td><b>Robocraze 351816</b><small>6 items · 20 pieces · ₹2,782</small></td>
+      <td><span class="pill g">DELIVERED</span></td>
+      <td><b>Arrived Sun 9 Aug, 3:26 pm</b><small>Should already be in the house — count it</small></td>
+    </tr>
+    <tr>
+      <td><b>Robu 3625143</b><small>19 items · 115 pieces · ₹10,842</small></td>
+      <td><span class="pill a">IN TRANSIT</span></td>
+      <td><b>Due today or tomorrow</b><small>Bluedart 77117234736 · dispatched Pune, Sun 9 Aug ·
+      surface takes 2–4 days · Robu does not email on delivery, so track the number</small></td>
+    </tr>
+    <tr>
+      <td><b>Electropi 134503</b><small>1 item · 27 W Pi 5 supply · ₹1,354</small></td>
+      <td><span class="pill r">STUCK</span></td>
+      <td><b>No date — chase today</b><small>Paid 8 Aug, still showing “Confirmed” after four days
+      with no dispatch mail. Call them.</small></td>
+    </tr>
+  </table>
+  <div class="stop">
+    <b>Nothing else is on its way.</b> There is no Amazon order, no Silverline order and no second
+    Electropi order anywhere in the school inbox. The Raspberry Pi, the DAC board, the screens, the
+    tablets and the camera have still not been bought by anyone.
+  </div>
+</section>
+
+<!-- ============ BOX 1 ============ -->
+<section style="--c:#16a34a;--cb:#f0fdf4;--cl:#bbf7d0">
+  <div class="box">
+    <div class="stamp">Box 1 · already delivered</div>
+    <h2>Robocraze — order 351816</h2>
+    <div class="meta">Delivered Sunday 9 August at 3:26 pm to Tuscan Sharifa, Langford Town.<br>
+    Small padded courier bag. <b>Expect 6 kinds of thing, 20 pieces in total.</b></div>
+    <div class="cnt">Count target: 20 pieces</div>
+  </div>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">ESP32 NodeMCU-32 dev board — 38 pin</div>
+    <div class="look">Small blue board, about the size of two stamps. Silver metal box at one end
+    (that is the Wi-Fi radio), micro-USB socket at the other. Count the pins down ONE side: there
+    should be 19, so 38 in total.</div>
+  </div><div class="qbox"><div class="qty">3<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">MQ-6 LPG gas sensor</div>
+    <div class="look">Blue board with a silver metal cap like a tiny drum on top.</div>
+    <div class="warn">Every MQ sensor looks identical. Read the tiny white text on the board — it must
+    say <b>MQ-6</b>. If any one of them says MQ-2 or MQ-5, set it aside and tell Jason.</div>
+  </div><div class="qbox"><div class="qty">4<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">DHT22 temperature and humidity sensor</div>
+    <div class="look">A <b>WHITE</b> plastic block with a grid of holes, on a small board.</div>
+    <div class="warn">White is DHT22 and correct. <b>Blue is DHT11 and wrong</b> — a different, much
+    less accurate sensor. Check all four are white.</div>
+  </div><div class="qbox"><div class="qty">4<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">HC-SR501 PIR motion sensor</div>
+    <div class="look">White plastic dome like half a golf ball, sitting on a green board. Two small
+    orange screw-adjusters underneath.</div>
+  </div><div class="qbox"><div class="qty">4<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">40 kg load cell</div>
+    <div class="look">Small silver metal bar, roughly the size of a finger, with three thin coloured
+    wires coming out of one end. These are the gas-cylinder scale.</div>
+  </div><div class="qbox"><div class="qty">4<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">HX711 load cell amplifier</div>
+    <div class="look">Tiny green board, smaller than a stamp, with HX711 printed on the black chip.</div>
+  </div><div class="qbox"><div class="qty">1<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+</section>
+
+<!-- ============ BOX 2 ============ -->
+<section style="--c:#b45309;--cb:#fffbeb;--cl:#fde68a">
+  <div class="box">
+    <div class="stamp">Box 2 · arriving now</div>
+    <h2>Robu.in — order 3625143</h2>
+    <div class="meta">Bluedart, tracking <b>77117234736</b>, dispatched from Pune on Sunday 9 August.
+    <br>Bigger carton, lots of small anti-static bags. <b>Expect 19 kinds of thing, about 115 pieces.</b>
+    <br>This box holds the two most expensive parts in the whole project — check those first.</div>
+    <div class="cnt">Count target: ~115 pieces</div>
+  </div>
+
+  <div class="sub">Check these two first — highest value</div>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">DFRobot Gravity sound level meter — ₹4,799</div>
+    <div class="look">Black board labelled <b>Gravity Sound Level Meter V1.0</b>, with a small
+    microphone sticking up and a red / blue / black cable attached.</div>
+    <div class="warn">The single most expensive item in the box. Check the board is not cracked and
+    the microphone is not bent or snapped off. Photograph it before it goes in a drawer.</div>
+  </div><div class="qbox"><div class="qty">1<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">SanDisk Ultra 64 GB microSD card — ₹1,859</div>
+    <div class="look">Retail blister pack, red and grey.</div>
+    <div class="warn">Small enough to lose in the packing paper. Find it before the carton is thrown
+    away. Read the note about memory cards further down this page.</div>
+  </div><div class="qbox"><div class="qty">1<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <div class="sub">Sensors</div>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">MC-38 door / window reed switch</div>
+    <div class="look">Sold in pairs. Two white plastic bars — one has two wires coming out of it, the
+    other has none. You are counting <b>pairs</b>, not bars, so 12 pairs means 24 white bars.</div>
+  </div><div class="qbox"><div class="qty">12<small>pairs</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">HLK-LD2410 mmWave presence radar</div>
+    <div class="look">Small flat green board with a silvery patterned rectangle printed on it — that
+    pattern is the antenna. No dome, no lens.</div>
+  </div><div class="qbox"><div class="qty">1<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">GY-SHT31-D temperature and humidity sensor</div>
+    <div class="look">Tiny purple or blue board, four pins in a row marked VIN GND SCL SDA. Comes
+    unwelded, so the pin strip may be loose in the bag — do not throw it out.</div>
+  </div><div class="qbox"><div class="qty">2<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">IR flame sensor</div>
+    <div class="look">Small board with <b>ONE</b> dark bulb pointing forwards.</div>
+    <div class="warn">If a board has <b>TWO</b> bulbs side by side it is an obstacle sensor, not a
+    flame sensor. Wrong part — flag it.</div>
+  </div><div class="qbox"><div class="qty">4<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">Raindrop / water leak sensor</div>
+    <div class="look">Each one is <b>TWO boards joined by a short cable</b> — a flat board covered in
+    zig-zag copper lines, plus a tiny board with a blue adjuster knob. Count the pairs.</div>
+  </div><div class="qbox"><div class="qty">9<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">SW-420 vibration sensor</div>
+    <div class="look">Board with a tiny metal cylinder lying on its side (a spring inside a tube),
+    plus a blue adjuster.</div>
+    <div class="warn">Only 4 were ordered but the plan needs 5. One more is on the shopping list —
+    this shortfall is expected, not a courier error.</div>
+  </div><div class="qbox"><div class="qty">4<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">ADS1115 16-bit analogue-to-digital converter</div>
+    <div class="look">Small purple or blue board with ADS1115 printed on it, ten pins along one edge.</div>
+  </div><div class="qbox"><div class="qty">2<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <div class="sub">Build materials</div>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">MB-102 breadboard, 830 point</div>
+    <div class="look">White plastic slab full of tiny holes, about the size of a phone.</div>
+  </div><div class="qbox"><div class="qty">3<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">Universal perfboard, 10 × 15 cm</div>
+    <div class="look">Brown or green board covered in a regular grid of small holes. Bigger than a
+    postcard.</div>
+  </div><div class="qbox"><div class="qty">6<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">Jumper wires — male to female, 40 pieces</div>
+    <div class="look">Rainbow ribbon of 40 wires that peels apart. One end is a pin, the other end is
+    a socket.</div>
+  </div><div class="qbox"><div class="qty">2<small>packs</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">Jumper wires — male to male, 40 pieces</div>
+    <div class="look">Same rainbow ribbon, but a pin at both ends.</div>
+    <div class="warn">There is no <b>female to female</b> pack in this order. That kind is missing and
+    needs buying — again, expected, not a courier error.</div>
+  </div><div class="qbox"><div class="qty">1<small>pack</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">1,500 piece metal film resistor kit</div>
+    <div class="look">A labelled box or a folder of small paper strips, 75 different values.</div>
+  </div><div class="qbox"><div class="qty">1<small>kit</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">KF301 screw terminal blocks</div>
+    <div class="look">Small green plastic blocks with screw holes on the front. Two sizes: 10 of the
+    2-hole kind and 5 of the 3-hole kind — 15 in total.</div>
+  </div><div class="qbox"><div class="qty">15<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">1N4148 diodes</div>
+    <div class="look">Tiny glass beads with wire legs and a black band at one end, on a paper tape strip.</div>
+  </div><div class="qbox"><div class="qty">30<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">2N3904 transistors</div>
+    <div class="look">Tiny black half-moon shaped parts with three wire legs.</div>
+  </div><div class="qbox"><div class="qty">20<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">DS-213K momentary push button</div>
+    <div class="look">Small two-pin push switch. This becomes the front-door bell.</div>
+  </div><div class="qbox"><div class="qty">1<small>expect</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+</section>
+
+<!-- ============ BOX 3 ============ -->
+<section style="--c:#dc2626;--cb:#fef2f2;--cl:#fecaca">
+  <div class="box">
+    <div class="stamp">Box 3 · has not shipped</div>
+    <h2>Electropi.in — order 134503</h2>
+    <div class="meta">Official 27 W USB-C power supply for the Pi 5, white. Paid ₹1,354 on 8 August.</div>
+  </div>
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">Chase Electropi for a dispatch date</div>
+    <div class="look">Order page: electropi.in → account → order 134503. Four days at “Confirmed” with
+    no tracking number is too long. Phone them rather than emailing.</div>
+    <div class="warn">While you are on the call, <b>order a second one</b>. The plan needs two — one
+    for the House Pi and one for the Music Pi — and only one was bought.</div>
+  </div><div class="qbox"><div class="qty">2<small>needed</small></div>
+    <div class="got"><input type="number" min="0"><span>have</span></div></div></label>
+</section>
+
+<!-- ============ THE THREE EXTRAS ============ -->
+<section style="--c:#7c3aed;--cb:#f5f3ff;--cl:#ddd6fe">
+  <div class="box">
+    <div class="stamp">The three extras</div>
+    <h2>Portable charger, Anker hub, spare card</h2>
+    <div class="meta">None of these three appear in the school inbox, so they were bought on a
+    personal account or over the counter. There is no invoice to check them against — read the
+    model numbers off the items themselves and write them down.</div>
+  </div>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">Portable charger — will it actually run a Pi 5?</div>
+    <div class="look"><b>Read the small print on the back of the charger and find the 5 V line.</b>
+    Everything depends on that one number.<br><br>
+    <b>5 V / 5 A</b> — perfect. Full Pi 5 power, no compromises.<br>
+    <b>5 V / 3 A</b> — it will run the Pi fine. You will see a “low power supply” warning, and the USB
+    ports are limited to 600 mA total, so do not hang a hard drive off it.<br>
+    <b>5 V / 2 A or less</b> — not enough. The Pi will boot and then crash the moment it works hard.</div>
+    <div class="warn"><b>Two traps, both common.</b> First: a “65 W” power bank is usually only 3 A at
+    5 V — the big wattage is at 9 V and 20 V, which a Pi cannot use. The headline number tells you
+    nothing; only the 5 V line matters. Second: for this to work as a battery backup it must support
+    <b>pass-through charging</b> — charging itself and powering the Pi at the same time. Many do not.
+    If the box does not say so, plug the wall charger into the bank and the Pi into the bank, and check
+    the Pi stays on while the bank charges.</div>
+  </div><div class="qbox"><div class="qty">?<small>check</small></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">Anker hub — where it belongs</div>
+    <div class="look"><b>It does not go on the Pi's USB-C port.</b> That port on a Pi 5 is power only —
+    it carries no video and no data — so a USB-C hub plugged in there will do nothing but pass
+    electricity.<br><br>
+    <b>Where it is genuinely useful:</b> plug it into one of the Pi's blue <b>USB-A</b> ports on the
+    Music Pi. That rig needs the MIDI keyboard, the footswitch pedal and the USB SSD all connected at
+    once, and the Pi only has four sockets and a small power budget to share between them.</div>
+    <div class="warn">If the hub has its own power adapter, use it — a <b>powered</b> hub feeds the
+    keyboard and the drive from the wall instead of from the Pi, which is exactly what you want on
+    stage. If it has no power input, keep the SSD plugged directly into the Pi and put only low-power
+    things on the hub.<br><br>
+    Tell Jason the model number printed on the underside and he will confirm which of the two cases
+    it is.</div>
+  </div><div class="qbox"><div class="qty">?<small>model</small></div></div></label>
+
+  <label class="row"><input type="checkbox" class="cb"><div class="body">
+    <div class="nm">Spare microSD card — right instinct, check the class</div>
+    <div class="look">Good call: two cards means both Pis can be started on day one instead of taking
+    turns. <b>Look at the front of the card for a small letter A followed by a 1 or a 2.</b><br><br>
+    <b>A2</b> — ideal. This is what the plan asked for.<br>
+    <b>A1, or no A marking at all</b> — it will work perfectly well, just slower to open things. Keep
+    it, and put the better card in the House Pi, which runs all day every day.</div>
+    <div class="warn"><b>Do this today, before any other hardware arrives.</b> Both cards can be
+    written now on a laptop with Raspberry Pi Imager — no Pi needed. Set the hostname to
+    <b>house</b> on one and <b>studio</b> on the other, switch on SSH, and enter the Wi-Fi details in
+    the same screen. That is twenty minutes of work that removes the slowest step from build day.</div>
+  </div><div class="qbox"><div class="qty">2<small>cards</small></div>
+    <div class="got"><input type="number" min="0"><span>found</span></div></div></label>
+</section>
+
+<!-- ============ VERDICT ============ -->
+<section>
+  <div class="box" style="--c:#1a1a1a;--cb:#faf8f3;--cl:#e2dcd0">
+    <h2>Do we have everything?</h2>
+  </div>
+  <div class="calm">
+    <b>Every sensor in the design is either here or on the van.</b> Doors, motion, presence, flame,
+    gas, leaks, vibration, sound level, temperature, humidity and the gas-cylinder scale — all
+    accounted for, at full quantity, plus nine ESP32 boards for a six-node design. The bench work can
+    start the moment box 2 lands.
+  </div>
+  <div class="stop">
+    <b>No computer has been bought.</b> The House Raspberry Pi, the DAC board, the XLR board, the
+    7-inch screen, the two door tablets, the entrance camera and the Pi coolers are all still
+    unordered — roughly ₹84,000 of the build. The Silverline quotation has not come back since
+    4 August. Until someone either chases that or buys the Pi elsewhere, sensors are all we have.
+  </div>
+  <div class="callout">
+    <b>Four small things to add to the next shopping trip.</b> One more SW-420 vibration sensor · one
+    pack of female-to-female jumper wires · a second 27 W Pi power supply · three SanDisk Extreme A2
+    cards. Together under ₹4,000, and each one blocks something if forgotten.
+  </div>
+</section>
+
+<div class="signoff">
+  <h3>Sign-off</h3>
+  <p>Once every line above is either ticked or noted as short, sign here and send a photo of this page
+  to Jason on WhatsApp along with photos of anything that looked wrong.</p>
+  <div class="sigrow">
+    <div><div class="sigline"></div><div class="siglbl">Counted by</div></div>
+    <div><div class="sigline"></div><div class="siglbl">Checked by</div></div>
+    <div><div class="sigline"></div><div class="siglbl">Date</div></div>
+  </div>
+</div>
+
+<footer>
+  Aangan · Nathaniel School of Music, Bangalore<br>
+  Robocraze 351816 · Robu 3625143 (Bluedart 77117234736) · Electropi 134503<br>
+  Order status traced from vendor email, 12 August 2026
+</footer>
+
+</div>
+
+<script>
+(function(){
+  var boxes=[].slice.call(document.querySelectorAll('.cb'));
+  var nums=[].slice.call(document.querySelectorAll('.got input'));
+  var K='aangan-inward-v1';
+  var st=JSON.parse(localStorage.getItem(K)||'{}');
+  function paint(){
+    var n=boxes.filter(function(b){return b.checked}).length;
+    document.getElementById('count').textContent=n+' / '+boxes.length+' checked';
+    document.getElementById('fill').style.width=(n/boxes.length*100)+'%';
+  }
+  boxes.forEach(function(b,i){
+    b.checked=!!st['c'+i];
+    b.addEventListener('change',function(){st['c'+i]=b.checked;save();paint()});
+  });
+  nums.forEach(function(x,i){
+    if(st['n'+i]!=null)x.value=st['n'+i];
+    x.addEventListener('input',function(){st['n'+i]=x.value;save()});
+    x.addEventListener('click',function(e){e.preventDefault();e.stopPropagation()});
+  });
+  function save(){localStorage.setItem(K,JSON.stringify(st))}
+  document.getElementById('reset').addEventListener('click',function(){
+    localStorage.removeItem(K);location.reload();
+  });
+  paint();
+})();
+</script>
+</body></html>

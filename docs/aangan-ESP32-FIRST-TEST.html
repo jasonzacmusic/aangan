@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aangan · Your first ESP32 test</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#f4f2ed;color:#1a1a1a;line-height:1.5}
+.w{max-width:760px;margin:0 auto;padding:0 14px 70px}
+header{background:#fff;padding:26px 0 20px;border-bottom:3px solid #1a1a1a}
+.hd{max-width:760px;margin:0 auto;padding:0 14px}
+header h1{font-size:27px;font-weight:800;letter-spacing:-.4px}
+header p{color:#777;font-size:12.5px;margin-top:5px}
+.live{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#16a34a;background:#f0fdf4;
+border:1px solid #bbf7d0;border-radius:7px;padding:5px 10px;display:inline-block;margin-top:11px}
+
+section{margin-top:30px}
+.h{border-left:5px solid var(--c);padding:3px 0 3px 13px}
+.h h2{font-size:20px;font-weight:800;color:var(--c);letter-spacing:-.2px}
+.h p{font-size:12px;color:#777;margin-top:4px;line-height:1.55}
+.tag{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.8px;
+text-transform:uppercase;color:#fff;background:var(--c);border-radius:5px;padding:3px 9px;
+display:inline-block;margin-bottom:7px}
+
+.big{background:#fff;border:1px solid #e2dcd0;border-radius:13px;padding:22px 24px;margin-top:14px}
+.big .n{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--c);
+letter-spacing:.9px;text-transform:uppercase}
+.big h3{font-size:22px;font-weight:800;margin-top:6px;letter-spacing:-.3px;line-height:1.25}
+.big p{font-size:14px;color:#555;margin-top:9px;line-height:1.65}
+.big p b{color:#1a1a1a}
+
+svg{display:block;width:100%;height:auto;margin:16px auto 0;max-width:520px}
+
+.note{background:#faf8f3;border:1px solid #e2dcd0;border-radius:10px;padding:13px 16px;margin-top:13px;
+font-size:12.5px;color:#5c5344;line-height:1.65}
+.warn{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:13px 16px;margin-top:13px;
+font-size:12.5px;color:#7f1d1d;line-height:1.65}
+.warn b{color:#b91c1c}
+.good{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:13px 16px;margin-top:13px;
+font-size:12.5px;color:#14532d;line-height:1.65}
+.good b{color:#166534}
+
+ol{margin:12px 0 0 20px}
+ol li{font-size:14px;line-height:1.7;margin-bottom:9px;padding-left:4px}
+ol li b{font-weight:700}
+ul.plain{list-style:none;margin-top:11px}
+ul.plain li{font-size:13px;line-height:1.6;padding:8px 0 8px 26px;position:relative;
+border-bottom:1px solid #f0ece3}
+ul.plain li:last-child{border-bottom:none}
+ul.plain li::before{content:"";position:absolute;left:6px;top:15px;width:7px;height:7px;
+border-radius:50%;background:var(--c)}
+
+footer{margin-top:34px;padding-top:16px;border-top:1px solid #e2dcd0;font-size:10.5px;color:#999;
+font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
+@media print{body{background:#fff}}
+</style></head><body>
+
+<header><div class="hd">
+  <h1>Your first ESP32 test</h1>
+  <p>Node 1 · Studio Doors · already programmed and running on your desk</p>
+  <div class="live">Board flashed and verified · MAC 8c:94:df:69:20:20 · I am watching its log now</div>
+</div></header>
+
+<div class="w">
+
+<!-- ===== THE EASY WAY ===== -->
+<section style="--c:#16a34a">
+  <div class="h">
+    <div class="tag">Do this one</div>
+    <h2>No wire needed at all</h2>
+    <p>I reprogrammed the board so the test uses a button that is already on it.</p>
+  </div>
+
+  <div class="big" style="--c:#16a34a">
+    <div class="n">The entire job</div>
+    <h3>Press the button marked BOOT. Let go.</h3>
+    <p>Your ESP32 has <b>two small buttons</b> on it. One says <b>EN</b> (or RST). The other says
+    <b>BOOT</b> (sometimes IO0 or FLASH). Press the <b>BOOT</b> one — a normal press, like a keyboard
+    key — hold about a second, then release.</p>
+    <p>That button is already wired to a pin and to ground inside the board. Pressing it is
+    <b>electrically identical</b> to a door reed switch closing. Nothing to touch, nothing to short,
+    nothing you can get wrong.</p>
+
+    <svg viewBox="0 0 520 210" xmlns="http://www.w3.org/2000/svg" role="img"
+         aria-label="ESP32 board with EN and BOOT buttons at the bottom edge, USB socket at the top">
+      <rect x="120" y="14" width="280" height="182" rx="9" fill="#1f4d3d" stroke="#14332a" stroke-width="2"/>
+      <rect x="228" y="4" width="64" height="26" rx="4" fill="#b8bcc2" stroke="#8d9299" stroke-width="1.5"/>
+      <text x="260" y="22" font-family="IBM Plex Mono, monospace" font-size="10" fill="#4a4f55"
+            text-anchor="middle">USB</text>
+      <rect x="196" y="58" width="128" height="74" rx="4" fill="#d7dade" stroke="#9aa0a6" stroke-width="1.5"/>
+      <text x="260" y="100" font-family="IBM Plex Mono, monospace" font-size="11" fill="#5b6167"
+            text-anchor="middle">ESP32 shield</text>
+      <g fill="#cfa227">
+        <circle cx="134" cy="34" r="4"/><circle cx="134" cy="52" r="4"/><circle cx="134" cy="70" r="4"/>
+        <circle cx="134" cy="88" r="4"/><circle cx="134" cy="106" r="4"/><circle cx="134" cy="124" r="4"/>
+        <circle cx="134" cy="142" r="4"/><circle cx="134" cy="160" r="4"/><circle cx="134" cy="178" r="4"/>
+        <circle cx="386" cy="34" r="4"/><circle cx="386" cy="52" r="4"/><circle cx="386" cy="70" r="4"/>
+        <circle cx="386" cy="88" r="4"/><circle cx="386" cy="106" r="4"/><circle cx="386" cy="124" r="4"/>
+        <circle cx="386" cy="142" r="4"/><circle cx="386" cy="160" r="4"/><circle cx="386" cy="178" r="4"/>
+      </g>
+      <rect x="150" y="160" width="34" height="26" rx="3" fill="#3a3f45"/>
+      <text x="167" y="177" font-family="IBM Plex Mono, monospace" font-size="9" fill="#fff"
+            text-anchor="middle">EN</text>
+      <rect x="336" y="160" width="42" height="26" rx="3" fill="#dc2626" stroke="#fff" stroke-width="2.5"/>
+      <text x="357" y="177" font-family="IBM Plex Mono, monospace" font-size="9" fill="#fff"
+            text-anchor="middle" font-weight="700">BOOT</text>
+      <path d="M 440 140 L 392 168" stroke="#dc2626" stroke-width="2.5" fill="none"
+            marker-end="url(#ar)"/>
+      <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+        <path d="M0,0 L9,4.5 L0,9 z" fill="#dc2626"/></marker></defs>
+      <text x="446" y="134" font-family="Inter, sans-serif" font-size="13" fill="#dc2626"
+            font-weight="700">PRESS</text>
+      <text x="446" y="150" font-family="Inter, sans-serif" font-size="13" fill="#dc2626"
+            font-weight="700">THIS</text>
+    </svg>
+
+    <div class="note">
+      Buttons sit at the <b>opposite end from the USB socket</b> on most boards, one at each corner.
+      If yours are placed differently, the printed labels still say EN and BOOT — go by the label,
+      not the position.
+    </div>
+  </div>
+
+  <div class="good">
+    <b>What happens next.</b> Nothing visible on the board — no light will change. The proof appears
+    on my side: I am reading its log live and will see <b>BUTTON PRESSED</b> the moment you do it, then
+    <b>BUTTON RELEASED</b>. Just press it and tell me. That single press proves your Mac, the
+    programming toolchain, the board and its input path all work — before the Raspberry Pi has even
+    been bought.
+  </div>
+</section>
+
+<!-- ===== THE WIRE WAY ===== -->
+<section style="--c:#b45309">
+  <div class="h">
+    <div class="tag">Only if you want to</div>
+    <h2>The wire version, on the real door pin</h2>
+    <p>The button proves the same thing. Do this only if you're curious, or when the reed switches
+    are in your hand.</p>
+  </div>
+
+  <div class="big" style="--c:#b45309">
+    <div class="n">What you need</div>
+    <h3>Anything metal that reaches between two pins</h3>
+    <ul class="plain" style="--c:#b45309">
+      <li><b>Best:</b> two male-to-female jumper wires — push a socket end onto each pin, then twist
+      the two pin ends together.</li>
+      <li><b>Fine:</b> a paperclip bent into a narrow U.</li>
+      <li><b>Fine:</b> metal tweezers, touching both pins at once.</li>
+      <li><b>Will not work:</b> a single male-to-female jumper. The board's pins are male, so you need
+      a socket at <i>both</i> ends — which is why the female-to-female pack I flagged as missing
+      actually matters.</li>
+    </ul>
+
+    <div class="n" style="margin-top:20px">Which two pins</div>
+    <h3 style="font-size:18px">Find the label <span style="font-family:'IBM Plex Mono',monospace">25</span>
+      and the nearest <span style="font-family:'IBM Plex Mono',monospace">GND</span></h3>
+    <p>Every pin is labelled in tiny white print along the edge of the board. Look for <b>25</b>
+    (it may read D25, G25, GPIO25 or IO25 — all the same pin). Then find any pin marked <b>GND</b>;
+    there are several, and <b>any of them works</b>. Touch your metal across those two, hold a second,
+    remove.</p>
+
+    <div class="warn">
+      <b>The one rule.</b> Only ever bridge a numbered pin to a GND pin. <b>Never</b> touch anything
+      to the pins marked <b>3V3</b>, <b>5V</b> or <b>VIN</b> — bridging a power pin to ground is a
+      short circuit and can kill the board instantly. If the print is too small to read with
+      confidence, stop and send me a clear photo of the board with the labels visible; I will mark
+      the exact two pins for you. There is no hurry, and the BOOT button already proves the point.
+    </div>
+  </div>
+</section>
+
+<footer>
+  Aangan · Nathaniel School of Music, Bangalore<br>
+  Node 1 of 6 critical nodes · bench-test firmware, no Wi-Fi and no passwords required<br>
+  Built from pi/house/esphome/studio-doors.yaml at commit 100405c
+</footer>
+
+</div>
+</body></html>

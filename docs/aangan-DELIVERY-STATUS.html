@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aangan · Delivered &amp; Not Delivered</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#f4f2ed;color:#1a1a1a;line-height:1.5}
+.w{max-width:820px;margin:0 auto;padding:0 14px 70px}
+header{background:#fff;padding:26px 0 20px;border-bottom:3px solid #1a1a1a}
+.hd{max-width:820px;margin:0 auto;padding:0 14px}
+header h1{font-size:27px;font-weight:800;letter-spacing:-.4px}
+header p{color:#777;font-size:12.5px;margin-top:5px}
+.src{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#16a34a;background:#f0fdf4;
+border:1px solid #bbf7d0;border-radius:7px;padding:5px 10px;display:inline-block;margin-top:11px}
+
+/* scoreboard */
+.score{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:22px}
+.sc{border-radius:12px;padding:14px 13px;border:1px solid var(--cl);background:var(--cb)}
+.sc .n{font-family:'IBM Plex Mono',monospace;font-size:27px;font-weight:800;color:var(--c);
+letter-spacing:-1px;line-height:1}
+.sc .l{font-size:11px;font-weight:700;color:var(--c);margin-top:5px;text-transform:uppercase;
+letter-spacing:.6px}
+.sc .s{font-size:11px;color:#777;margin-top:3px;line-height:1.4}
+@media(max-width:620px){.score{grid-template-columns:1fr}}
+
+section{margin-top:30px}
+.band{border-left:5px solid var(--c);padding:4px 0 4px 13px}
+.band h2{font-size:20px;font-weight:800;color:var(--c);letter-spacing:-.2px}
+.band .meta{font-size:11.5px;color:#777;margin-top:4px;line-height:1.55}
+.band .meta b{color:#444}
+.stamp{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.8px;
+text-transform:uppercase;color:#fff;background:var(--c);border-radius:5px;padding:3px 9px;
+display:inline-block;margin-bottom:7px}
+
+table{width:100%;border-collapse:collapse;margin-top:13px;background:#fff;
+border:1px solid #e2dcd0;border-radius:11px;overflow:hidden}
+th{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.7px;
+text-transform:uppercase;color:var(--c);background:var(--cb);text-align:left;padding:9px 12px;
+border-bottom:1px solid var(--cl)}
+th.r,td.r{text-align:right}
+th.c,td.c{text-align:center}
+td{padding:10px 12px;font-size:13px;border-bottom:1px solid #f0ece3;vertical-align:top}
+tr:last-child td{border-bottom:none}
+td.nm{font-weight:600;line-height:1.35}
+td.nm small{display:block;font-weight:400;font-size:11px;color:#888;margin-top:2px;line-height:1.45}
+td.q{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14px;color:var(--c);
+white-space:nowrap}
+td.pz{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#888;white-space:nowrap}
+td.chk{font-size:11.5px;color:#666;line-height:1.5;min-width:0}
+.ok{color:#16a34a;font-weight:700;font-size:11px;font-family:'IBM Plex Mono',monospace}
+.short{color:#b45309;font-weight:700;font-size:11px;font-family:'IBM Plex Mono',monospace}
+.sub{background:#faf8f3;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;
+letter-spacing:.7px;text-transform:uppercase;color:#8a7a5e}
+.sub td{padding:7px 12px}
+.tot{background:var(--cb);font-weight:700;font-size:12.5px;color:var(--c)}
+.tot td{padding:10px 12px;border-bottom:none}
+
+.flag{background:#fffbeb;border:1px solid #fde68a;border-radius:9px;
+padding:11px 14px;margin-top:11px;font-size:12px;color:#78350f;line-height:1.6}
+.flag b{color:#92400e}
+.stop{background:#fef2f2;border:1px solid #fecaca;border-radius:9px;
+padding:11px 14px;margin-top:11px;font-size:12px;color:#7f1d1d;line-height:1.6}
+.stop b{color:#b91c1c}
+.calm{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;
+padding:11px 14px;margin-top:11px;font-size:12px;color:#14532d;line-height:1.6}
+
+.grand{background:#1a1a1a;color:#fff;border-radius:13px;padding:20px 22px;margin-top:30px}
+.grand .row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;
+padding:7px 0;border-bottom:1px solid #333;font-size:13px}
+.grand .row:last-child{border-bottom:none;padding-top:13px}
+.grand .row span:last-child{font-family:'IBM Plex Mono',monospace;font-weight:700}
+.grand .big{font-size:15px;font-weight:700}
+.grand .big span:last-child{font-size:24px;letter-spacing:-.8px;color:#fca5a5}
+.grand .lbl{opacity:.7}
+
+footer{margin-top:32px;padding-top:16px;border-top:1px solid #e2dcd0;font-size:10.5px;color:#999;
+font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
+@media print{body{background:#fff}table{break-inside:avoid}}
+</style></head><body>
+
+<header><div class="hd">
+  <h1>Aangan — Delivered &amp; Not Delivered</h1>
+  <p>Three purchase orders traced through the inbox · Nathaniel School of Music · 12 August 2026</p>
+  <div class="src">Built from actual vendor email — Robocraze 351816 · Robu 3625143 · Electropi 134503</div>
+</div></header>
+
+<div class="w">
+
+<div class="score">
+  <div class="sc" style="--c:#16a34a;--cb:#f0fdf4;--cl:#bbf7d0">
+    <div class="n">6</div><div class="l">Delivered</div>
+    <div class="s">Robocraze, arrived Sunday 9&nbsp;Aug · ₹2,782</div>
+  </div>
+  <div class="sc" style="--c:#b45309;--cb:#fffbeb;--cl:#fde68a">
+    <div class="n">19</div><div class="l">Shipped, in transit</div>
+    <div class="s">Robu via Bluedart, dispatched 9&nbsp;Aug · ₹10,842</div>
+  </div>
+  <div class="sc" style="--c:#dc2626;--cb:#fef2f2;--cl:#fecaca">
+    <div class="n">25</div><div class="l">Not ordered</div>
+    <div class="s">Including the House Pi and every screen · ≈ ₹84,000</div>
+  </div>
+</div>
+
+<div class="stop" style="margin-top:16px">
+  <b>Read this first.</b> Everything that has arrived or shipped is a <i>sensor</i>. Not one Raspberry&nbsp;Pi,
+  power supply, screen, tablet, camera or audio board has been ordered — the Silverline quotation went
+  silent on 4&nbsp;August after Ramya wrote “will confirm with you tomorrow,” and there has been no reply
+  in six days. You cannot start the build with sensors alone.
+</div>
+
+<!-- ============ DELIVERED ============ -->
+<section style="--c:#16a34a;--cb:#f0fdf4;--cl:#bbf7d0">
+  <div class="band">
+    <div class="stamp">Delivered</div>
+    <h2>Robocraze — order 351816</h2>
+    <div class="meta">Placed Sat 8 Aug · shipped same day · <b>delivered Sunday 9 August, 3:26 pm</b><br>
+    Paid ₹2,782 by UPI · free shipping · delivered to Tuscan Sharifa, Langford Town</div>
+  </div>
+  <table>
+    <tr><th>Item</th><th class="c">Qty</th><th class="c">Plan</th><th class="r">Paid</th></tr>
+    <tr><td class="nm">ESP32 NodeMCU-32 dev board<small>38-pin WROOM-32 — the sensor node brains</small></td>
+        <td class="c q">3</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹1,086</td></tr>
+    <tr><td class="nm">MQ-6 LPG gas sensor<small>One per stove point · needs 24–48 h burn-in before it means anything</small></td>
+        <td class="c q">4</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹376</td></tr>
+    <tr><td class="nm">DHT22 / AM2302 temperature + humidity<small>Bedrooms, hall, studio-bed</small></td>
+        <td class="c q">4</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹414</td></tr>
+    <tr><td class="nm">HC-SR501 PIR motion sensor<small>Corridors and entrance</small></td>
+        <td class="c q">4</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹243</td></tr>
+    <tr><td class="nm">40 kg load cells<small>The LPG cylinder scale — 4 × 40 kg = 160 kg capacity, ample</small></td>
+        <td class="c q">4</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹623</td></tr>
+    <tr><td class="nm">HX711 load cell amplifier<small>Reads the four cells above</small></td>
+        <td class="c q">1</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹39</td></tr>
+    <tr class="tot"><td>6 line items — all in hand</td><td class="c">20 pcs</td><td></td><td class="r">₹2,782</td></tr>
+  </table>
+  <div class="calm">
+    Every one of these matches the plan quantity exactly. Combined with the six ESP32s already owned,
+    there are now <b>nine</b> node brains for a six-node design — a healthy spare margin.
+  </div>
+  <div class="flag">
+    <b>One thing to know on the bench.</b> These are the <b>38-pin</b> ESP32, not the 30-pin the list
+    specified. Electrically it is the better board. But a 38-pin ESP32 is wider, and on an 830-point
+    breadboard it covers the holes on both sides — leaving nowhere to land a jumper. Bridge two
+    breadboards side by side, or use the perfboard directly. Not a fault, just a five-minute surprise
+    on build day if nobody warns you.
+  </div>
+</section>
+
+<!-- ============ IN TRANSIT ============ -->
+<section style="--c:#b45309;--cb:#fffbeb;--cl:#fde68a">
+  <div class="band">
+    <div class="stamp">Shipped — not yet delivered</div>
+    <h2>Robu.in — order 3625143</h2>
+    <div class="meta">Placed Fri 8 Aug 1:51 pm · <b>dispatched Sun 9 Aug via Bluedart</b> ·
+    tracking <b>77117234736</b><br>Standard surface shipping · Pune to Bangalore is 2–4 days, so it is
+    <b>due today or tomorrow</b>. Robu does not send a delivery email — track the number.</div>
+  </div>
+  <table>
+    <tr><th>Item</th><th class="c">Qty</th><th class="c">Plan</th><th class="r">Line</th></tr>
+
+    <tr class="sub"><td colspan="4">Sensors</td></tr>
+    <tr><td class="nm">MC-38 reed door switch, NC + magnet<small>Mount at the meeting stiles on the double doors</small></td>
+        <td class="c q">12</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹504</td></tr>
+    <tr><td class="nm">DFRobot Gravity SEN0232 sound level meter<small>The calibrated dB reading the recording-quiet verdict rests on</small></td>
+        <td class="c q">1</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹4,799</td></tr>
+    <tr><td class="nm">HLK-LD2410 24 GHz mmWave presence radar<small>True presence in the studio — sees a person sitting still</small></td>
+        <td class="c q">1</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹379</td></tr>
+    <tr><td class="nm">GY-SHT31-D precision temp + humidity<small>The instrument climate guard, ±2% and holds calibration</small></td>
+        <td class="c q">2</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹720</td></tr>
+    <tr><td class="nm">IR flame sensor module<small>Studio, teaching room, hall, bedroom — never the kitchen</small></td>
+        <td class="c q">4</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹112</td></tr>
+    <tr><td class="nm">Raindrop / water-leak sensor<small>Sinks, stove lines, bathrooms, balcony tap</small></td>
+        <td class="c q">9</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹414</td></tr>
+    <tr><td class="nm">SW-420 vibration sensor<small>Washing machine finished, fridge door bumped</small></td>
+        <td class="c q">4</td><td class="c"><span class="short">5 planned</span></td><td class="r pz">₹160</td></tr>
+    <tr><td class="nm">ADS1115 16-bit ADC, 4-channel<small>Not on the final list — a correct addition, see note below</small></td>
+        <td class="c q">2</td><td class="c"><span class="ok">EXTRA</span></td><td class="r pz">₹236</td></tr>
+
+    <tr class="sub"><td colspan="4">Build materials</td></tr>
+    <tr><td class="nm">SanDisk Ultra 64 GB microSDXC<small>Class 10 / A1</small></td>
+        <td class="c q">1</td><td class="c"><span class="short">3 × A2 planned</span></td><td class="r pz">₹1,859</td></tr>
+    <tr><td class="nm">1,500-piece metal film resistor pack<small>75 values × 20 — covers every pull-up and divider</small></td>
+        <td class="c q">1</td><td class="c"><span class="ok">EXTRA</span></td><td class="r pz">₹468</td></tr>
+    <tr><td class="nm">10 × 15 cm universal perfboard<small>Larger than the 7 × 9 cm planned — better</small></td>
+        <td class="c q">6</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹510</td></tr>
+    <tr><td class="nm">MB-102 830-point breadboard</td>
+        <td class="c q">3</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹180</td></tr>
+    <tr><td class="nm">Male-to-female jumper wires, 40 pc</td>
+        <td class="c q">2</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹84</td></tr>
+    <tr><td class="nm">Male-to-male jumper wires, 40 pc</td>
+        <td class="c q">1</td><td class="c"><span class="short">no F-F</span></td><td class="r pz">₹46</td></tr>
+    <tr><td class="nm">KF301 screw terminal blocks<small>2-pin × 10 and 3-pin × 5 — how sensor cable lands on perfboard</small></td>
+        <td class="c q">15</td><td class="c"><span class="ok">EXTRA</span></td><td class="r pz">₹125</td></tr>
+    <tr><td class="nm">1N4148 switching diodes</td>
+        <td class="c q">30</td><td class="c"><span class="ok">EXTRA</span></td><td class="r pz">₹126</td></tr>
+    <tr><td class="nm">2N3904 NPN transistors</td>
+        <td class="c q">20</td><td class="c"><span class="ok">EXTRA</span></td><td class="r pz">₹100</td></tr>
+    <tr><td class="nm">DS-213K momentary push button<small>The front-door doorbell</small></td>
+        <td class="c q">1</td><td class="c"><span class="ok">FULL</span></td><td class="r pz">₹20</td></tr>
+    <tr class="tot"><td>19 line items — arriving 11–12 Aug</td><td class="c">115 pcs</td><td></td><td class="r">₹10,842</td></tr>
+  </table>
+  <div class="calm">
+    <b>The ADS1115 was a smart catch.</b> Four MQ-6 sensors and the sound level meter all output an
+    analogue voltage, and the ESP32's own converter is unusable on ADC2 pins whenever Wi-Fi is on —
+    which is always. Two of these boards give eight clean 16-bit channels over I²C and sidestep that
+    trap entirely. It was not on the final list; it should have been.
+  </div>
+  <div class="flag">
+    <b>The memory card is the wrong one, and there is only one.</b> What shipped is a SanDisk
+    <b>Ultra</b> (A1). The plan called for three <b>Extreme A2</b> cards — House Pi, Music Pi, and a
+    spare. A2 is meaningfully faster at the small random reads an operating system does all day, and
+    Home Assistant on an A1 card feels sluggish in a way people blame on the Pi. Buy three Extreme A2
+    64 GB and keep the Ultra as the spare.
+  </div>
+  <div class="flag">
+    <b>Two small shortfalls.</b> SW-420 vibration sensors: 4 shipped, 5 planned — buy one more (₹70).
+    Jumper wires: male-to-male and male-to-female came, but no <b>female-to-female</b>, which is the
+    kind you need most once modules are soldered onto perfboard. A 40-piece F-F bundle is about ₹120
+    on SP Road.
+  </div>
+</section>
+
+<!-- ============ ORDERED, NOT SHIPPED ============ -->
+<section style="--c:#7c3aed;--cb:#f5f3ff;--cl:#ddd6fe">
+  <div class="band">
+    <div class="stamp">Ordered — not shipped</div>
+    <h2>Electropi.in — order 134503</h2>
+    <div class="meta">Placed Fri 8 Aug 1:46 pm · status still <b>Confirmed</b> · <b>no dispatch email in
+    four days</b><br>₹1,354.05 paid including GST, SALE10 coupon applied</div>
+  </div>
+  <table>
+    <tr><th>Item</th><th class="c">Qty</th><th class="c">Plan</th><th class="r">Paid</th></tr>
+    <tr><td class="nm">Official 27 W USB-C PD power supply for Pi 5, white<small>The only correct supply — a generic charger will brown out a Pi 5 under load</small></td>
+        <td class="c q">1</td><td class="c"><span class="short">2 planned</span></td><td class="r pz">₹1,354</td></tr>
+    <tr class="tot"><td>1 line item</td><td class="c">1 pc</td><td></td><td class="r">₹1,354</td></tr>
+  </table>
+  <div class="stop">
+    <b>Phone them today.</b> Four days at “Confirmed” with no tracking number is too long, and this is
+    the only power supply on order. While you have them on the line, <b>order the second one</b> — the
+    plan needs two, one for the House Pi and one for the Music Pi, and only one was bought.
+  </div>
+</section>
+
+<!-- ============ THE THREE EXTRAS ============ -->
+<section style="--c:#0891b2;--cb:#ecfeff;--cl:#a5f3fc">
+  <div class="band">
+    <div class="stamp">Bought outside the school account</div>
+    <h2>Portable charger · Anker hub · spare card</h2>
+    <div class="meta">These three do not appear anywhere in the school inbox, so there is no invoice
+    to check them against. Read the model numbers off the items themselves.</div>
+  </div>
+  <table>
+    <tr><th>Item</th><th class="c">Verdict</th><th class="r">What to check</th></tr>
+    <tr><td class="nm">Portable charger<small>Intended as the House Pi's battery backup</small></td>
+        <td class="c"><span class="short">CHECK</span></td>
+        <td class="r chk">5 V / 5 A best · 5 V / 3 A works · under 3 A no</td></tr>
+    <tr><td class="nm">Anker hub<small>Not for the Pi's USB-C port — that port is power only</small></td>
+        <td class="c"><span class="short">CHECK</span></td>
+        <td class="r chk">Use on a USB-A port · powered is far better</td></tr>
+    <tr><td class="nm">Spare microSD card<small>So both Pis can start on day one</small></td>
+        <td class="c"><span class="ok">GOOD</span></td>
+        <td class="r chk">Look for A2 · write both cards today</td></tr>
+  </table>
+  <div class="flag">
+    <b>The power bank's headline wattage tells you nothing.</b> A Pi 5 can only take 5 V, and most
+    “65 W” banks deliver just 3 A at 5 V — the big numbers live at 9 V and 20 V, which the Pi cannot
+    use. Find the 5 V line in the small print on the back. For it to work as a UPS it must also do
+    <b>pass-through charging</b>: test by plugging the wall charger into the bank and the Pi into the
+    bank, and confirming the Pi stays on while the bank charges.
+  </div>
+  <div class="calm">
+    <b>Write both memory cards today — no Pi required.</b> Raspberry Pi Imager on a laptop, hostname
+    <b>house</b> on one card and <b>studio</b> on the other, SSH switched on and Wi-Fi entered in the
+    same settings screen. Twenty minutes now removes the slowest step from build day.
+  </div>
+</section>
+
+<!-- ============ NOT ORDERED ============ -->
+<section style="--c:#dc2626;--cb:#fef2f2;--cl:#fecaca">
+  <div class="band">
+    <div class="stamp">Not ordered</div>
+    <h2>Nothing bought — 25 line items</h2>
+    <div class="meta">No purchase order exists for any of this. Amazon shows no project order at all in
+    the last month, and the Silverline quotation has not come back.</div>
+  </div>
+
+  <table>
+    <tr><th>Item</th><th class="c">Qty</th><th class="c">Where</th><th class="r">Est.</th></tr>
+
+    <tr class="sub"><td colspan="4">Blocking — the build cannot start without these</td></tr>
+    <tr><td class="nm">Raspberry Pi 5, 8 GB<small>The House brain. You own one Pi 5 already, which is the Music Pi. This is the second.</small></td>
+        <td class="c q">1</td><td class="c">Silverline</td><td class="r pz">₹8,000</td></tr>
+    <tr><td class="nm">Official Pi 5 active cooler<small>A Pi 5 throttles under sustained load. Not optional.</small></td>
+        <td class="c q">2</td><td class="c">Silverline</td><td class="r pz">₹1,000</td></tr>
+    <tr><td class="nm">Official 27 W USB-C power supply<small>Second unit — one is on order at Electropi</small></td>
+        <td class="c q">1</td><td class="c">Electropi</td><td class="r pz">₹1,300</td></tr>
+    <tr><td class="nm">SanDisk Extreme A2 microSD 64 GB<small>House Pi, Music Pi, spare — the Ultra in transit is the wrong class</small></td>
+        <td class="c q">3</td><td class="c">Amazon</td><td class="r pz">₹2,100</td></tr>
+
+    <tr class="sub"><td colspan="4">The piano rig — separate bill</td></tr>
+    <tr><td class="nm">Raspberry Pi DAC Pro, IQaudio PCM5242<small>Turns Pianoteq's output into analogue</small></td>
+        <td class="c q">1</td><td class="c">Silverline</td><td class="r pz">₹2,500</td></tr>
+    <tr><td class="nm">XLR board for IQaudio DAC Pro<small>The low-volume part. If out of stock, take the DAC anyway and add 2 passive DI boxes.</small></td>
+        <td class="c q">1</td><td class="c">Silverline</td><td class="r pz">₹2,000</td></tr>
+    <tr><td class="nm">Raspberry Pi Touch Display 2, 7"<small>Switch piano sounds on stage without a laptop</small></td>
+        <td class="c q">1</td><td class="c">Silverline</td><td class="r pz">₹5,500</td></tr>
+    <tr><td class="nm">6-pin female header, 2.54 mm<small>In case the DAC ships with bare P7/P9 pads</small></td>
+        <td class="c q">2</td><td class="c">SP Road</td><td class="r pz">₹60</td></tr>
+
+    <tr class="sub"><td colspan="4">Screens, camera and power</td></tr>
+    <tr><td class="nm">Samsung Galaxy Tab A9, 8.7" Wi-Fi<small>Front door and studio door signs. Lenovo Tab M9 is an equal substitute.</small></td>
+        <td class="c q">2</td><td class="c">Amazon</td><td class="r pz">₹20,000</td></tr>
+    <tr><td class="nm">Screw-in tablet wall mount</td>
+        <td class="c q">2</td><td class="c">Amazon</td><td class="r pz">₹1,400</td></tr>
+    <tr><td class="nm">Flat USB-C cable 2 m + 2 A charger<small>Runs down the wall under trunking</small></td>
+        <td class="c q">2</td><td class="c">Amazon</td><td class="r pz">₹1,000</td></tr>
+    <tr><td class="nm">TP-Link Tapo C210 camera<small>Entrance camera, local RTSP into Home Assistant</small></td>
+        <td class="c q">1</td><td class="c">Amazon</td><td class="r pz">₹2,800</td></tr>
+    <tr><td class="nm">Inline USB-C UPS for the House Pi<small>You asked for a good battery unit that doubles for shoots — buy inline, never a HAT</small></td>
+        <td class="c q">1</td><td class="c">Amazon</td><td class="r pz">₹3,500</td></tr>
+    <tr><td class="nm">5 V 2 A USB charger + micro-USB cable<small>One per ESP32 node</small></td>
+        <td class="c q">6</td><td class="c">Amazon</td><td class="r pz">₹1,200</td></tr>
+
+    <tr class="sub"><td colspan="4">House sensors still missing</td></tr>
+    <tr><td class="nm">JSN-SR04T waterproof ultrasonic<small>Sump and overhead tank levels. Tank headspace is 100% humidity — the plain HC-SR04 corrodes.</small></td>
+        <td class="c q">2</td><td class="c">SP Road</td><td class="r pz">₹900</td></tr>
+    <tr><td class="nm">SW-420 vibration sensor<small>Fifth unit — four are in transit</small></td>
+        <td class="c q">1</td><td class="c">SP Road</td><td class="r pz">₹70</td></tr>
+    <tr><td class="nm">Female-to-female jumper wires, 40 pc</td>
+        <td class="c q">1</td><td class="c">SP Road</td><td class="r pz">₹120</td></tr>
+
+    <tr class="sub"><td colspan="4">Air quality — never made it onto any buy list</td></tr>
+    <tr><td class="nm">SCD41 true CO₂ sensor<small>The CO₂ nudge is already built into the app and has no sensor coming</small></td>
+        <td class="c q">3</td><td class="c">SP Road</td><td class="r pz">₹10,500</td></tr>
+    <tr><td class="nm">PMS5003 PM2.5 / PM10 particulate sensor<small>Recording-aware purifying and pre-class purge depend on this</small></td>
+        <td class="c q">3</td><td class="c">SP Road</td><td class="r pz">₹6,000</td></tr>
+    <tr><td class="nm">SGP41 VOC + NOx sensor<small>The staleness and odour index</small></td>
+        <td class="c q">3</td><td class="c">SP Road</td><td class="r pz">₹6,000</td></tr>
+
+    <tr class="sub"><td colspan="4">For the technician — buy separately, fit last</td></tr>
+    <tr><td class="nm">Latching panic switch, Schneider type<small>The wired emergency loop — works with no Pi, no Wi-Fi, no app</small></td>
+        <td class="c q">4</td><td class="c">SP Road</td><td class="r pz">₹1,400</td></tr>
+    <tr><td class="nm">2-core security loop cable, 90 m roll<small>Panic loop plus twelve door reed runs. Measure before the trip.</small></td>
+        <td class="c q">2</td><td class="c">SP Road</td><td class="r pz">₹2,400</td></tr>
+    <tr><td class="nm">Battery-backed alarm sounder, 12 V<small>Sounds even with power and network gone</small></td>
+        <td class="c q">1</td><td class="c">SP Road</td><td class="r pz">₹1,500</td></tr>
+    <tr><td class="nm">Volt-free relay module<small>How the ESP32s safely observe the certified smoke and LPG alarms</small></td>
+        <td class="c q">3</td><td class="c">SP Road</td><td class="r pz">₹750</td></tr>
+    <tr><td class="nm">Motor contactor + float switches<small>Real physical dry-run and high-level cutoffs, not software</small></td>
+        <td class="c q">1</td><td class="c">SP Road</td><td class="r pz">₹2,000</td></tr>
+    <tr><td class="nm">Certified smoke + LPG alarms<small>Already owned — confirm they still test good before build day</small></td>
+        <td class="c q">—</td><td class="c">owned</td><td class="r pz">—</td></tr>
+    <tr class="tot"><td>25 line items outstanding</td><td class="c"></td><td></td><td class="r">≈ ₹84,000</td></tr>
+  </table>
+
+  <div class="stop">
+    <b>The air features have no hardware behind them.</b> The CO₂ nudge, pre-class purge,
+    recording-aware purifying and instrument climate guard are all built and working in the app.
+    Three of the four need the SCD41, PMS5003 and SGP41 — and those sensors appear only in the Air
+    Plan document. They were never carried onto the final buy list, so they were never quoted and
+    never ordered. Only the instrument climate guard is covered, by the two SHT31s in transit.
+    That is ₹22,500 of sensors, and it is my omission, not the vendor's.
+  </div>
+
+  <div class="flag">
+    <b>Dropped by your decision, correctly.</b> The six ABS enclosures and the four 25 A geyser relays
+    are off the list — you were right that neither belonged in the original plan. They are not counted
+    as missing above.
+  </div>
+</section>
+
+<!-- ============ OPTIONAL ============ -->
+<section style="--c:#6b7280;--cb:#f9fafb;--cl:#e5e7eb">
+  <div class="band">
+    <div class="stamp">Not ordered — optional</div>
+    <h2>The stage pedal group</h2>
+    <div class="meta">All-or-nothing, and none of it blocks the house build. Decide separately.</div>
+  </div>
+  <table>
+    <tr><th>Item</th><th class="c">Qty</th><th class="r">Est.</th></tr>
+    <tr><td class="nm">NVMe HAT + 256 GB NVMe SSD<small>Buy this OR the UPS — you do not strictly need both</small></td><td class="c q">1</td><td class="r pz">₹4,500</td></tr>
+    <tr><td class="nm">True-bypass looper pedal, 1 loop<small>Lifts the Pi out of the signal path with one stomp</small></td><td class="c q">1</td><td class="r pz">₹2,500</td></tr>
+    <tr><td class="nm">Raspberry Pi Pico RP2040<small>The footswitch brain — firmware is already written and in the Chorale repo</small></td><td class="c q">2</td><td class="r pz">₹800</td></tr>
+    <tr><td class="nm">Momentary SPST footswitch<small>Harmony · Voices · Mode · Doubler · Stage/Studio · Panic</small></td><td class="c q">6</td><td class="r pz">₹720</td></tr>
+    <tr><td class="nm">1590BB aluminium enclosure<small>Metal, not plastic — it gets stood on</small></td><td class="c q">1</td><td class="r pz">₹1,200</td></tr>
+    <tr><td class="nm">Expression pedal + TRS cable<small>Swells the choir on CC 11 — the most musical control on the board</small></td><td class="c q">1</td><td class="r pz">₹3,500</td></tr>
+    <tr class="tot"><td>6 line items</td><td class="c"></td><td class="r">₹13,220</td></tr>
+  </table>
+</section>
+
+<div class="grand">
+  <div class="row"><span class="lbl">Delivered · Robocraze 351816</span><span>₹2,782</span></div>
+  <div class="row"><span class="lbl">In transit · Robu 3625143</span><span>₹10,842</span></div>
+  <div class="row"><span class="lbl">Ordered, unshipped · Electropi 134503</span><span>₹1,354</span></div>
+  <div class="row"><span class="lbl">Committed so far</span><span>₹14,978</span></div>
+  <div class="row big"><span>Still to buy — core build</span><span>≈ ₹84,000</span></div>
+</div>
+
+<footer>
+  Aangan · Nathaniel School of Music, Bangalore<br>
+  Status traced from vendor email on 10 August 2026 · Robocraze 351816 · Robu 3625143 (Bluedart 77117234736) · Electropi 134503<br>
+  Amazon.in shows no order for this project in the last 30 days
+</footer>
+
+</div>
+</body></html>
