@@ -1,0 +1,112 @@
+# AANGAN · ROOM NODE — RECORDING STUDIO
+#
+# Grouped by ROOM, not by function. Wi-Fi unifies the data; it does not unify
+# the wires. Every sensor here is physically cabled to this board, so the board
+# lives IN the studio and no cable leaves the room.
+#
+# Replaces the studio half of studio-doors.yaml + studio-sense.yaml.
+#
+# WIRING (all sensors within a couple of metres of the board):
+#   GPIO25  studio door, leaf A     reed between pin and GND
+#   GPIO26  studio door, leaf B     reed between pin and GND
+#   GPIO27  studio sink leak probe  probe between pin and GND
+#   GPIO34  SEN0232 sound meter     signal wire; sensor takes 5V + GND
+#   GPIO16/17  LD2410 presence      LD2410 TX->16, RX->17; 5V + GND
+#
+# Power: one 5V USB charger. No mains work, no electrician.
+esphome:
+  name: room-studio
+  friendly_name: Studio
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+  level: INFO
+
+api:
+  encryption:
+    key: !secret api_key_studio_sense
+  reboot_timeout: 0s   # no Home Assistant in this setup; do NOT reboot waiting for one
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none   # 4-AP mesh drops the association otherwise
+  reboot_timeout: 5min
+  ap:
+    ssid: "room-studio setup"
+    password: !secret ap_password
+captive_portal:
+
+web_server:
+  port: 80
+
+uart:
+  id: ld2410_uart
+  rx_pin: GPIO16
+  tx_pin: GPIO17
+  baud_rate: 256000
+  parity: NONE
+  stop_bits: 1
+
+ld2410:
+  uart_id: ld2410_uart
+
+sensor:
+  # DFRobot SEN0232: 0.6-2.6 V spans 30-130 dBA, so dBA = volts x 50.
+  - platform: adc
+    pin: GPIO34
+    name: "Studio sound level"
+    id: studio_dba
+    unit_of_measurement: "dBA"
+    device_class: sound_pressure
+    attenuation: 12db
+    update_interval: 200ms
+    filters:
+      - multiply: 50.0
+      - sliding_window_moving_average:
+          window_size: 10
+          send_every: 5
+    accuracy_decimals: 1
+
+binary_sensor:
+  # NOT inverted. Reed closed (magnet present, door shut) pulls the pin to GND,
+  # which reads as closed. Confirm on the bench with the first reed before the
+  # other three are trusted.
+  - platform: gpio
+    name: "Studio door leaf A"
+    pin: { number: GPIO25, mode: { input: true, pullup: true } }
+    device_class: door
+    filters: [delayed_on: 50ms, delayed_off: 50ms]
+  - platform: gpio
+    name: "Studio door leaf B"
+    pin: { number: GPIO26, mode: { input: true, pullup: true } }
+    device_class: door
+    filters: [delayed_on: 50ms, delayed_off: 50ms]
+  - platform: gpio
+    name: "Studio sink leak"
+    pin: { number: GPIO27, mode: { input: true, pullup: true }, inverted: true }
+    device_class: moisture
+    filters: [delayed_on: 500ms]
+  - platform: ld2410
+    has_target:
+      name: "Studio presence"
+      device_class: occupancy
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP address"
+      on_value:
+        then:
+          - logger.log:
+              level: INFO
+              format: "AANGAN READY - open http://%s/ on any phone"
+              args: ["x.c_str()"]
