@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aangan · GPIO wiring reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#f4f2ed;color:#1a1a1a;line-height:1.5}
+.w{max-width:900px;margin:0 auto;padding:0 14px 70px}
+header{background:#fff;padding:26px 0 20px;border-bottom:3px solid #1a1a1a}
+.hd{max-width:900px;margin:0 auto;padding:0 14px}
+header h1{font-size:27px;font-weight:800;letter-spacing:-.4px}
+header p{color:#666;font-size:13px;margin-top:5px}
+.src{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#166534;background:#f0fdf4;
+border:1px solid #bbf7d0;border-radius:7px;padding:6px 11px;display:inline-block;margin-top:11px}
+
+section{margin-top:30px}
+.h{border-left:5px solid var(--c);padding:3px 0 3px 13px}
+.h h2{font-size:20px;font-weight:800;color:var(--c);letter-spacing:-.2px}
+.h p{font-size:13px;color:#666;margin-top:4px;line-height:1.6}
+
+.nodehd{display:flex;gap:13px;align-items:center;margin-top:22px;flex-wrap:wrap}
+.num{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:800;color:#fff;background:#1a1a1a;
+border-radius:9px;min-width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.nn h3{font-size:18px;font-weight:800;letter-spacing:-.2px}
+.nn .ip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#666}
+
+table{width:100%;border-collapse:collapse;margin-top:11px;background:#fff;border:1px solid #e2dcd0;
+border-radius:10px;overflow:hidden}
+th{font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:700;letter-spacing:.6px;
+text-transform:uppercase;color:#6b5b3e;background:#faf8f3;text-align:left;padding:9px 11px;
+border-bottom:1px solid #e2dcd0}
+td{padding:10px 11px;font-size:13px;border-bottom:1px solid #f0ece3;vertical-align:top;line-height:1.6}
+tr:last-child td{border-bottom:none}
+td.nm{font-weight:700;width:24%}
+td.dev{color:#555;width:18%}
+td.wire{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#1a1a1a}
+td.wire b{color:#b45309;font-weight:700}
+td.st{width:9%;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:700}
+.ok{color:#166534}
+.off{color:#b91c1c}
+
+.warn{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:13px 16px;margin-top:13px;
+font-size:13px;color:#7f1d1d;line-height:1.7}
+.warn b{color:#b91c1c}
+.note{background:#faf8f3;border:1px solid #e2dcd0;border-radius:10px;padding:13px 16px;margin-top:13px;
+font-size:13px;color:#5c5344;line-height:1.7}
+.note b{color:#1a1a1a}
+.good{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:13px 16px;margin-top:13px;
+font-size:13px;color:#14532d;line-height:1.7}
+.good b{color:#166534}
+
+footer{margin-top:32px;padding-top:16px;border-top:1px solid #e2dcd0;font-size:12px;color:#666;
+font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
+@media print{
+  @page{margin:12mm 10mm}
+  body{background:#fff;font-size:10.5pt}
+  .w,.hd{max-width:100%;padding:0}
+  header{padding:0 0 8px;border-bottom:2.5px solid #000}
+  tr,.warn,.note,.good,.nodehd{break-inside:avoid;page-break-inside:avoid}
+  table,section{break-inside:auto;page-break-inside:auto}
+  .h,.nodehd{break-after:avoid;page-break-after:avoid}
+  th,td.st,.num,.warn,.note,.good,.src{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style></head><body>
+
+<header><div class="hd">
+  <h1>Aangan — every sensor, every pin</h1>
+  <p>Complete wiring reference for all six boards · 14 August 2026</p>
+  <div class="src">Generated from the firmware actually flashed — pi/house/esphome/*.yaml</div>
+</div></header>
+
+<div class="w">
+
+<!-- ===== HOW TO READ ===== -->
+<section style="--c:#1a1a1a">
+  <div class="h">
+    <h2>How to read this</h2>
+  </div>
+  <div class="note">
+    <b>GND means any pin marked GND.</b> There are several on every board and they are all the same —
+    use whichever is nearest.<br><br>
+    <b>3V3 and 5V are different and not interchangeable.</b> Where a sensor is listed as 5V it will not
+    work properly on 3V3. Where it says 3V3, giving it 5V can damage the ESP32's input.<br><br>
+    <b>All sensor grounds must be joined to the ESP32's ground</b>, even when a sensor has its own
+    power supply. Without a shared ground nothing reads correctly.
+  </div>
+  <div class="warn">
+    <b>Never connect 3V3, 5V or VIN straight to GND.</b> That is a short circuit and kills the board.
+  </div>
+</section>
+
+<!-- ===== BOARD 1 ===== -->
+<section style="--c:#166534">
+  <div class="nodehd"><div class="num">1</div><div class="nn">
+    <h3>Studio</h3><div class="ip">http://192.168.0.158 · room-studio.yaml</div></div></div>
+  <table>
+    <tr><th>Sensor</th><th>Device</th><th>Wiring — sensor pin → ESP32 pin</th><th class="st">Code</th></tr>
+    <tr><td class="nm">Studio door leaf A</td><td class="dev">MC-38 reed</td>
+      <td class="wire">wire 1 → <b>GPIO25</b> · wire 2 → <b>GND</b><br>no power, no polarity</td>
+      <td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Studio door leaf B</td><td class="dev">MC-38 reed</td>
+      <td class="wire">wire 1 → <b>GPIO26</b> · wire 2 → <b>GND</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Studio sink leak</td><td class="dev">Raindrop probe</td>
+      <td class="wire">VCC → <b>3V3</b> · GND → <b>GND</b> · DO → <b>GPIO27</b><br>AO not used</td>
+      <td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Studio sound level</td><td class="dev">DFRobot SEN0232</td>
+      <td class="wire">red → <b>5V</b> · black → <b>GND</b> · blue/signal → <b>GPIO34</b></td>
+      <td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Studio presence</td><td class="dev">HLK-LD2410</td>
+      <td class="wire">VCC → <b>5V</b> · GND → <b>GND</b><br>LD2410 <b>TX → GPIO16</b> · LD2410 <b>RX → GPIO17</b></td>
+      <td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Studio temperature<br>+ humidity</td><td class="dev">GY-SHT31-D</td>
+      <td class="wire">VIN → <b>3V3</b> · GND → <b>GND</b><br>SDA → <b>GPIO21</b> · SCL → <b>GPIO22</b></td>
+      <td class="st ok">DONE</td></tr>
+  </table>
+  <div class="note">
+    <b>The LD2410's TX and RX cross over.</b> Its transmit goes to the ESP32's receive. If presence
+    never works, swap those two wires — it is the single most common mistake with this part.
+  </div>
+</section>
+
+<!-- ===== BOARD 2 ===== -->
+<section style="--c:#b45309">
+  <div class="nodehd"><div class="num">2</div><div class="nn">
+    <h3>Music room</h3><div class="ip">http://192.168.0.153 · room-music.yaml</div></div></div>
+  <table>
+    <tr><th>Sensor</th><th>Device</th><th>Wiring — sensor pin → ESP32 pin</th><th class="st">Code</th></tr>
+    <tr><td class="nm">Teaching door leaf A</td><td class="dev">MC-38 reed</td>
+      <td class="wire">wire 1 → <b>GPIO25</b> · wire 2 → <b>GND</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Teaching door leaf B</td><td class="dev">MC-38 reed</td>
+      <td class="wire">wire 1 → <b>GPIO26</b> · wire 2 → <b>GND</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Music room leak</td><td class="dev">Raindrop probe</td>
+      <td class="wire">VCC → <b>3V3</b> · GND → <b>GND</b> · DO → <b>GPIO27</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Music room flame</td><td class="dev">IR flame module</td>
+      <td class="wire">VCC → <b>3V3</b> · GND → <b>GND</b> · DO → <b>GPIO33</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Music room temp<br>+ humidity</td><td class="dev">GY-SHT31-D</td>
+      <td class="wire">VIN → <b>3V3</b> · GND → <b>GND</b><br>SDA → <b>GPIO21</b> · SCL → <b>GPIO22</b></td>
+      <td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Music room sound level</td><td class="dev">2nd SEN0232</td>
+      <td class="wire">would be <b>GPIO34</b> — sensor not bought</td><td class="st off">OFF</td></tr>
+  </table>
+</section>
+
+<!-- ===== BOARD 3 ===== -->
+<section style="--c:#1d4ed8">
+  <div class="nodehd"><div class="num">3</div><div class="nn">
+    <h3>Bathrooms A + geyser</h3><div class="ip">http://192.168.0.154 · node-3-bath-a.yaml</div></div></div>
+  <table>
+    <tr><th>Sensor</th><th>Device</th><th>Wiring — sensor pin → ESP32 pin</th><th class="st">Code</th></tr>
+    <tr><td class="nm">Bathroom A1 leak</td><td class="dev">Raindrop probe</td>
+      <td class="wire">VCC → <b>3V3</b> · GND → <b>GND</b> · DO → <b>GPIO25</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Bathroom A2 leak</td><td class="dev">Raindrop probe</td>
+      <td class="wire">VCC → <b>3V3</b> · GND → <b>GND</b> · DO → <b>GPIO26</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Geyser overflow</td><td class="dev">Raindrop probe</td>
+      <td class="wire">VCC → <b>3V3</b> · GND → <b>GND</b> · DO → <b>GPIO27</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Bathroom 3 temp<br>+ humidity</td><td class="dev">DHT22</td>
+      <td class="wire">VCC/+ → <b>3V3</b> · GND/− → <b>GND</b> · DATA/out → <b>GPIO32</b></td>
+      <td class="st ok">DONE</td></tr>
+  </table>
+</section>
+
+<!-- ===== BOARD 4 ===== -->
+<section style="--c:#7c3aed">
+  <div class="nodehd"><div class="num">4</div><div class="nn">
+    <h3>Bathrooms B + washing machine</h3><div class="ip">http://192.168.0.156 · node-4-bath-b.yaml</div></div></div>
+  <table>
+    <tr><th>Sensor</th><th>Device</th><th>Wiring — sensor pin → ESP32 pin</th><th class="st">Code</th></tr>
+    <tr><td class="nm">Bathroom B1 leak</td><td class="dev">Raindrop probe</td>
+      <td class="wire">VCC → <b>3V3</b> · GND → <b>GND</b> · DO → <b>GPIO25</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Bathroom B2 leak</td><td class="dev">Raindrop probe</td>
+      <td class="wire">VCC → <b>3V3</b> · GND → <b>GND</b> · DO → <b>GPIO26</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Washing machine leak</td><td class="dev">Raindrop probe</td>
+      <td class="wire">VCC → <b>3V3</b> · GND → <b>GND</b> · DO → <b>GPIO27</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Washing machine running</td><td class="dev">SW-420 vibration</td>
+      <td class="wire">VCC → <b>3V3</b> · GND → <b>GND</b> · DO → <b>GPIO32</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Bathroom 4 temp<br>+ humidity</td><td class="dev">DHT22</td>
+      <td class="wire">VCC/+ → <b>3V3</b> · GND/− → <b>GND</b> · DATA/out → <b>GPIO33</b></td>
+      <td class="st ok">DONE</td></tr>
+  </table>
+</section>
+
+<!-- ===== BOARD 5 ===== -->
+<section style="--c:#b91c1c">
+  <div class="nodehd"><div class="num">5</div><div class="nn">
+    <h3>Kitchen</h3><div class="ip">http://192.168.0.157 · node-5-kitchen.yaml</div></div></div>
+  <table>
+    <tr><th>Sensor</th><th>Device</th><th>Wiring — sensor pin → ESP32 pin</th><th class="st">Code</th></tr>
+    <tr><td class="nm">Gas sensor 1 (hob left)</td><td class="dev">MQ-6</td>
+      <td class="wire">VCC → <b>external 5V</b> · GND → <b>shared GND</b><br>AO → 10kΩ → <b>GPIO34</b> → 20kΩ → GND</td>
+      <td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Gas sensor 2 (hob right)</td><td class="dev">MQ-6</td>
+      <td class="wire">AO → 10kΩ → <b>GPIO35</b> → 20kΩ → GND</td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Gas sensor 3 (cylinder)</td><td class="dev">MQ-6</td>
+      <td class="wire">AO → 10kΩ → <b>GPIO36</b> → 20kΩ → GND</td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Gas sensor 4 (floor)</td><td class="dev">MQ-6</td>
+      <td class="wire">AO → 10kΩ → <b>GPIO39</b> → 20kΩ → GND</td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Gas cylinder weight</td><td class="dev">HX711 + 4 load cells</td>
+      <td class="wire">VCC → <b>3V3</b> · GND → <b>GND</b><br>DT/DOUT → <b>GPIO18</b> · SCK → <b>GPIO19</b><br>load cells → E+ E− A+ A− on the HX711</td>
+      <td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Kitchen temp + humidity</td><td class="dev">DHT22</td>
+      <td class="wire">VCC/+ → <b>3V3</b> · GND/− → <b>GND</b> · DATA → <b>GPIO23</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Kitchen sink leak</td><td class="dev">Raindrop probe</td>
+      <td class="wire">VCC → <b>3V3</b> · GND → <b>GND</b> · DO → <b>GPIO25</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Kitchen flame</td><td class="dev">IR flame module</td>
+      <td class="wire">VCC → <b>3V3</b> · GND → <b>GND</b> · DO → <b>GPIO26</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Kitchen motion</td><td class="dev">HC-SR501 PIR</td>
+      <td class="wire">VCC → <b>5V</b> · GND → <b>GND</b> · OUT → <b>GPIO27</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">LPG detector contact</td><td class="dev">Hikvision HF-GP110</td>
+      <td class="wire">relay contact → <b>GPIO32</b> + <b>GND</b> — code commented out</td>
+      <td class="st off">OFF</td></tr>
+  </table>
+  <div class="warn">
+    <b>The MQ-6 gas sensors are the only part of this whole build that needs soldering.</b> Each one
+    needs two resistors: sensor AO through a 10kΩ to the ESP32 pin, then a 20kΩ from that pin down to
+    GND. Without them the sensor can push 5V into a 3.3V input and destroy it.<br><br>
+    Their heaters draw about 150 mA each — <b>600 mA for four</b>. Run them from a separate 5V supply,
+    not the ESP32, and join that supply's ground to the ESP32's ground.
+  </div>
+  <div class="note">
+    <b>Do not aim the flame sensor at the hob</b> — it will alarm every time you cook.<br>
+    <b>The PIR needs 5V, not 3V3.</b> It is the one sensor on this board with that requirement.
+  </div>
+</section>
+
+<!-- ===== BOARD 6 ===== -->
+<section style="--c:#0891b2">
+  <div class="nodehd"><div class="num">6</div><div class="nn">
+    <h3>Hall / entrance</h3><div class="ip">http://192.168.0.159 · node-6-hall.yaml</div></div></div>
+  <table>
+    <tr><th>Sensor</th><th>Device</th><th>Wiring — sensor pin → ESP32 pin</th><th class="st">Code</th></tr>
+    <tr><td class="nm">Main door</td><td class="dev">MC-38 reed</td>
+      <td class="wire">wire 1 → <b>GPIO25</b> · wire 2 → <b>GND</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Doorbell pressed</td><td class="dev">Push button</td>
+      <td class="wire">wire 1 → <b>GPIO26</b> · wire 2 → <b>GND</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Hall motion</td><td class="dev">HC-SR501 PIR</td>
+      <td class="wire">VCC → <b>5V</b> · GND → <b>GND</b> · OUT → <b>GPIO27</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Entrance motion</td><td class="dev">HC-SR501 PIR</td>
+      <td class="wire">VCC → <b>5V</b> · GND → <b>GND</b> · OUT → <b>GPIO32</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Hall flame</td><td class="dev">IR flame module</td>
+      <td class="wire">VCC → <b>3V3</b> · GND → <b>GND</b> · DO → <b>GPIO33</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Main door disturbed</td><td class="dev">SW-420 vibration</td>
+      <td class="wire">VCC → <b>3V3</b> · GND → <b>GND</b> · DO → <b>GPIO18</b></td><td class="st ok">DONE</td></tr>
+    <tr><td class="nm">Hall temp + humidity</td><td class="dev">DHT22</td>
+      <td class="wire">VCC/+ → <b>3V3</b> · GND/− → <b>GND</b> · DATA → <b>GPIO19</b></td><td class="st ok">DONE</td></tr>
+  </table>
+</section>
+
+<!-- ===== CODE STATUS ===== -->
+<section style="--c:#166534">
+  <div class="h">
+    <h2>Is the code done?</h2>
+  </div>
+  <div class="good">
+    <b>Yes — 34 of 36 sensors are written, compiled and already flashed onto the boards.</b> Nothing
+    on this page needs programming. Plug a sensor in as shown and it appears on that board's web page
+    within seconds.
+  </div>
+  <div class="warn">
+    <b>Two are deliberately switched off, because their hardware does not exist yet:</b><br><br>
+    <b>Music room sound level</b> — needs the second SEN0232 meter (₹4,799), never bought.<br>
+    <b>LPG detector contact</b> — the Hikvision detector <i>has</i> arrived and it does have a relay
+    output, so this one can be switched on now. It needs board 5 plugged back into the Mac for two
+    minutes.<br><br>
+    They are commented out rather than left active on purpose: an input with nothing wired to it
+    reports a confident, believable reading that is completely false.
+  </div>
+  <div class="note">
+    <b>What still needs doing after wiring — and it can only be done afterwards:</b> confirming which
+    way the door reeds read, setting the decibel level that means "too loud to record", tuning how far
+    the presence radar looks, giving the MQ-6 sensors 24–48 hours powered to settle, and calibrating
+    the cylinder scale against a known weight. All of those I do remotely over Wi-Fi — no cables, a
+    minute or two each.
+  </div>
+</section>
+
+<footer>
+  Aangan · Nathaniel School of Music, Bangalore<br>
+  36 sensors across 6 boards · generated from pi/house/esphome/*.yaml, not typed by hand<br>
+  GPIO 25, 26 and 27 are the doors-and-probes pins on almost every board
+</footer>
+
+</div>
+</body></html>
