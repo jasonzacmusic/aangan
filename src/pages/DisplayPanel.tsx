@@ -170,7 +170,7 @@ export default function DisplayPanel({ id }: { id: string }) {
           {music?.dbLevel != null && (
             <div className="mt-6 w-full max-w-xl">
               <DbMeter value={music.dbLevel} threshold={settings.dbThreshold} />
-              <div className="mt-1 font-mono text-[10px] text-dim">{dbHistory.length ? "music room · live" : ""}</div>
+              <div className="mt-1 font-mono text-[10px] text-dim">{dbHistory.length ? "studio · live" : ""}</div>
             </div>
           )}
           <NudgeBanner variant="panel" />

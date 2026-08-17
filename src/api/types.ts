@@ -13,7 +13,7 @@ export interface StudioStateInfo {
   since: number; // epoch ms
 }
 
-export type RoomId = "entrance" | "music" | "bedroom" | "kitchen" | "bathroom";
+export type RoomId = "entrance" | "studio" | "music" | "bedroom" | "kitchen" | "bathroom";
 
 export interface Room {
   id: RoomId;
@@ -22,8 +22,11 @@ export interface Room {
   presence: boolean;
   /** Null means the room does not have a commissioned temperature sensor yet. */
   tempC: number | null;
+  humidityPct?: number | null;
   signColor: string; // hex the WS2812B sign is showing
-  dbLevel?: number; // music room only
+  dbLevel?: number; // recording studio only — the teaching room has no meter
+  /** False when this room's ESP32 did not answer. Missing means "assume live" (mock). */
+  online?: boolean;
 }
 
 export interface Preflight {
@@ -259,10 +262,10 @@ export const DEFAULT_DISPLAYS: DisplayConfig[] = [
 export interface FleetDevice {
   id: string;
   name: string;
-  kind: "mac" | "pi" | "panel" | "network" | "other";
+  kind: "mac" | "pi" | "esp32" | "panel" | "network" | "other";
   online: boolean;
   lastSeen: number; // epoch ms
-  detail: string; // e.g. "Home Assistant · CPU 12%" or "last backup 03:00"
+  detail: string; // e.g. "http://192.168.0.250" or "last backup 03:00"
 }
 
 export type StreamEvent =
@@ -416,6 +419,7 @@ export const STATE_META: Record<StudioState, StateMeta> = {
 
 export const ROOM_NAMES: Record<RoomId, string> = {
   entrance: "Entrance",
+  studio: "Studio",
   music: "Music Room",
   bedroom: "Bedroom",
   kitchen: "Kitchen",

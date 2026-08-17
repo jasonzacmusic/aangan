@@ -9,3 +9,6 @@ output/playwright/
 # Never commit real ESPHome secrets (wifi password, OTA + API keys)
 pi/house/esphome/secrets.yaml
 **/secrets.yaml
+
+# LAN server runtime state
+data/

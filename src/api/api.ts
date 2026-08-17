@@ -8,7 +8,7 @@ import type { ApiAdapter } from "./types";
  *
  * Every page talks to `api` and only `api`. Flip USE_MOCK in
  * src/config.ts and the exact same app drives the real apartment
- * through the Pi wrapper — no other code changes.
+ * through the LAN server (or a later Home Assistant hub).
  */
 export const api: ApiAdapter = USE_MOCK ? new MockAdapter() : new LiveAdapter(LIVE_BASE_URL);
 
