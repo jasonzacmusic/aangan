@@ -119,7 +119,7 @@ export default function App() {
           <img src="/nsm-white.png" alt="Nathaniel School of Music" className="mx-auto mb-4 w-40 opacity-80" />
           <div className="font-mono text-[10px] uppercase tracking-[0.4em] text-gold">Studio Command</div>
           <div className="mt-2 font-mono text-[10px] text-dim">
-            {connectionStatus === "connecting" ? "tuning in…" : dataSource === "live" ? "Pi unreachable · retrying…" : "restarting the house…"}
+            {connectionStatus === "connecting" ? "tuning in…" : dataSource === "live" ? "House unreachable · retrying…" : "restarting the house…"}
           </div>
         </div>
         <PwaUpdatePrompt />
@@ -170,7 +170,7 @@ export default function App() {
     : connectionStatus === "reconnecting"
       ? "reconnecting…"
       : dataSource === "live"
-        ? "Pi unreachable"
+        ? "house unreachable"
         : "offline";
 
   return (

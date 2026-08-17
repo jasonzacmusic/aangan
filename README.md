@@ -35,9 +35,17 @@ The mock house persists the studio state in IndexedDB, so a wall panel comes bac
 
 ## Mock → live is one build setting
 
-Every page talks only to the `ApiAdapter` selected in [src/api/api.ts](src/api/api.ts). Both the simulation and Pi client implement the same complete interface.
+Every page talks only to the `ApiAdapter` selected in [src/api/api.ts](src/api/api.ts). The simulation, the LAN house, and a later Home Assistant hub all implement the same interface.
 
-Local demo mode is the default. The Home Assistant app build switches to live data automatically. For any other build, use:
+**There is no Raspberry Pi in this house.** Each ESP32 already serves a live page on Wi-Fi. The phone app cannot live on HTTPS Vercel and still read those HTTP boards — browsers block that. The live path is:
+
+```bash
+npm run lan
+```
+
+That builds the live app and serves it from the studio Mac on port `8126`. Open the printed `http://192.168.0.x:8126` on any phone, iPad or laptop on the school Wi-Fi. Type `http://` explicitly — Chrome upgrades a typed address to https and the boards look dead.
+
+Local demo mode (also Vercel) is the default. For a Home Assistant hub later:
 
 ```bash
 VITE_DATA_SOURCE=live VITE_LIVE_BASE_URL=http://homeassistant.local:8126 npm run build
@@ -45,9 +53,9 @@ VITE_DATA_SOURCE=live VITE_LIVE_BASE_URL=http://homeassistant.local:8126 npm run
 
 No page or component changes are required. Port `8123` belongs to Home Assistant; Aangan Bridge and its copy of the app use `8126`. An empty `VITE_LIVE_BASE_URL` uses the current origin, which is how the add-on build avoids mixed-content and CORS problems.
 
-> The public HTTPS Vercel app cannot normally call a plain-HTTP Pi URL because browsers block mixed content. For live house control, serve this same built app from the Pi/HTTPS home hostname, or expose the Pi wrapper through a trusted HTTPS home-network endpoint.
+> The public HTTPS Vercel app cannot call the HTTP ESP32 boards. Browsers block mixed content. For live house control, run `npm run lan` on a computer on the school Wi-Fi (the studio Mac mini is the natural choice) and open that HTTP address on every phone.
 
-## Raspberry Pi wrapper contract
+## Raspberry Pi / LAN wrapper contract
 
 The TypeScript shapes in [src/api/types.ts](src/api/types.ts) and the comments in [src/api/liveAdapter.ts](src/api/liveAdapter.ts) are authoritative. JSON enum names must match exactly. Every timestamp is Unix epoch milliseconds. Responses use `Content-Type: application/json` and the wrapper must allow the Studio Command origin with CORS.
 
@@ -192,7 +200,7 @@ Send an initial `safety`, `utilities`, and `preflight` frame as soon as a client
 npm install
 npm run dev
 npm run check
-npm run build:addon
+npm run lan          # live house on the LAN, no Raspberry Pi
 ```
 
 The production build is written to `dist/`. `npm run build` stamps the service worker with a unique build ID so every Vercel release can be detected cleanly.
@@ -200,16 +208,16 @@ The production build is written to `dist/`. `npm run build` stamps the service w
 ## The rest of the system (in this repo)
 
 ```
-pi/piano/     PIANO Pi: setup script, HiFiBerry config, Pianoteq + status-server services
-pi/house/     HOUSE Pi: HA package, nine ESPHome node templates, critical alerts,
-              and the tested bridge that serves the live app/API
-aangan_bridge/ installable Home Assistant app; built with npm run build:addon
-mac-agent/    the recording-Mac gate: record_gate.py (+ threshold TRAINING from real
-              takes) and GuardedRecord.lua for REAPER
-hardware/     BUY_LIST.md — owned vs to-buy, Silverline/robu.in/hifiberry sourcing
-docs/         INSTALL_DIAGRAMS.md and TEST_CHECKLIST.md
+scripts/lan-server.mjs   Pi-free live house: serves the PWA and reads the six ESP32s
+pi/house/esphome/        the six live room nodes (plus older unused templates)
+aangan_bridge/           optional Home Assistant app, if a hub is added later
+mac-agent/               recording-Mac gate (still talks to Home Assistant if one exists)
+hardware/                BUY_LIST.md — treat INVENTORY.md as the truth
+docs/                    install diagrams and test checklist
 ```
 
-Going live: add this GitHub repository to the Home Assistant App store, install **Aangan Bridge**, and open `http://homeassistant.local:8126`. Full steps: [docs/TOMORROW_INSTALL.md](docs/TOMORROW_INSTALL.md).
+Going live **without a Raspberry Pi:** on the studio Mac, `npm run lan`, then open the printed `http://192.168.0.x:8126` on every phone. Type `http://` explicitly.
+
+A Home Assistant hub is optional later. Full sensor-day notes: [docs/TOMORROW_INSTALL.md](docs/TOMORROW_INSTALL.md). The honest hardware list is [INVENTORY.md](INVENTORY.md).
 
 For the non-technical delivery summary and the prioritized hardware plan, see [REPORT.md](REPORT.md).

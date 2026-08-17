@@ -43,9 +43,9 @@ export default function RoomCard({ room, threshold, onOpen }: Props) {
       </div>
 
       <div className="mt-3 flex items-center gap-4 font-mono text-[11px]">
-        <span className={`flex items-center gap-1.5 ${room.doorOpen ? "text-st-meeting" : "text-dim"}`}>
-          <DoorGlyph open={room.doorOpen} />
-          {room.doorOpen ? "DOOR OPEN" : "closed"}
+        <span className={`flex items-center gap-1.5 ${room.online === false ? "text-st-meeting" : room.doorOpen ? "text-st-meeting" : "text-dim"}`}>
+          <DoorGlyph open={room.online !== false && room.doorOpen} />
+          {room.online === false ? "BOARD OFFLINE" : room.doorOpen ? "DOOR OPEN" : "closed"}
         </span>
         <span className={`flex items-center gap-1.5 ${room.presence ? "text-st-available" : "text-dim"}`}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">

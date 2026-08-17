@@ -78,11 +78,12 @@ export class MockAdapter implements ApiAdapter {
   };
 
   private rooms: Room[] = [
-    { id: "entrance", name: "Entrance", doorOpen: false, presence: false, tempC: 25.4, signColor: STATE_META.available.color },
-    { id: "music", name: "Music Room", doorOpen: false, presence: true, tempC: 24.1, signColor: STATE_META.available.color, dbLevel: 41 },
-    { id: "bedroom", name: "Bedroom", doorOpen: false, presence: false, tempC: 24.8, signColor: STATE_META.available.color },
-    { id: "kitchen", name: "Kitchen", doorOpen: false, presence: true, tempC: 26.2, signColor: STATE_META.available.color },
-    { id: "bathroom", name: "Bathroom", doorOpen: false, presence: false, tempC: 25.0, signColor: STATE_META.available.color },
+    { id: "studio", name: "Studio", doorOpen: false, presence: true, tempC: 24.1, humidityPct: 58, signColor: STATE_META.available.color, dbLevel: 41, online: true },
+    { id: "music", name: "Music Room", doorOpen: false, presence: true, tempC: 24.4, humidityPct: 57, signColor: STATE_META.available.color, online: true },
+    { id: "entrance", name: "Entrance", doorOpen: false, presence: false, tempC: 25.4, signColor: STATE_META.available.color, online: true },
+    { id: "bedroom", name: "Bedroom", doorOpen: false, presence: false, tempC: 24.8, signColor: STATE_META.available.color, online: false },
+    { id: "kitchen", name: "Kitchen", doorOpen: false, presence: true, tempC: 26.2, signColor: STATE_META.available.color, online: true },
+    { id: "bathroom", name: "Bathroom", doorOpen: false, presence: false, tempC: 25.0, signColor: STATE_META.available.color, online: true },
   ];
 
   private safety: Safety = {
@@ -143,13 +144,14 @@ export class MockAdapter implements ApiAdapter {
   /** Modes saved before a hush, so restoring is exact rather than a guess. */
   private preHushModes: Record<string, PurifierMode> = {};
   private fleet: FleetDevice[] = [
-    { id: "mac-mini", name: "Studio Mac mini", kind: "mac", online: true, lastSeen: Date.now(), detail: "REAPER host · backup 03:00 OK" },
-    { id: "house-pi", name: "House Pi", kind: "pi", online: true, lastSeen: Date.now(), detail: "Home Assistant · 6/6 nodes" },
-    { id: "piano-pi", name: "Piano Pi", kind: "pi", online: true, lastSeen: Date.now(), detail: "Pianoteq · black-box armed" },
-    { id: "panel-front", name: "Front-door panel", kind: "panel", online: true, lastSeen: Date.now(), detail: "door sign · kiosk" },
-    { id: "panel-studio", name: "Studio-door panel", kind: "panel", online: true, lastSeen: Date.now(), detail: "state sign · kiosk" },
-    { id: "wall-ipad", name: "Wall iPad", kind: "panel", online: true, lastSeen: Date.now(), detail: "house board" },
-    { id: "router", name: "Router", kind: "network", online: true, lastSeen: Date.now(), detail: "WAN up · 87 Mbps" },
+    { id: "studio", name: "1 · Studio", kind: "esp32", online: true, lastSeen: Date.now(), detail: "http://192.168.0.250" },
+    { id: "music", name: "2 · Music room", kind: "esp32", online: true, lastSeen: Date.now(), detail: "http://192.168.0.251" },
+    { id: "bath-a", name: "3 · Bathrooms A", kind: "esp32", online: true, lastSeen: Date.now(), detail: "http://192.168.0.252" },
+    { id: "bath-b", name: "4 · Bathrooms B", kind: "esp32", online: true, lastSeen: Date.now(), detail: "http://192.168.0.253" },
+    { id: "kitchen", name: "5 · Kitchen", kind: "esp32", online: true, lastSeen: Date.now(), detail: "http://192.168.0.254" },
+    { id: "hall", name: "6 · Hall", kind: "esp32", online: true, lastSeen: Date.now(), detail: "http://192.168.0.249" },
+    { id: "mac-mini", name: "Studio Mac mini", kind: "mac", online: true, lastSeen: Date.now(), detail: "LAN house · port 8126" },
+    { id: "router", name: "Router", kind: "network", online: true, lastSeen: Date.now(), detail: "WAN up" },
   ];
   private displays: DisplayConfig[] = DEFAULT_DISPLAYS.map((d) => ({ ...d }));
   private sensorsHealthy = true;
@@ -290,7 +292,7 @@ export class MockAdapter implements ApiAdapter {
     const OUTDOOR_CO2 = 430;
 
     this.air.rooms.forEach((room) => {
-      const matching = this.rooms.find((r) => r.id === (room.id === "studio" ? "music" : room.id));
+      const matching = this.rooms.find((r) => r.id === room.id);
       const occupied = matching?.presence ?? false;
       // A door only ventilates the room it belongs to.
       const roomDoorOpen = matching?.doorOpen ?? false;
@@ -361,17 +363,22 @@ export class MockAdapter implements ApiAdapter {
     await this.hydration;
   }
 
+  private studioRoom() {
+    return this.rooms.find((r) => r.id === "studio")!;
+  }
+
   private musicBase(): number {
     if (this.quietMode) return 33;
-    const music = this.rooms.find((r) => r.id === "music")!;
+    const studio = this.studioRoom();
     if (this.state.state === "audio_rec" || this.state.state === "video_rec") return 36;
     if (this.state.state === "class") return 54;
-    return music.presence ? 48 : 34;
+    return studio.presence ? 48 : 34;
   }
 
   private getPreflightSync(): Preflight {
-    const openDoors = this.rooms.filter((r) => r.doorOpen).map((r) => r.id);
-    const dbLevel = this.rooms.find((r) => r.id === "music")!.dbLevel ?? 0;
+    const recordingRooms = this.rooms.filter((r) => r.id === "studio" || r.id === "music");
+    const openDoors = recordingRooms.filter((r) => r.doorOpen).map((r) => r.id);
+    const dbLevel = this.studioRoom().dbLevel ?? 0;
     const doorsClosed = openDoors.length === 0;
     const quietEnough = dbLevel < this.dbThreshold;
     const sensorsHealthy = this.sensorsHealthy;
@@ -440,16 +447,16 @@ export class MockAdapter implements ApiAdapter {
 
   private step() {
     this.tick++;
-    const music = this.rooms.find((r) => r.id === "music")!;
+    const studio = this.studioRoom();
     const swell = Math.sin(this.tick / 6) * 5 + Math.sin(this.tick / 2.3) * 2;
     const jitter = (Math.random() - 0.5) * 4;
-    music.dbLevel = Math.max(30, Math.min(92, Math.round((this.musicBase() + swell + jitter) * 10) / 10));
+    studio.dbLevel = Math.max(30, Math.min(92, Math.round((this.musicBase() + swell + jitter) * 10) / 10));
 
     this.rooms.forEach((r) => {
       if (r.tempC != null) r.tempC = Math.round((r.tempC + (Math.random() - 0.5) * 0.06) * 10) / 10;
     });
     if (Math.random() < 0.02) {
-      const candidates = this.rooms.filter((r) => r.id !== "music");
+      const candidates = this.rooms.filter((r) => r.id !== "studio");
       const room = candidates[Math.floor(Math.random() * candidates.length)];
       room.doorOpen = !room.doorOpen;
     }
@@ -503,8 +510,8 @@ export class MockAdapter implements ApiAdapter {
       p.lastSeen = Date.now();
       // The black-box follows the music-room mic: someone playing = capturing.
       const bb = p.blackbox!;
-      const music = this.rooms.find((r) => r.id === "music")!;
-      const playing = (music.dbLevel ?? 0) > 46 && music.presence;
+      const studio = this.studioRoom();
+      const playing = (studio.dbLevel ?? 0) > 46 && studio.presence;
       if (playing && !bb.recording) bb.recording = true;
       else if (!playing && bb.recording && Math.random() < 0.2) {
         bb.recording = false;
@@ -648,8 +655,8 @@ export class MockAdapter implements ApiAdapter {
     this.prep.active = true;
     this.prep.status = "ready";
     this.quietMode = true;
-    const music = this.rooms.find((r) => r.id === "music")!;
-    music.dbLevel = 34;
+    const studio = this.studioRoom();
+    studio.dbLevel = 34;
     this.emit({ type: "rooms", rooms: this.rooms.map((r) => ({ ...r })) });
     this.emitPreflight();
     this.addHistory({ type: "preflight", title: "Room silenced", detail: "Doorbell muted · AC and fan switched off", severity: "success" });

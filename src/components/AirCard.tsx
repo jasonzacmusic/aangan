@@ -76,8 +76,12 @@ export default function AirCard() {
       </div>
 
       <div className="rounded-2xl border border-line bg-surface/80 p-3 backdrop-blur">
-        {/* Stacked rows: three rooms side by side squeezes four numbers into
-            nothing on a phone and inside a desktop dashboard column alike. */}
+        {air.rooms.length === 0 && air.purifiers.length === 0 ? (
+          <div className="px-2 py-5 text-center text-xs text-dim">
+            CO₂, dust and VOC sensors were never ordered. Room temperature still appears on the room cards when the SHT31 boards are soldered.
+          </div>
+        ) : (
+          <>
         <div className="flex flex-col gap-2">
           {air.rooms.map((r) => (
             <RoomRow key={r.id} room={r} />
@@ -156,6 +160,8 @@ export default function AirCard() {
         <p className="mt-2 font-mono text-[9px] leading-relaxed text-dim/80">
           CO₂ is measured, never guessed — a purifier cannot fix it, only fresh air can
         </p>
+          </>
+        )}
       </div>
     </section>
   );

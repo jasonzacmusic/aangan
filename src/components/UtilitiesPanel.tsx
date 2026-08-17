@@ -33,7 +33,7 @@ export default function UtilitiesPanel() {
           <h3 className="font-display text-xl">House Pulse</h3>
           <p className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.22em] text-dim">Bangalore essentials · live</p>
         </div>
-        <span className="rounded-full border border-st-available/30 bg-st-available/5 px-2.5 py-1 font-mono text-[8px] uppercase tracking-wider text-st-available">Pi-ready</span>
+        <span className="rounded-full border border-line bg-surface2 px-2.5 py-1 font-mono text-[8px] uppercase tracking-wider text-dim">no Pi</span>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
