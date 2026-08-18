@@ -7,8 +7,10 @@
 # Replaces the studio half of studio-doors.yaml + studio-sense.yaml.
 #
 # WIRING (all sensors within a couple of metres of the board):
-#   GPIO25  studio door, leaf A     reed between pin and GND
-#   GPIO26  studio door, leaf B     reed between pin and GND
+#   GPIO25  studio door, G1 hall side   reed between pin and GND
+#   GPIO26  studio door, G2 hall side   reed between pin and GND
+#   The studio is the connector between the two flats, so it has a door on
+#   each side and each one gets its own reed.
 #   GPIO27  studio sink leak probe  probe between pin and GND
 #   GPIO34  SEN0232 sound meter     signal wire; sensor takes 5V + GND
 #   GPIO16/17  LD2410 presence      LD2410 TX->16, RX->17; 5V + GND
@@ -109,12 +111,12 @@ binary_sensor:
   # which reads as closed. Confirm on the bench with the first reed before the
   # other three are trusted.
   - platform: gpio
-    name: "Studio door leaf A"
+    name: "Studio door - G1 side"
     pin: { number: GPIO25, mode: { input: true, pullup: true } }
     device_class: door
     filters: [delayed_on: 50ms, delayed_off: 50ms]
   - platform: gpio
-    name: "Studio door leaf B"
+    name: "Studio door - G2 side"
     pin: { number: GPIO26, mode: { input: true, pullup: true } }
     device_class: door
     filters: [delayed_on: 50ms, delayed_off: 50ms]
