@@ -7,9 +7,13 @@
     "dev": "vite",
     "build": "vite build && node scripts/stamp-sw.mjs",
     "build:addon": "VITE_DATA_SOURCE=live VITE_LIVE_BASE_URL= npm run build && node scripts/build-addon.mjs",
+    "build:lan": "VITE_DATA_SOURCE=live VITE_LIVE_BASE_URL= npm run build",
+    "lan": "npm run build:lan && node scripts/lan-server.mjs",
+    "lan:serve": "node scripts/lan-server.mjs",
     "typecheck": "tsc --noEmit",
     "test:wrapper": "python3 -m unittest pi.house.wrapper.test_studio_wrapper",
-    "check": "npm run typecheck && npm run test:wrapper && npm run build",
+    "test:lan": "node --test scripts/lib/house.test.mjs scripts/lan-server.test.mjs",
+    "check": "npm run typecheck && npm run test:wrapper && npm run test:lan && npm run build",
     "preview": "vite preview --port 4173"
   },
   "dependencies": {

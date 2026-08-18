@@ -64,7 +64,7 @@ export default function Settings() {
             <div className="text-sm font-medium">Recording quiet threshold</div>
             <div className="font-mono text-lg text-gold">{settings.dbThreshold} dB</div>
           </div>
-          <div className="mt-1 text-xs text-dim">Pre-flight goes red when the music-room mic reads above this.</div>
+          <div className="mt-1 text-xs text-dim">Pre-flight goes red when the studio mic reads above this.</div>
           <input
             type="range"
             min={35}

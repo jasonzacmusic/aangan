@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { api, DATA_SOURCE } from "../api/api";
+import { HOUSE_UNREACHABLE } from "../config";
 import {
   ActivityEvent,
   AirState,
@@ -245,8 +246,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           if (sosNow.status === "fulfilled") setSos(sosNow.value);
           if (fleetNow.status === "fulfilled") setFleet(fleetNow.value);
           if (airNow.status === "fulfilled") setAir(airNow.value);
-          const music = rm.find((room) => room.id === "music");
-          if (music?.dbLevel != null) setDbHistory([music.dbLevel]);
+          const dbRoom = rm.find((room) => room.dbLevel != null);
+          if (dbRoom?.dbLevel != null) setDbHistory([dbRoom.dbLevel]);
           setConnected(true);
           setConnectionStatus("online");
           setLastError(null);
@@ -256,8 +257,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             if (ev.type === "state") setStateInfo(ev.state);
             if (ev.type === "rooms") {
               setRooms(ev.rooms);
-              const nextMusic = ev.rooms.find((room) => room.id === "music");
-              if (nextMusic?.dbLevel != null) setDbHistory((samples) => [...samples.slice(-89), nextMusic.dbLevel!]);
+              const dbRoom = ev.rooms.find((room) => room.dbLevel != null);
+              if (dbRoom?.dbLevel != null) setDbHistory((samples) => [...samples.slice(-89), dbRoom.dbLevel!]);
             }
             if (ev.type === "safety") applySafety(ev.safety, true);
             if (ev.type === "doorbell") setDoorbell(ev.doorbell);
@@ -285,7 +286,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           attempt += 1;
           setConnected(false);
           setConnectionStatus(attempt === 1 ? "offline" : "reconnecting");
-          setLastError(DATA_SOURCE === "live" ? "Pi unreachable — Studio Command is reconnecting." : "The simulated house is restarting.");
+          setLastError(DATA_SOURCE === "live" ? HOUSE_UNREACHABLE : "The simulated house is restarting.");
           await pause(Math.min(30_000, 1000 * 2 ** Math.min(attempt - 1, 5)));
         }
       }
@@ -333,7 +334,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       } catch {
         setConnected(false);
         setConnectionStatus("offline");
-        setLastError(DATA_SOURCE === "live" ? "Pi unreachable — command not sent. Reconnecting…" : "That command did not complete. Please try once more.");
+        setLastError(DATA_SOURCE === "live" ? "House unreachable — command not sent. Reconnecting…" : "That command did not complete. Please try once more.");
       } finally {
         finishCommit();
       }
@@ -414,7 +415,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setPreflightPrep(prep);
       setPreflight(await api.getPreflight());
     } catch {
-      setLastError(DATA_SOURCE === "live" ? "The Pi could not silence the room. Check the studio devices." : "The room-silence demo did not complete.");
+      setLastError(DATA_SOURCE === "live" ? "Could not silence the room. The live dB meter is still the gate." : "The room-silence demo did not complete.");
       setPreflightPrep((current) => current ? { ...current, status: "idle", active: false } : null);
     }
   }, []);
@@ -434,7 +435,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try {
       setUtilities(await api.runUtilityAction(action));
     } catch {
-      setLastError(DATA_SOURCE === "live" ? "The Pi did not confirm that house action." : "That house action did not complete.");
+      setLastError(DATA_SOURCE === "live" ? "The house did not confirm that action." : "That house action did not complete.");
     }
   }, []);
 
@@ -467,7 +468,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try {
       await api.playTone(hz);
     } catch {
-      setLastError("The app played A440 here, but the Pi speaker did not answer.");
+      setLastError("The app played A440 here. There is no room speaker on this setup yet.");
     }
   }, []);
 

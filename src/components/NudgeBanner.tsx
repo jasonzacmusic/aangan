@@ -3,8 +3,8 @@ import { useStore } from "../state/store";
 import { DoorIcon } from "./icons";
 
 /**
- * The "close the door" nudge: when any monitored door is open AND the music
- * room is louder than the recording-quiet threshold, the house asks for the
+ * The "close the door" nudge: when any monitored door is open AND the studio
+ * is louder than the recording-quiet threshold, the house asks for the
  * door to be closed. Computed client-side from live rooms data with a little
  * hysteresis so the banner never flickers on dB jitter.
  */
@@ -34,7 +34,7 @@ export default function NudgeBanner({ variant = "app" }: { variant?: "app" | "pa
         <DoorIcon size={34} className="shrink-0 text-st-meeting" />
         <div className="text-left">
           <div className="font-display text-3xl text-st-meeting">Please close the {nudge.count > 1 ? "doors" : "door"}</div>
-          <div className="mt-1 font-mono text-sm text-paper/80">{nudge.names} open · {nudge.db} dB in the music room</div>
+          <div className="mt-1 font-mono text-sm text-paper/80">{nudge.names} open · {nudge.db} dB in the studio</div>
         </div>
       </div>
     );

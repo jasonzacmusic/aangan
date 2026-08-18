@@ -6,6 +6,7 @@ import { ChipIcon, IconProps, MonitorIcon, PlugIcon, SignIcon, WifiIcon } from "
 const KIND_ICON: Record<FleetDevice["kind"], (p: IconProps) => React.JSX.Element> = {
   mac: MonitorIcon,
   pi: ChipIcon,
+  esp32: ChipIcon,
   panel: SignIcon,
   network: WifiIcon,
   other: PlugIcon,

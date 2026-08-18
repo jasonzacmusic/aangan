@@ -100,7 +100,7 @@ export default function Safety() {
             Refresh
           </button>
         </div>
-        {doorbell && (
+        {doorbell?.snapshotUrl ? (
           <div className="relative">
             <img src={doorbell.snapshotUrl} alt="Doorbell snapshot" className="aspect-video w-full object-cover" draggable={false} />
             <div className="absolute bottom-0 inset-x-0 flex items-center justify-between bg-gradient-to-t from-black/80 to-transparent px-4 pb-2.5 pt-8">
@@ -117,6 +117,10 @@ export default function Safety() {
                 </span>
               )}
             </div>
+          </div>
+        ) : (
+          <div className="px-4 py-8 text-center text-xs text-dim">
+            No doorbell camera yet. The hall board can still see the doorbell button; the picture needs an ESP32-CAM that has not been bought.
           </div>
         )}
       </div>

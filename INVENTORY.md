@@ -84,10 +84,10 @@ function-grouped design that assumed 180 m of two-core cable nobody ever bought.
 |---|---|---|---|---|
 | 1 | Studio | `8c:94:df:69:20:20` | **192.168.0.250** (static) | `room-studio.yaml` |
 | 2 | Music room | `00:70:07:a2:73:98` | **192.168.0.251** (static) | `room-music.yaml` |
-| 3 | Bathrooms A + geyser | `00:70:07:a2:6f:04` | DHCP — needs a static | `node-3-bath-a.yaml` |
-| 4 | Bathrooms B + washing machine | `00:70:07:a2:90:dc` | DHCP — needs a static | `node-4-bath-b.yaml` |
-| 5 | Kitchen | `88:f1:55:30:7f:84` | DHCP — needs a static | `node-5-kitchen.yaml` |
-| 6 | Hall / entrance | `8c:94:df:69:1e:5c` | DHCP — needs a static | `node-6-hall.yaml` |
+| 3 | Bathrooms A + geyser | `00:70:07:a2:6f:04` | **192.168.0.252** (in yaml — reflash) | `node-3-bath-a.yaml` |
+| 4 | Bathrooms B + washing machine | `00:70:07:a2:90:dc` | **192.168.0.253** (in yaml — reflash) | `node-4-bath-b.yaml` |
+| 5 | Kitchen | `88:f1:55:30:7f:84` | **192.168.0.254** (in yaml — reflash) | `node-5-kitchen.yaml` |
+| 6 | Hall / entrance | `8c:94:df:69:1e:5c` | **192.168.0.249** (in yaml — reflash) | `node-6-hall.yaml` |
 
 All six flashed. **36 sensors, no pin conflicts.** Each serves its own page and announces its address
 over USB on boot. Pins 25/26/27 are the doors-and-probes pins on nearly every board.
@@ -98,7 +98,7 @@ wiring. Set back to INFO once each room is signed off.
 
 ### Still to do on these nodes
 - **Most sensors are not physically wired yet.**
-- Assign static addresses to boards 3–6, continuing `.252`, `.253`, `.254`, `.249`.
+- Assign static addresses to boards 3–6 (now in the yaml: `.252`, `.253`, `.254`, `.249`) and reflash.
 - **Calibration, which can only happen after wiring:** the dBA threshold that means "too loud",
   the MQ-6 clean-air baseline, the HX711 scale factor, and the LD2410 distance gates.
 
@@ -216,8 +216,10 @@ Everything else on all six boards is push-fit.
 1. **Wire the six rooms.** Boards 1 and 2 are in progress. Everything is push-fit except §7.
 2. **Static addresses on boards 3–6**, so no bookmark ever breaks again.
 3. **Calibrate** — reed direction, dBA threshold, radar gates, cylinder scale. All remote over Wi-Fi.
-4. **Connect the app to the real boards.** Solves §8. This is what turns six sensor pages into a
-   product, and it is the gate for everything below.
+4. **Connect the app to the real boards.** The LAN server now lives in this repo: on the studio
+   Mac, `npm run lan`, then open the printed `http://192.168.0.x:8126` on every phone. HTTPS
+   Vercel still cannot see the boards — that is a browser rule, not a missing feature. This is
+   the gate for everything below.
 5. **The recording gate** — one glance before a take, with a named reason when the answer is no.
 6. **Unattended safety alerting** — ESP32 pushing to phones directly, so a 3 a.m. leak wakes someone
    with no app open. Designed, not built.

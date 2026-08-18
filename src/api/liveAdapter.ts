@@ -25,7 +25,7 @@ import {
 } from "./types";
 
 /**
- * Authoritative Raspberry Pi wrapper contract.
+ * Authoritative live-house contract (LAN server or a later Home Assistant hub).
  *
  * All timestamps are Unix epoch milliseconds. JSON keys and enum values must
  * match src/api/types.ts exactly. CORS must allow the Studio Command origin.

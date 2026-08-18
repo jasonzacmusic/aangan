@@ -41,8 +41,8 @@ export default function Preflight({ onSelect }: Props) {
   const studioAir = air?.rooms.find((r) => r.id === "studio") ?? air?.rooms[0];
   const airClean = !studioAir || (studioAir.pm25 < 30 && studioAir.co2 < settings.co2Threshold);
 
-  const music = rooms.find((r) => r.id === "music");
-  const db = music?.dbLevel ?? preflight.dbLevel;
+  const studio = rooms.find((r) => r.dbLevel != null) ?? rooms.find((r) => r.id === "studio");
+  const db = studio?.dbLevel ?? preflight.dbLevel;
   const quiet = db < settings.dbThreshold;
   const doorsClosed = preflight.doorsClosed;
   const ready = doorsClosed && quiet && preflight.sensorsHealthy && preflight.safetyClear;
