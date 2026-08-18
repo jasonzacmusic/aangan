@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aangan · The recording light and the door displays</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#f4f2ed;color:#1a1a1a;line-height:1.5}
+.w{max-width:840px;margin:0 auto;padding:0 14px 70px}
+header{background:#fff;padding:26px 0 20px;border-bottom:3px solid #1a1a1a}
+.hd{max-width:840px;margin:0 auto;padding:0 14px}
+header h1{font-size:28px;font-weight:800;letter-spacing:-.4px}
+header p{color:#666;font-size:13px;margin-top:5px}
+
+section{margin-top:34px}
+.h{border-left:5px solid var(--c);padding:3px 0 3px 13px}
+.h h2{font-size:21px;font-weight:800;color:var(--c);letter-spacing:-.2px}
+.h p{font-size:13px;color:#666;margin-top:5px;line-height:1.6}
+
+.big{background:#1a1a1a;color:#fff;border-radius:13px;padding:22px 24px;margin-top:16px}
+.big h3{font-size:19px;font-weight:800;letter-spacing:-.3px;line-height:1.35}
+.big p{font-size:14.5px;margin-top:11px;line-height:1.75;color:#e5e0d6}
+.big p b{color:#fff}
+.big .hl{color:#86efac;font-weight:700}
+
+.card{background:#fff;border:1px solid #e2dcd0;border-radius:12px;padding:20px 22px;margin-top:14px}
+.card h3{font-size:17px;font-weight:800;letter-spacing:-.2px}
+.card p{font-size:14px;color:#444;margin-top:9px;line-height:1.7}
+.card p b{color:#1a1a1a}
+svg{display:block;width:100%;height:auto;margin:12px auto;max-width:640px}
+
+table{width:100%;border-collapse:collapse;margin-top:13px;background:#fff;border:1px solid #e2dcd0;
+border-radius:10px;overflow:hidden}
+th{font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:700;letter-spacing:.6px;
+text-transform:uppercase;color:#6b5b3e;background:#faf8f3;text-align:left;padding:10px 12px;
+border-bottom:1px solid #e2dcd0}
+td{padding:11px 12px;font-size:13.5px;border-bottom:1px solid #f0ece3;vertical-align:top;line-height:1.6}
+tr:last-child td{border-bottom:none}
+td.pin{font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:15px;color:#b45309;
+background:#fffbeb;text-align:center;white-space:nowrap;width:78px}
+td.w{font-weight:700}
+td.r{text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#666;white-space:nowrap}
+
+.step{display:flex;gap:14px;align-items:flex-start;padding:15px 0;border-bottom:1px solid #f0ece3}
+.step:last-child{border-bottom:none}
+.sn{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:800;color:#fff;background:var(--c);
+border-radius:50%;min-width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.sb{flex:1;min-width:0}
+.sb .t{font-size:15px;font-weight:700;line-height:1.4}
+.sb .d{font-size:13.5px;color:#555;margin-top:5px;line-height:1.7}
+.sb .d b{color:#1a1a1a}
+
+.warn{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;margin-top:14px;
+font-size:13.5px;color:#7f1d1d;line-height:1.75}
+.warn b{color:#b91c1c}
+.note{background:#faf8f3;border:1px solid #e2dcd0;border-radius:10px;padding:14px 16px;margin-top:14px;
+font-size:13.5px;color:#5c5344;line-height:1.75}
+.note b{color:#1a1a1a}
+.good{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 16px;margin-top:14px;
+font-size:13.5px;color:#14532d;line-height:1.75}
+.good b{color:#166534}
+
+footer{margin-top:36px;padding-top:16px;border-top:1px solid #e2dcd0;font-size:12px;color:#666;
+font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
+@media print{
+  @page{margin:12mm 10mm}
+  body{background:#fff;font-size:10.5pt}
+  .w,.hd{max-width:100%;padding:0}
+  header{padding:0 0 8px;border-bottom:2.5px solid #000}
+  .card,.step,tr,.warn,.note,.good,.big{break-inside:avoid;page-break-inside:avoid}
+  table,section{break-inside:auto;page-break-inside:auto}
+  .h{break-after:avoid;page-break-after:avoid}
+  .big{background:#fff;color:#1a1a1a;border:2.5px solid #1a1a1a}
+  .big p{color:#333}.big p b,.big .hl{color:#000}
+  th,td.pin,.sn,.warn,.note,.good{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style></head><body>
+
+<header><div class="hd">
+  <h1>The recording light and the door displays</h1>
+  <p>What we are building, why it matters, and how to install it</p>
+</div></header>
+
+<div class="w">
+
+<section style="--c:#166534">
+  <div class="h"><h2>What this is for</h2></div>
+  <div class="big">
+    <h3>So that nobody ever walks into a take.</h3>
+    <p>Right now the only way to know a recording is happening is to already know. Someone opens the
+    studio door mid-take, a lesson is ruined, and the take is lost. The same happens with deliveries
+    at the front door and family walking through.</p>
+    <p>Two things fix it. <b>A light that anyone can see</b>, and <b>a screen at each door that says
+    what is going on inside.</b> Flick one switch and both change together.</p>
+  </div>
+</section>
+
+<section style="--c:#b45309">
+  <div class="h">
+    <h2>Two halves, and they are not equally ready</h2>
+    <p>This is the part worth understanding before anything is bought.</p>
+  </div>
+  <div class="card">
+    <h3>The light works on its own. Today.</h3>
+    <p>The switch and the light both connect to <b>the same ESP32 board in the studio</b>. The board
+    watches the switch and drives the light itself — no app, no internet, no Raspberry Pi. Flick the
+    switch and the light changes instantly, even if the Wi-Fi is down.</p>
+    <p><b>About ₹1,100 of parts and it is finished.</b></p>
+  </div>
+  <div class="card">
+    <h3>The screens need the app connected first.</h3>
+    <p>A screen at a door is a tablet showing a web page. That page has to <i>read</i> the studio's
+    state from somewhere, and right now the Aangan app runs on simulated data — it cannot see the
+    boards yet. A screen showing invented information is worse than no screen.</p>
+    <p><b>So: build the light first. Buy tablets after the app is connected.</b></p>
+  </div>
+</section>
+
+<section style="--c:#1d4ed8">
+  <div class="h">
+    <h2>How the light connects</h2>
+    <p>Two free pins on board 1, the studio node. Nothing else on that board changes.</p>
+  </div>
+  <div class="card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" role="img"
+         aria-label="Switch on GPIO23 and LED strip on GPIO18 via a level shifter, with its own 5V supply">
+      <rect x="24" y="90" width="120" height="130" rx="8" fill="#1f4d3d" stroke="#14332a" stroke-width="2"/>
+      <text x="84" y="80" font-family="Inter,sans-serif" font-size="13" fill="#1a1a1a" text-anchor="middle" font-weight="700">BOARD 1 · Studio</text>
+      <g font-family="'IBM Plex Mono',monospace" font-size="12" fill="#fff">
+        <circle cx="144" cy="120" r="5" fill="#cfa227"/><text x="96" y="124">23</text>
+        <circle cx="144" cy="165" r="5" fill="#cfa227"/><text x="96" y="169">18</text>
+        <circle cx="144" cy="205" r="5" fill="#8fa3ad"/><text x="88" y="209">GND</text>
+      </g>
+
+      <path d="M 144 120 H 250" stroke="#b45309" stroke-width="2.5" fill="none"/>
+      <rect x="250" y="102" width="104" height="36" rx="5" fill="#f2f0ea" stroke="#9aa0a6" stroke-width="1.8"/>
+      <text x="302" y="125" font-family="Inter,sans-serif" font-size="12.5" fill="#3a3f45" text-anchor="middle" font-weight="700">SWITCH</text>
+      <path d="M 354 120 C 400 120, 400 205, 250 205" stroke="#3a3f45" stroke-width="2.5" fill="none"/>
+      <text x="380" y="100" font-family="Inter,sans-serif" font-size="11.5" fill="#666">flick this</text>
+
+      <path d="M 144 165 H 250" stroke="#b45309" stroke-width="2.5" fill="none"/>
+      <rect x="250" y="147" width="104" height="36" rx="5" fill="#e8e4d8" stroke="#9aa0a6" stroke-width="1.8"/>
+      <text x="302" y="164" font-family="Inter,sans-serif" font-size="11" fill="#3a3f45" text-anchor="middle" font-weight="700">LEVEL</text>
+      <text x="302" y="177" font-family="Inter,sans-serif" font-size="11" fill="#3a3f45" text-anchor="middle" font-weight="700">SHIFTER</text>
+      <path d="M 354 165 H 452" stroke="#b45309" stroke-width="2.5" fill="none"/>
+      <rect x="452" y="140" width="150" height="50" rx="6" fill="#23262b" stroke="#0f1113" stroke-width="1.8"/>
+      <g fill="#dc2626"><circle cx="472" cy="165" r="6"/><circle cx="502" cy="165" r="6"/>
+        <circle cx="532" cy="165" r="6"/><circle cx="562" cy="165" r="6"/><circle cx="588" cy="165" r="6"/></g>
+      <text x="527" y="212" font-family="Inter,sans-serif" font-size="12.5" fill="#1a1a1a" text-anchor="middle" font-weight="700">LED STRIP</text>
+
+      <rect x="452" y="245" width="150" height="34" rx="5" fill="#fdecec" stroke="#e4a0a0" stroke-width="1.6"/>
+      <text x="527" y="267" font-family="'IBM Plex Mono',monospace" font-size="11.5" fill="#b91c1c" text-anchor="middle" font-weight="700">5V SUPPLY</text>
+      <path d="M 527 245 V 190" stroke="#b91c1c" stroke-width="2.5" fill="none"/>
+      <path d="M 452 262 H 250 V 205 H 144" stroke="#3a3f45" stroke-width="2.5" fill="none" stroke-dasharray="6,4"/>
+      <text x="300" y="252" font-family="Inter,sans-serif" font-size="11.5" fill="#666">grounds joined</text>
+    </svg>
+
+    <table>
+      <tr><th>Pin</th><th>What connects</th><th>Wires</th></tr>
+      <tr><td class="pin">23</td><td class="w">The switch</td>
+        <td>one wire to pin 23, the other to GND. No power, no polarity.</td></tr>
+      <tr><td class="pin">18</td><td class="w">LED strip data</td>
+        <td>pin 18 → level shifter input → strip DIN</td></tr>
+      <tr><td class="pin">—</td><td class="w">Strip power</td>
+        <td>strip 5V and GND go to its <b>own</b> 5V supply, not the ESP32</td></tr>
+    </table>
+
+    <div class="warn">
+      <b>The strip must have its own power supply.</b> An LED strip at full brightness draws far more
+      current than the ESP32 can give — trying it will brown out the board and every sensor on it
+      will start misbehaving. <b>Join the supply's ground to the ESP32's ground</b>, or the strip will
+      not understand the signal.
+    </div>
+    <div class="note">
+      <b>Why a level shifter.</b> The ESP32 speaks at 3.3 volts; the strip expects 5. Short runs
+      sometimes work without one, then fail intermittently when the room warms up — which is the worst
+      kind of fault to chase. It costs ₹80. Fit it.
+    </div>
+  </div>
+</section>
+
+<section style="--c:#166534">
+  <div class="h">
+    <h2>Installing it — in this order</h2>
+  </div>
+  <div class="card" style="--c:#166534">
+    <div class="step" style="--c:#166534"><div class="sn">1</div><div class="sb">
+      <div class="t">Build it on the table first</div>
+      <div class="d">Board, switch, level shifter and a short piece of strip, all on the bench with the
+      board on a charger. <b>Nothing goes on a wall until the switch changes the colour.</b></div>
+    </div></div>
+    <div class="step" style="--c:#166534"><div class="sn">2</div><div class="sb">
+      <div class="t">Test the switch on its own</div>
+      <div class="d">Before the strip is connected, flick the switch and check the studio page at
+      <b>http://192.168.0.250</b> changes. If the switch does not register, the strip will not help.</div>
+    </div></div>
+    <div class="step" style="--c:#166534"><div class="sn">3</div><div class="sb">
+      <div class="t">Add the strip and its supply</div>
+      <div class="d">Plug the 5V supply in <b>last</b>, after every wire is in place. Flick the switch —
+      the strip should change colour immediately.</div>
+    </div></div>
+    <div class="step" style="--c:#166534"><div class="sn">4</div><div class="sb">
+      <div class="t">Then, and only then, mount it</div>
+      <div class="d"><b>Above the studio door, on the outside</b>, so it is seen before someone opens
+      it. High enough not to be knocked. The switch goes wherever the person recording can reach it
+      without leaving the instrument.</div>
+    </div></div>
+  </div>
+  <div class="good">
+    <b>What finished looks like:</b> flick the switch, a light above the studio door turns red, and
+    anyone approaching knows not to come in. Flick it back and it returns to green. No phone, no app,
+    no internet needed — it keeps working in a power cut on the board's charger.
+  </div>
+</section>
+
+<section style="--c:#b91c1c">
+  <div class="h">
+    <h2>The screens — what they will do, and what they need first</h2>
+  </div>
+  <div class="card">
+    <p>Each screen is a small tablet on the wall beside a door, showing one page all day. The app
+    already has all of this built:</p>
+    <table>
+      <tr><th>Screen</th><th>Shows</th></tr>
+      <tr><td class="w">Studio door</td><td>Recording / Class / Available, in colour, readable from across the corridor</td></tr>
+      <tr><td class="w">Front door</td><td>Same, plus the <b>delivery code</b> — type an OTP and the courier reads it off the screen, so nobody opens the door mid-take</td></tr>
+      <tr><td class="w">Either</td><td>A QR code guests can scan for what is happening inside and how to behave</td></tr>
+    </table>
+    <div class="warn">
+      <b>Three things must be settled before buying a tablet.</b><br><br>
+      <b>1. Is there a plug socket within cable reach of each door?</b> A tablet on a wall needs
+      power. If there is no socket there, <b>this is the one part of the whole project that needs an
+      electrician</b> — check it before spending anything.<br><br>
+      <b>2. The app must read the real boards first.</b> Today it shows invented numbers.<br><br>
+      <b>3. Each tablet needs kiosk software</b> so it stays on one page, never sleeps, and comes back
+      by itself after a power cut. Without it, a tablet is not a wall panel.
+    </div>
+  </div>
+</section>
+
+<footer>
+  Aangan · Nathaniel School of Music, Bangalore<br>
+  The light: about ₹1,100, works standalone, buildable now<br>
+  The screens: about ₹24,000, and they wait for the app
+</footer>
+
+</div>
+</body></html>
