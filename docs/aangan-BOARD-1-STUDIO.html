@@ -414,6 +414,65 @@ font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
   </div>
 </section>
 
+<!-- ===== MOUNT IN THE STUDIO ===== -->
+<section style="--c:#166534">
+  <div class="h">
+    <h2>Put the sound meter in the room</h2>
+    <p>The board stays in the studio. Only three wires go to the meter. Nothing goes through a wall, and nothing needs an electrician.</p>
+  </div>
+
+  <table>
+    <tr><th>Do this</th><th>Why</th></tr>
+    <tr>
+      <td class="nm">Sit Board 1 on a shelf or in the white ABS box, still on its USB charger, <b>inside the studio</b></td>
+      <td>Every sensor for this board must stay within a couple of metres of it. The meter cannot live in the hall with the board in the studio.</td>
+    </tr>
+    <tr>
+      <td class="nm">Put the meter at <b>chest-to-head height</b> (~1.2–1.5 m), near the chair / vocal mic / recording position, round microphone facing the room</td>
+      <td>The number is “is this room quiet enough to record”. That only works if the meter hears what the recording hears.</td>
+    </tr>
+    <tr>
+      <td class="nm">Keep it in <b>open air</b></td>
+      <td>Not behind foam, not in a closed box, not in a cupboard, not facing a wall.</td>
+    </tr>
+  </table>
+
+  <div class="warn">
+    <b>Do not put it:</b> on a speaker or near a monitor · under an AC vent · in the door gap ·
+    high on the ceiling · on a metal plate or the ESP32 itself (the microphone pins will short) ·
+    with tape over the round black mic. Do not touch that black film.
+  </div>
+
+  <div class="sensor" style="--c:#166534">
+    <div class="stop"><div class="sn">A</div><div class="sbody">
+      <h3>Today — tape, no drilling</h3>
+      <div class="conn">
+        1. Stick double-sided tape on the <b>back</b> of the black board only, or tape it to a scrap of plastic / cardboard first, then tape that to the wall.<br>
+        2. Microphone (the round capsule) faces <b>into the room</b>.<br>
+        3. Tape the <b>cable</b> to the wall a few centimetres from the board so a tug cannot rip the plug.<br>
+        4. Same three wires as the bench: <b>red → 5V</b> · <b>black → GND</b> · <b>blue/signal → GPIO34</b>. If the Gravity cable is short, extend those three with jumper wire — keep the run under about two metres.
+      </div>
+      <div class="test"><b>Test after it is up:</b> on <b>http://192.168.0.250</b>, stay quiet, note the number, then clap at the recording seat. It must jump. If it does not, the cable came off pin 34 or the meter lost 5V.</div>
+    </div></div>
+  </div>
+
+  <div class="sensor" style="--c:#166534">
+    <div class="stop"><div class="sn">B</div><div class="sbody">
+      <h3>Later — white ABS box</h3>
+      <div class="look">The six white boxes and tape are already in the building. The meter is 60 × 43 mm. It must <b>hear the room</b>, so the box cannot be sealed.</div>
+      <div class="conn">
+        Cut or drill a hole so the microphone looks out. Sit the board on plastic standoffs or a dry insulator — never on metal. Board 1 (the ESP32) can live in the same box or on the shelf below; the meter can sit on the wall with only the three-wire cable going back.
+      </div>
+    </div></div>
+  </div>
+
+  <div class="note">
+    <b>Reeds stay on the doors, radar faces into the room, leak comb stays on the floor.</b>
+    Only the sound meter wants this height-and-position. Do not move Board 1 out of the studio to make the cable prettier.
+  </div>
+</section>
+
+
 <!-- ===== TROUBLE ===== -->
 <section style="--c:#1a1a1a">
   <div class="h">
