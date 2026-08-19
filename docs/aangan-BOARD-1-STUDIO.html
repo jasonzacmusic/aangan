@@ -78,10 +78,51 @@ font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
 <header><div class="hd">
   <h1>Board 1 — Studio</h1>
   <p>Six sensors, every wire, in the order to connect them</p>
-  <div class="src">Board already programmed · page at http://192.168.0.158</div>
+  <div class="src">Board already programmed · page at http://192.168.0.250</div>
 </div></header>
 
 <div class="w">
+
+<!-- ===== PHONE PAGE DECODER ===== -->
+<section style="--c:#7f1d1d">
+  <div class="h">
+    <h2>If the phone numbers never move</h2>
+    <p>http://192.168.0.250 is the live Studio board. The page is not frozen — the log at the bottom still updates. Stuck readings mean those pins are empty, or a different board’s parts were plugged in here.</p>
+  </div>
+  <table>
+    <tr><th>What the phone shows</th><th>What it actually means</th><th>What must be on this board to make it move</th></tr>
+    <tr>
+      <td class="nm">Humidity NA<br>Temperature NA</td>
+      <td>The climate chip is not electrically there. Firmware is waiting on I²C address 0x44.</td>
+      <td>GY-SHT31-D with the <b>four header pins soldered</b>, then VIN→3V3, GND, SDA→GPIO21, SCL→GPIO22. A DHT22 will never fill these two lines — that part belongs on the bathroom board.</td>
+    </tr>
+    <tr>
+      <td class="nm">Sound level stuck at ~7.1 dBA</td>
+      <td>GPIO34 is empty. An unconnected analogue pin invents a number and holds it. A real quiet room with the meter on is about 30–50, and a clap must jump.</td>
+      <td>SEN0232 only: red→5V, black→GND, blue/signal→<b>GPIO34</b>. Raindrop AO or a DHT data wire on 34 will not behave like a sound meter.</td>
+    </tr>
+    <tr>
+      <td class="nm">Door leaf A / B both ON</td>
+      <td>ON = pin sitting high. Unwired reeds do that because of the pull-up. Dry raindrop modules on these pins also sit ON, so they look like open doors.</td>
+      <td>MC-38 reed: one wire GPIO25 (A / G1 side), one wire GPIO26 (B / G2 side), other wire of each to GND. Hold the magnet on the switch — that line must flip to OFF. If it never flips, the reed is not on that pin.</td>
+    </tr>
+    <tr>
+      <td class="nm">Presence OFF</td>
+      <td>The radar is not talking on UART, or TX/RX are swapped.</td>
+      <td>LD2410: 5V, GND, <b>TX→GPIO16, RX→GPIO17</b> (crossed). Walk in front of it. If it stays OFF, swap TX and RX.</td>
+    </tr>
+    <tr>
+      <td class="nm">Sink leak OFF</td>
+      <td>OFF is dry — correct if the comb is dry, and also what an unwired pin shows.</td>
+      <td>Raindrop VCC→3V3, GND, DO→GPIO27. Touch the comb with a damp cloth. It must go ON, then OFF when dry.</td>
+    </tr>
+  </table>
+  <div class="warn">
+    <b>Wrong board is the usual mix-up.</b> Raindrop modules plus a DHT22 are board 3 (bathrooms + geyser), not this page.
+    Open <b>http://192.168.0.154</b> first (today’s DHCP). After that board is reflashed it will sit at
+    <b>http://192.168.0.252</b>. Temperature and humidity on the Studio page will stay NA until the SHT31 is soldered — connecting anything else will not fill them.
+  </div>
+</section>
 
 <!-- ===== PICK THESE OUT ===== -->
 <section style="--c:#166534">
@@ -315,8 +356,9 @@ font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
         black &nbsp;→&nbsp; <b>blue rail (GND)</b><br>
         blue/signal &nbsp;→&nbsp; <b>GPIO34</b></div>
       <div class="test"><b>Test:</b> watch <b>Studio sound level</b>. Stay silent and note the number.
-      Clap, and it must jump then settle. <b>Write down both numbers</b> — that is how the recording
-      threshold gets set, and only your room can give it.</div>
+      Clap, and it must jump then settle. A stuck <b>7.1</b> (or anything that never moves) means
+      GPIO34 is still empty. A working quiet reading is roughly 30–50. <b>Write down both numbers</b>
+      — that is how the recording threshold gets set, and only your room can give it.</div>
     </div></div>
   </div>
 
@@ -345,8 +387,9 @@ font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
         SDA &nbsp;→&nbsp; <b>GPIO21</b><br>
         SCL &nbsp;→&nbsp; <b>GPIO22</b></div>
       <div class="test"><b>Test:</b> <b>Studio temperature</b> and <b>Studio humidity</b> show real
-      numbers within a minute. Breathe gently on it and humidity rises. Blank means the four wires are
-      in the wrong order.</div>
+      numbers within a minute. Breathe gently on it and humidity rises. <b>NA is expected until the
+      four header pins are soldered</b> — the chip shipped unwelded, and jumpers on a loose strip do
+      not count. Wrong wire order also stays NA.</div>
     </div></div>
   </div>
 
@@ -379,9 +422,10 @@ font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
   <table>
     <tr><th>What you see</th><th>What it means</th></tr>
     <tr><td class="nm">Page will not load</td><td>Board is not on Wi-Fi. Unplug, wait five seconds, plug back in.</td></tr>
-    <tr><td class="nm">A sensor never changes</td><td>A wire is one hole out. Count the pins again from the end of the board.</td></tr>
+    <tr><td class="nm">A sensor never changes</td><td>A wire is one hole out, or this part belongs on another board. Count the pins again from the end of the board.</td></tr>
+    <tr><td class="nm">Sound stuck near 7.1 dBA</td><td>GPIO34 is empty. Plug the SEN0232 signal into pin 34 and power it from 5V. Clap — the number must jump.</td></tr>
     <tr><td class="nm">Presence never comes on</td><td>TX and RX are the wrong way round. Swap them.</td></tr>
-    <tr><td class="nm">Humidity stays blank</td><td>The four wires are in the wrong order. VIN and GND are easy to reverse.</td></tr>
+    <tr><td class="nm">Humidity stays NA</td><td>The SHT31 header is not soldered, or the four wires are in the wrong order. A DHT22 will not fill this line.</td></tr>
     <tr><td class="nm">Doors read backwards</td><td><b>Normal. Do not rewire.</b> Write it down and Jason flips it in the software.</td></tr>
     <tr><td class="nm">Everything stopped at once</td><td>Unplug immediately. Usually a red rail touching a blue rail.</td></tr>
   </table>
@@ -393,8 +437,8 @@ font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
 
 <footer>
   Aangan · Nathaniel School of Music, Bangalore<br>
-  Board 1 · Studio · MAC 8c:94:df:69:20:20 · http://192.168.0.158<br>
-  Firmware pi/house/esphome/room-studio.yaml — already flashed, nothing to program
+  Board 1 · Studio · MAC 8c:94:df:69:20:20 · http://192.168.0.250<br>
+  Firmware pi/house/esphome/room-studio.yaml — already flashed; hide-fake-dBA needs one reflash
 </footer>
 
 </div>
