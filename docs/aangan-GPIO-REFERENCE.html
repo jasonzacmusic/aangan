@@ -93,7 +93,7 @@ font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
 <!-- ===== BOARD 1 ===== -->
 <section style="--c:#166534">
   <div class="nodehd"><div class="num">1</div><div class="nn">
-    <h3>Studio</h3><div class="ip">http://192.168.0.158 · room-studio.yaml</div></div></div>
+    <h3>Studio</h3><div class="ip">http://192.168.0.250 · room-studio.yaml</div></div></div>
   <table>
     <tr><th>Sensor</th><th>Device</th><th>Wiring — sensor pin → ESP32 pin</th><th class="st">Code</th></tr>
     <tr><td class="nm">Studio door leaf A</td><td class="dev">MC-38 reed</td>
@@ -118,12 +118,17 @@ font-family:'IBM Plex Mono',monospace;line-height:1.8;text-align:center}
     <b>The LD2410's TX and RX cross over.</b> Its transmit goes to the ESP32's receive. If presence
     never works, swap those two wires — it is the single most common mistake with this part.
   </div>
+  <div class="warn">
+    <b>Firmware DONE is not the same as a live reading.</b> Temperature/humidity stay NA until the
+    SHT31 header is soldered. Sound stuck at ~7.1 dBA means GPIO34 is empty — that number is invented
+    by an unconnected pin, not a quiet room.
+  </div>
 </section>
 
 <!-- ===== BOARD 2 ===== -->
 <section style="--c:#b45309">
   <div class="nodehd"><div class="num">2</div><div class="nn">
-    <h3>Music room</h3><div class="ip">http://192.168.0.153 · room-music.yaml</div></div></div>
+    <h3>Music room</h3><div class="ip">http://192.168.0.251 · room-music.yaml</div></div></div>
   <table>
     <tr><th>Sensor</th><th>Device</th><th>Wiring — sensor pin → ESP32 pin</th><th class="st">Code</th></tr>
     <tr><td class="nm">Teaching door leaf A</td><td class="dev">MC-38 reed</td>

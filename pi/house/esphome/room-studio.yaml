@@ -91,6 +91,10 @@ sensor:
     update_interval: 30s
 
   # DFRobot SEN0232: 0.6-2.6 V spans 30-130 dBA, so dBA = volts x 50.
+  # An empty GPIO34 floats around 0.1–0.2 V and publishes a stuck "~7.1 dBA".
+  # That number is a lie — a real quiet studio with this meter is ~30–50 dBA
+  # and a clap must jump. Hide anything below 20 so the phone shows NA until
+  # the signal wire is actually on pin 34. Takes effect on the next flash.
   - platform: adc
     pin: GPIO34
     name: "Studio sound level"
@@ -101,6 +105,9 @@ sensor:
     update_interval: 200ms
     filters:
       - multiply: 50.0
+      - lambda: |-
+          if (x < 20.0) return NAN;
+          return x;
       - sliding_window_moving_average:
           window_size: 10
           send_every: 5
