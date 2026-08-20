@@ -55,7 +55,7 @@ esp32:
     type: esp-idf
 
 logger:
-  baud_rate: 115200   # TEMP: diagnosing wifi. Back to 0 once solved.
+  baud_rate: 115200
   level: INFO
 
 api:
@@ -196,51 +196,15 @@ script:
           id(door_visual).publish_state(visual);
           id(door_mark).publish_state(mark);
 
-# USB overlay so Studio Command can still set rec / class from this Mac.
-uart:
-  id: usb_cmd
-  baud_rate: 115200
-  tx_pin: GPIO1
-  rx_pin: GPIO3
-  debug:
-    direction: RX
-    dummy_receiver: true
-    after:
-      delimiter: "\n"
-    sequence:
-      - lambda: |-
-          std::string line(bytes.begin(), bytes.end());
-          while (!line.empty() && (line.back() == '\r' || line.back() == '\n' || line.back() == ' '))
-            line.pop_back();
-          if (line.empty()) return;
-          if (line.rfind("COLOR ", 0) == 0) {
-            std::string hex = line.substr(6);
-            if (!hex.empty() && hex[0] == '#') hex.erase(0, 1);
-            if (hex.size() >= 6) {
-              unsigned long n = strtoul(hex.c_str(), nullptr, 16);
-              float r = ((n >> 16) & 0xFF) / 255.0f;
-              float g = ((n >> 8) & 0xFF) / 255.0f;
-              float b = (n & 0xFF) / 255.0f;
-              auto puck = id(door_puck).turn_on();
-              puck.set_rgb(r, g, b);
-              puck.set_brightness(1.0f);
-              puck.perform();
-            }
-          } else if (line.rfind("TEXT ", 0) == 0) {
-            id(door_ticker).publish_state(line.substr(5));
-          } else if (line.rfind("STATE ", 0) == 0) {
-            id(g_state) = line.substr(6);
-            id(apply_hall).execute();
-          } else if (line.rfind("VISUAL ", 0) == 0) {
-            id(door_visual).publish_state(line.substr(7));
-          } else if (line.rfind("MARK ", 0) == 0) {
-            id(door_mark).publish_state(line.substr(5));
-          } else if (line.rfind("DBA ", 0) == 0) {
-            id(g_dba) = atof(line.substr(4).c_str());
-            id(apply_hall).execute();
-          } else if (line.rfind("DOOR ", 0) == 0) {
-            id(door_leaf).publish_state(line.substr(5));
-          }
+# The USB command overlay used to live here: a uart on GPIO1/GPIO3 that let
+# the Mac push colours down the serial cable. It is gone deliberately.
+#
+# GPIO1 and GPIO3 ARE the USB serial port. Claiming them for anything else
+# means this board can never print a boot log, which is why logging had to
+# be switched off and why a board that would not join Wi-Fi could not be
+# diagnosed at all. The app now reaches the light over Wi-Fi and through
+# the relay, so nothing needs the cable. Do not put a uart back on these
+# two pins.
 
 output:
   - platform: ledc
@@ -342,10 +306,18 @@ interval:
           condition:
             wifi.connected
           then:
-            - http_request.get:
+            - http_request.post:
                 url: ${relay_url}
                 capture_response: true
                 max_response_buffer_size: 256
+                request_headers:
+                  Content-Type: application/json
+                # Reporting and collecting in the same call. What this board can
+                # see about the door and the room reaches the sign nowhere else
+                # — it arrives on ESP-NOW and dies here otherwise.
+                json: |-
+                  root["visual"] = id(door_visual).state;
+                  root["dba"] = id(g_dba);
                 on_response:
                   then:
                     - lambda: |-

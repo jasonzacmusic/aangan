@@ -8,8 +8,15 @@
  * board making an outbound https call is unaffected by mixed content, by mesh
  * client isolation, and by whether the Mac is even switched on.
  *
- *   POST /api/door  { "state": "audio_rec" }   ← the app, on every change
- *   GET  /api/door                             ← ledESP, every couple of seconds
+ *   POST /api/door  { "state": "audio_rec" }        ← the app, on every change
+ *   POST /api/door  { "visual": "door", "dba": 61 }  ← the board, every 3s
+ *   GET  /api/door                                   ← the door sign / anyone
+ *
+ * The board's poll is a POST rather than a GET so that one call does both jobs:
+ * it reports what the board can see (door open, room too loud — facts that
+ * arrive over ESP-NOW and exist nowhere else) and receives the studio state in
+ * the reply. Splitting that into a read and a write would double the serverless
+ * invocations for no gain.
  *
  * Storage is Vercel KV over its REST API, called with plain fetch so this file
  * needs no dependency. If KV is not configured the route still answers from
@@ -39,8 +46,20 @@ const KV_URL = process.env.KV_REST_API_URL ?? "";
 const KV_TOKEN = process.env.KV_REST_API_TOKEN ?? "";
 const kvReady = KV_URL.length > 0 && KV_TOKEN.length > 0;
 
+const VISUALS = new Set(["ok", "loud", "door"]);
+
+type Door = {
+  /** What the studio is doing. Only the app sets this. */
+  state: string;
+  /** Epoch ms of the last state write. 0 = this instance knows nothing. */
+  at: number;
+  /** What the board can see. Only the board sets this. */
+  visual: string;
+  dba: number | null;
+};
+
 /** Survives between invocations on a warm instance; lost on a cold start. */
-let memory: { state: string; at: number } = { state: "available", at: 0 };
+let memory: Door = { state: "available", at: 0, visual: "ok", dba: null };
 
 async function kv(path: string): Promise<unknown> {
   const res = await fetch(`${KV_URL}/${path}`, {
@@ -51,11 +70,11 @@ async function kv(path: string): Promise<unknown> {
   return (await res.json())?.result ?? null;
 }
 
-async function readState() {
+async function readState(): Promise<Door> {
   if (!kvReady) return memory;
   try {
     const raw = await kv(`get/${KEY}`);
-    if (typeof raw === "string" && raw.length) return JSON.parse(raw);
+    if (typeof raw === "string" && raw.length) return { ...memory, ...JSON.parse(raw) };
   } catch {
     // KV blipped. Fall through to memory rather than 500 — a door light going
     // stale is far better than the board getting an error it cannot act on.
@@ -64,7 +83,7 @@ async function readState() {
 }
 
 async function writeState(state: string) {
-  memory = { state, at: Date.now() };
+  memory = { ...memory, state, at: Date.now() };
   if (!kvReady) return;
   try {
     await kv(`set/${KEY}/${encodeURIComponent(JSON.stringify(memory))}`);
@@ -84,6 +103,20 @@ export default async function handler(req: any, res: any) {
 
   if (req.method === "POST") {
     const body = typeof req.body === "string" ? safeParse(req.body) : req.body;
+
+    // A board report. Never touches `state` or `at` — the board is not allowed
+    // to decide what the studio is doing, only to say what it can see.
+    if (body && body.state === undefined) {
+      const visual = String(body.visual ?? "");
+      if (VISUALS.has(visual)) memory.visual = visual;
+      const dba = Number(body.dba);
+      if (Number.isFinite(dba)) memory.dba = Math.round(dba * 10) / 10;
+      const now = await readState();
+      return res.status(200).json({
+        state: now.state, at: now.at, visual: memory.visual, dba: memory.dba,
+      });
+    }
+
     const state = String(body?.state ?? "");
     if (!STATES.has(state)) {
       return res.status(400).json({ ok: false, error: "unknown state", got: state });
@@ -98,6 +131,10 @@ export default async function handler(req: any, res: any) {
     // Epoch ms of the last write. 0 means this instance has never been
     // written to, which the board reads as "I know nothing, ignore me".
     at: current.at,
+    // What the board can see. The sign needs these to show the door-open and
+    // too-loud rules; they live nowhere else, since they arrive on ESP-NOW.
+    visual: memory.visual,
+    dba: memory.dba,
     age_s: current.at ? Math.round((Date.now() - current.at) / 1000) : null,
     store: kvReady ? "kv" : "memory",
   });

@@ -1,0 +1,184 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Studio Door">
+<title>Studio Door</title>
+<style>
+  /* Deliberately old-Safari friendly: no CSS variables in critical paths, no
+     grid, no clamp() without a fallback. This runs on an iPad that may be many
+     iOS versions behind, propped by a mahogany door, for hours at a time. */
+  * { margin:0; padding:0; -webkit-box-sizing:border-box; box-sizing:border-box; }
+  html, body {
+    height:100%; width:100%; overflow:hidden;
+    -webkit-user-select:none; user-select:none;
+    -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent;
+  }
+  body {
+    background:#0b0b0c; color:#fff;
+    font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,sans-serif;
+    -webkit-transition:background-color 700ms ease; transition:background-color 700ms ease;
+  }
+  /* A single wash, lit from above like a lamp over a door, rather than a flat
+     fill. Flat colour on a big panel in a dark hall looks like a screen; this
+     looks like light. */
+  #wash {
+    position:fixed; top:0; left:0; right:0; bottom:0;
+    background-image:-webkit-radial-gradient(50% 22%, ellipse farthest-corner, rgba(255,255,255,.20) 0%, rgba(255,255,255,0) 62%);
+    background-image:radial-gradient(ellipse farthest-corner at 50% 22%, rgba(255,255,255,.20) 0%, rgba(255,255,255,0) 62%);
+    pointer-events:none;
+  }
+  #vig {
+    position:fixed; top:0; left:0; right:0; bottom:0; pointer-events:none;
+    -webkit-box-shadow:inset 0 0 22vmin 6vmin rgba(0,0,0,.42);
+    box-shadow:inset 0 0 22vmin 6vmin rgba(0,0,0,.42);
+  }
+  #stage {
+    position:fixed; top:0; left:0; right:0; bottom:0;
+    display:-webkit-box; display:-webkit-flex; display:flex;
+    -webkit-box-orient:vertical; -webkit-flex-direction:column; flex-direction:column;
+    -webkit-box-pack:center; -webkit-justify-content:center; justify-content:center;
+    -webkit-box-align:center; -webkit-align-items:center; align-items:center;
+    text-align:center; padding:6vmin;
+  }
+  #eyebrow {
+    font-size:2.1vmin; letter-spacing:.62em; text-indent:.62em;
+    text-transform:uppercase; opacity:.55; font-weight:600; margin-bottom:3.2vmin;
+  }
+  #word {
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:20vmin; line-height:.92; font-weight:normal;
+    letter-spacing:-.015em; text-shadow:0 .4vmin 3vmin rgba(0,0,0,.45);
+  }
+  #sub { font-size:3vmin; opacity:.8; margin-top:3.4vmin; font-weight:500; letter-spacing:.005em; }
+  #foot {
+    position:fixed; left:0; right:0; bottom:3.2vmin;
+    font-size:1.9vmin; letter-spacing:.26em; text-transform:uppercase;
+    opacity:.32; font-weight:600;
+  }
+  #dba {
+    position:fixed; top:3.2vmin; right:4vmin;
+    font-family:"SF Mono",Menlo,Consolas,monospace;
+    font-size:2vmin; opacity:.42; letter-spacing:.08em;
+  }
+  #dot {
+    position:fixed; top:3.4vmin; left:4vmin;
+    width:1.5vmin; height:1.5vmin; min-width:9px; min-height:9px;
+    border-radius:50%; background:#35d07f; opacity:.75;
+  }
+  #dot.bad { background:#e0484d; }
+  /* The two motions are deliberately different animals. A breath says "ease
+     off"; a flash says "stop". They must never be mistakable for each other
+     from across a hall. */
+  .breathe { -webkit-animation:breathe 1.8s ease-in-out infinite; animation:breathe 1.8s ease-in-out infinite; }
+  .flash   { -webkit-animation:flash .22s steps(1) infinite;      animation:flash .22s steps(1) infinite; }
+  @-webkit-keyframes breathe { 0%,100%{opacity:1} 50%{opacity:.34} }
+  @keyframes breathe { 0%,100%{opacity:1} 50%{opacity:.34} }
+  @-webkit-keyframes flash { 0%,49%{opacity:1} 50%,100%{opacity:.1} }
+  @keyframes flash { 0%,49%{opacity:1} 50%,100%{opacity:.1} }
+</style>
+
+<div id="wash"></div>
+<div id="vig"></div>
+<div id="dot"></div>
+<div id="dba"></div>
+<div id="stage">
+  <div id="eyebrow">Nathaniel School of Music</div>
+  <div id="word">&mdash;</div>
+  <div id="sub">connecting</div>
+</div>
+<div id="foot">Studio</div>
+
+<script>
+/* The door sign.
+ *
+ * Reads the same /api/door the light board reads, from the same origin, so the
+ * sign and the strip cannot drift apart or contradict each other. Same origin
+ * also means no mixed-content block, which is what rules out talking to the
+ * board's own http address from this https page.
+ *
+ * Written in plain ES5 on purpose. This is expected to run on an old iPad left
+ * propped by the door; arrow functions and fetch() are not safe assumptions.
+ */
+(function () {
+  var LOOK = {
+    audio_rec: { bg:"#8E1116", word:"ON AIR",    sub:"Recording — please do not enter", foot:"Studio" },
+    video_rec: { bg:"#8E1116", word:"ON AIR",    sub:"Filming — please do not enter",   foot:"Studio" },
+    class:     { bg:"#7A4A0B", word:"CLASS",     sub:"Lesson in progress",                   foot:"Studio" },
+    meeting:   { bg:"#7A4A0B", word:"MEETING",   sub:"Please wait",                          foot:"Studio" },
+    emergency: { bg:"#4C1D95", word:"EMERGENCY", sub:"Do not enter",                         foot:"Studio" },
+    available: { bg:"#0E3323", word:"COME IN",   sub:"The studio is free",                   foot:"Studio" }
+  };
+
+  var el = function (id) { return document.getElementById(id); };
+  var lastKey = "";
+  var misses = 0;
+
+  function paint(state, visual, dba, online) {
+    el("dot").className = online ? "" : "bad";
+
+    var look = LOOK[state] || LOOK.available;
+    var recording = (state === "audio_rec" || state === "video_rec");
+    var fx = "", sub = look.sub;
+
+    /* Urgency order matters and must match the strip: a door swinging open
+       during a take beats the room merely being loud. Someone is about to
+       walk into shot; that is the more expensive problem. */
+    if (recording || state === "emergency") {
+      if (visual === "door")      { fx = "flash";   sub = "DOOR OPEN — please close it"; }
+      else if (visual === "loud") { fx = "breathe"; sub = "Too loud for a take"; }
+      else if (state === "emergency") { fx = "flash"; }
+    }
+
+    var key = state + "|" + visual + "|" + fx;
+    if (key !== lastKey) {
+      document.body.style.backgroundColor = look.bg;
+      el("word").innerHTML = look.word;
+      el("stage").className = fx;
+      el("foot").innerHTML = look.foot;
+      lastKey = key;
+    }
+    el("sub").innerHTML = sub;
+    el("dba").innerHTML = (dba && dba !== "--") ? dba + " dBA" : "";
+  }
+
+  function get(url, done) {
+    var x = new XMLHttpRequest();
+    var finished = false;
+    x.open("GET", url + (url.indexOf("?") < 0 ? "?" : "&") + "t=" + new Date().getTime(), true);
+    x.timeout = 4000;
+    x.onreadystatechange = function () {
+      if (x.readyState !== 4 || finished) return;
+      finished = true;
+      if (x.status === 200) {
+        try { done(JSON.parse(x.responseText)); return; } catch (e) {}
+      }
+      done(null);
+    };
+    x.ontimeout = function () { if (!finished) { finished = true; done(null); } };
+    x.onerror  = function () { if (!finished) { finished = true; done(null); } };
+    try { x.send(); } catch (e) { done(null); }
+  }
+
+  function tick() {
+    get("/api/door", function (body) {
+      if (!body || typeof body.state !== "string") {
+        /* One dropped poll on a phone-grade radio is nothing. Only call it
+           offline after several in a row, so a flicker of Wi-Fi does not put
+           a red dot on a door during a lesson. */
+        misses++;
+        if (misses >= 4) paint(lastKey.split("|")[0] || "available", "ok", "", false);
+        return;
+      }
+      misses = 0;
+      paint(body.state, body.visual || "ok", body.dba || "", true);
+    });
+  }
+
+  tick();
+  setInterval(tick, 2000);
+
+  /* An iPad by a door should never sleep, and should never bounce-scroll. */
+  document.addEventListener("touchmove", function (e) { e.preventDefault(); }, false);
+})();
