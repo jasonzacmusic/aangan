@@ -1,67 +1,63 @@
 import { useEffect, useState } from "react";
-import { LEDESP_URL, ledespEnabled, ledespReachable } from "../api/ledesp";
+import { LEDESP_URL, ledespLink, type LinkStatus } from "../api/ledesp";
 
 /**
- * Honest status for the door light board.
+ * Honest status for the door light.
  *
- * The board is a separate machine on the Wi-Fi. When the app cannot reach it,
- * that is almost never a bug in the app — it is the network, or the board is
- * unplugged. So say which, out loud, instead of failing silently.
+ * When the light does not follow the app it is almost never the app — it is
+ * the network, or the board is unplugged. So name which road is open instead
+ * of failing quietly, and let it be tapped to open the board directly.
  */
+const LOOK: Record<LinkStatus | "checking", { label: string; fg: string; bg: string; edge: string; dot: string }> = {
+  checking: { label: "Door light · checking", fg: "#b9b9c2", bg: "rgba(255,255,255,.06)", edge: "rgba(255,255,255,.14)", dot: "#8a8a94" },
+  direct:   { label: "Door light · live",     fg: "#7ee2a8", bg: "rgba(46,160,97,.13)",   edge: "rgba(46,160,97,.35)",  dot: "#35d07f" },
+  relay:    { label: "Door light · via cloud", fg: "#8ec8ff", bg: "rgba(56,120,220,.14)", edge: "rgba(56,120,220,.4)",  dot: "#5b9dff" },
+  down:     { label: "Door light · unreachable", fg: "#ff9b9b", bg: "rgba(185,28,28,.15)", edge: "rgba(185,28,28,.4)",  dot: "#e0484d" },
+};
+
 export default function LedEspBadge() {
-  const [live, setLive] = useState<boolean | null>(null);
+  const [link, setLink] = useState<LinkStatus | "checking">("checking");
 
   useEffect(() => {
-    if (!ledespEnabled) return;
     let alive = true;
     const check = async () => {
-      const ok = await ledespReachable();
-      if (alive) setLive(ok);
+      const l = await ledespLink();
+      if (alive) setLink(l);
     };
     void check();
-    const t = setInterval(check, 5000);
+    const t = setInterval(check, 6000);
     return () => {
       alive = false;
       clearInterval(t);
     };
   }, []);
 
-  if (!ledespEnabled) return null;
-
-  const label =
-    live === null ? "Door light · checking" : live ? "Door light · live" : "Door light · unreachable";
+  const look = LOOK[link];
+  const title =
+    link === "direct" ? `Talking straight to ${LEDESP_URL} on the house Wi-Fi`
+    : link === "relay" ? "The board is polling the app over the internet"
+    : link === "down" ? "Nothing is answering at the door — check the board's power, and any VPN blocking local network"
+    : "Looking for the door light";
 
   return (
     <a
-      href={LEDESP_URL}
+      href={LEDESP_URL || "/api/door"}
       target="_blank"
       rel="noreferrer"
-      title={live ? `Connected to ${LEDESP_URL}` : `No answer from ${LEDESP_URL} — open it in this browser to test`}
+      title={title}
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 7,
-        padding: "5px 11px 5px 9px",
-        borderRadius: 999,
-        fontSize: 12,
-        fontWeight: 600,
-        letterSpacing: "0.01em",
-        textDecoration: "none",
-        color: live ? "#7ee2a8" : live === null ? "#b9b9c2" : "#ff9b9b",
-        background: live ? "rgba(46,160,97,.13)" : live === null ? "rgba(255,255,255,.06)" : "rgba(185,28,28,.15)",
-        border: `1px solid ${live ? "rgba(46,160,97,.35)" : live === null ? "rgba(255,255,255,.14)" : "rgba(185,28,28,.4)"}`,
+        display: "inline-flex", alignItems: "center", gap: 7,
+        padding: "5px 11px 5px 9px", borderRadius: 999,
+        fontSize: 12, fontWeight: 600, letterSpacing: ".01em",
+        textDecoration: "none", color: look.fg,
+        background: look.bg, border: `1px solid ${look.edge}`,
       }}
     >
-      <span
-        style={{
-          width: 8,
-          height: 8,
-          borderRadius: "50%",
-          background: live ? "#35d07f" : live === null ? "#8a8a94" : "#e0484d",
-          boxShadow: live ? "0 0 8px rgba(53,208,127,.8)" : "none",
-        }}
-      />
-      {label}
+      <span style={{
+        width: 8, height: 8, borderRadius: "50%", background: look.dot,
+        boxShadow: link === "direct" ? "0 0 8px rgba(53,208,127,.8)" : "none",
+      }} />
+      {look.label}
     </a>
   );
 }

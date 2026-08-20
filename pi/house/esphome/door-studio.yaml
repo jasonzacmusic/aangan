@@ -30,6 +30,14 @@
 #           74AHCT125 level shifter before a long run)
 #   12 LEDs assumed for a puck/ring.
 
+substitutions:
+  # Where the app parks the studio state for this board to collect.
+  # The board polls OUT over https, which is the only direction that works:
+  # an https page may not read this http board, and the house mesh does not
+  # reliably pass client-to-client traffic. Change this one line if the app
+  # ever moves to a branded domain.
+  relay_url: "https://studio-command-h57ogegjf-jasonzacmusics-projects.vercel.app/api/door"
+
 esphome:
   name: door-studio
   friendly_name: Studio door
@@ -82,6 +90,7 @@ json:
 http_request:
   timeout: 1s
   watchdog_timeout: 15s
+  verify_ssl: false   # payload is one public word; a CA bundle costs flash for nothing
 
 espnow:
   auto_add_peer: true
@@ -308,6 +317,34 @@ binary_sensor:
     internal: false
 
 interval:
+  # Studio state from the app, over the internet. This is the road that works
+  # from a phone on mobile data, with the Mac off, and through a mesh that will
+  # not pass client-to-client traffic. Anything other than a clean 200 with a
+  # known state is ignored, so a redirect to a login page or a flat network
+  # simply leaves the light where it was.
+  - interval: 2s
+    then:
+      - if:
+          condition:
+            wifi.connected
+          then:
+            - http_request.get:
+                url: ${relay_url}
+                capture_response: true
+                max_response_buffer_size: 256
+                on_response:
+                  then:
+                    - lambda: |-
+                        if (response->status_code != 200) return;
+                        json::parse_json(body, [](JsonObject root) -> bool {
+                          if (!root["state"].is<const char*>()) return false;
+                          std::string next = root["state"].as<std::string>();
+                          if (next.empty() || next == id(g_state)) return false;
+                          id(g_state) = next;
+                          id(apply_hall).execute();
+                          return true;
+                        });
+
   # Heartbeat: re-apply the light every 10s so it is self-healing if a
   # trigger is ever missed. apply_hall is idempotent.
   - interval: 10s
