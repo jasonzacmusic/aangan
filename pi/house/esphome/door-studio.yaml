@@ -36,7 +36,7 @@ substitutions:
   # an https page may not read this http board, and the house mesh does not
   # reliably pass client-to-client traffic. Change this one line if the app
   # ever moves to a branded domain.
-  relay_url: "https://studio-command-h57ogegjf-jasonzacmusics-projects.vercel.app/api/door"
+  relay_url: "https://aangan.nathanielschool.com/api/door"
 
 esphome:
   name: door-studio
@@ -317,12 +317,17 @@ binary_sensor:
     internal: false
 
 interval:
+  # Studio state from the app, over the internet. 3s, not faster: this is a
+  # serverless call, and every second shaved off multiplies the monthly
+  # invocation count. 3s is ~860k/month, inside the included allowance, and a
+  # human pressing a button cannot tell it from instant. Door-open and
+  # too-loud do not wait on this — those arrive on ESP-NOW in milliseconds.
   # Studio state from the app, over the internet. This is the road that works
   # from a phone on mobile data, with the Mac off, and through a mesh that will
   # not pass client-to-client traffic. Anything other than a clean 200 with a
   # known state is ignored, so a redirect to a login page or a flat network
   # simply leaves the light where it was.
-  - interval: 2s
+  - interval: 3s
     then:
       - if:
           condition:
