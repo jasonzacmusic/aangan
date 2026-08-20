@@ -3,6 +3,7 @@ import { SceneDef, STATE_META, StudioState } from "./api/types";
 import ConfirmSheet from "./components/ConfirmSheet";
 import EmergencyOverlay from "./components/EmergencyOverlay";
 import Nav, { Tab } from "./components/Nav";
+import LedEspBadge from "./components/LedEspBadge";
 import PwaUpdatePrompt from "./components/PwaUpdatePrompt";
 import VoiceButton from "./components/VoiceButton";
 import NudgeBanner from "./components/NudgeBanner";
@@ -203,6 +204,12 @@ export default function App() {
         {tab === "settings" && <Settings />}
         {tab === "more" && <More onOpen={setTab} />}
       </main>
+
+      {/* Whether the real door light is answering. Fixed, always visible,
+          because "is it connected?" was previously unanswerable. */}
+      <div className="pointer-events-auto fixed left-4 top-4 z-[40] lg:left-60">
+        <LedEspBadge />
+      </div>
 
       <NudgeBanner />
       <Nav tab={tab} setTab={setTab} />

@@ -25,6 +25,7 @@ import {
   UtilityAction,
 } from "./types";
 import { idbGet, idbSet } from "../state/idb";
+import { pushLedEspState } from "./ledesp";
 
 /** A living simulation of the Pi + Home Assistant wrapper. */
 
@@ -176,6 +177,7 @@ export class MockAdapter implements ApiAdapter {
           this.state = msg.payload;
           const color = STATE_META[this.state.state].color;
           this.rooms.forEach((room) => (room.signColor = color));
+          void pushLedEspState(this.state.state);
           this.emit({ type: "state", state: { ...this.state } });
           this.emit({ type: "rooms", rooms: this.rooms.map((r) => ({ ...r })) });
         }
@@ -574,6 +576,9 @@ export class MockAdapter implements ApiAdapter {
     await idbSet(MOCK_STATE_KEY, this.state);
     const color = STATE_META[state].color;
     this.rooms.forEach((room) => (room.signColor = color));
+    // The door light is a real Wi-Fi board, not part of the simulator.
+    // Simulated house, real lamp — so the strip can be proved on its own.
+    void pushLedEspState(state);
     this.emit({ type: "state", state: { ...this.state } });
     this.emit({ type: "rooms", rooms: this.rooms.map((room) => ({ ...room })) });
     this.broadcast({ kind: "state", payload: { ...this.state } });
