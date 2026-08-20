@@ -42,16 +42,23 @@
     -webkit-box-align:center; -webkit-align-items:center; align-items:center;
     text-align:center; padding:6vmin;
   }
-  #eyebrow {
-    font-size:2.1vmin; letter-spacing:.62em; text-indent:.62em;
-    text-transform:uppercase; opacity:.55; font-weight:600; margin-bottom:3.2vmin;
-  }
+  /* The real mark, not the name set in a typeface. Height-driven so it scales
+     with the panel, and slightly held back so the state word stays the loudest
+     thing on the door. */
+  #logo { height:7.2vmin; max-height:74px; width:auto; opacity:.9; margin-bottom:4vmin; }
   #word {
     font-family:Georgia,"Times New Roman",serif;
     font-size:20vmin; line-height:.92; font-weight:normal;
     letter-spacing:-.015em; text-shadow:0 .4vmin 3vmin rgba(0,0,0,.45);
   }
   #sub { font-size:3vmin; opacity:.8; margin-top:3.4vmin; font-weight:500; letter-spacing:.005em; }
+  /* A written note is the one thing on this door somebody chose to say, so it
+     is set larger than the stock wording and given room to breathe. */
+  #note {
+    font-size:3.6vmin; margin-top:2.6vmin; font-weight:600; line-height:1.35;
+    max-width:80%; opacity:.97;
+  }
+  #note:empty { display:none; }
   #foot {
     position:fixed; left:0; right:0; bottom:3.2vmin;
     font-size:1.9vmin; letter-spacing:.26em; text-transform:uppercase;
@@ -84,9 +91,10 @@
 <div id="dot"></div>
 <div id="dba"></div>
 <div id="stage">
-  <div id="eyebrow">Nathaniel School of Music</div>
+  <img id="logo" src="/nsm-full-white.png" alt="Nathaniel School of Music">
   <div id="word">&mdash;</div>
   <div id="sub">connecting</div>
+  <div id="note"></div>
 </div>
 <div id="foot">Studio</div>
 
@@ -115,7 +123,7 @@
   var lastKey = "";
   var misses = 0;
 
-  function paint(state, visual, dba, online) {
+  function paint(state, visual, dba, online, note) {
     el("dot").className = online ? "" : "bad";
 
     var look = LOOK[state] || LOOK.available;
@@ -140,6 +148,9 @@
       lastKey = key;
     }
     el("sub").innerHTML = sub;
+    /* textContent, not innerHTML: this string is typed by a person on a phone
+       and must never be able to put markup on the door. */
+    el("note").textContent = note || "";
     el("dba").innerHTML = (dba && dba !== "--") ? dba + " dBA" : "";
   }
 
@@ -173,11 +184,11 @@
            offline after several in a row, so a flicker of Wi-Fi does not put
            a red dot on a door during a lesson. */
         misses++;
-        if (misses >= 4) paint(lastKey.split("|")[0] || "available", "ok", "", false);
+        if (misses >= 4) paint(lastKey.split("|")[0] || "available", "ok", "", false, "");
         return;
       }
       misses = 0;
-      paint(body.state, body.visual || "ok", body.dba || "", true);
+      paint(body.state, body.visual || "ok", body.dba || "", true, body.message || "");
     });
   }
 

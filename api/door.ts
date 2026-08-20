@@ -9,6 +9,7 @@
  * client isolation, and by whether the Mac is even switched on.
  *
  *   POST /api/door  { "state": "audio_rec" }        ← the app, on every change
+ *   POST /api/door  { "message": "Back at 4" }      ← a note for the door sign
  *   POST /api/door  { "visual": "door", "dba": 61 }  ← the board, every 3s
  *   GET  /api/door                                   ← the door sign / anyone
  *
@@ -56,10 +57,16 @@ type Door = {
   /** What the board can see. Only the board sets this. */
   visual: string;
   dba: number | null;
+  /** A free-text note for the sign. Empty means "use the state's own words". */
+  message: string;
 };
 
 /** Survives between invocations on a warm instance; lost on a cold start. */
-let memory: Door = { state: "available", at: 0, visual: "ok", dba: null };
+let memory: Door = { state: "available", at: 0, visual: "ok", dba: null, message: "" };
+
+/** Long enough for "Back at 4, please wait downstairs", short enough to read
+ *  across a hall. A sign nobody can read from the door is not a sign. */
+const MESSAGE_MAX = 80;
 
 async function kv(path: string): Promise<unknown> {
   const res = await fetch(`${KV_URL}/${path}`, {
@@ -104,6 +111,18 @@ export default async function handler(req: any, res: any) {
   if (req.method === "POST") {
     const body = typeof req.body === "string" ? safeParse(req.body) : req.body;
 
+    // A note for the sign, on its own or alongside a state change.
+    const hasMessage = body && typeof body.message === "string";
+    if (hasMessage) {
+      memory.message = body.message.replace(/\s+/g, " ").trim().slice(0, MESSAGE_MAX);
+      memory.at = Date.now();
+    }
+    // A note with no state is a complete request. Answer it here, before the
+    // board branch, so it is never mistaken for a board report.
+    if (hasMessage && body.state === undefined) {
+      return res.status(200).json({ ok: true, message: memory.message, at: memory.at });
+    }
+
     // A board report. Never touches `state` or `at` — the board is not allowed
     // to decide what the studio is doing, only to say what it can see.
     if (body && body.state === undefined) {
@@ -135,6 +154,7 @@ export default async function handler(req: any, res: any) {
     // too-loud rules; they live nowhere else, since they arrive on ESP-NOW.
     visual: memory.visual,
     dba: memory.dba,
+    message: memory.message,
     age_s: current.at ? Math.round((Date.now() - current.at) / 1000) : null,
     store: kvReady ? "kv" : "memory",
   });

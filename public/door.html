@@ -1,0 +1,203 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Studio Door">
+<meta name="theme-color" content="#0b0b0c">
+<title>Studio Door — Control</title>
+<style>
+  /* Same restraint as the sign: plain ES5-friendly CSS, because this gets
+     opened on whatever phone is nearest, including old ones. */
+  *{margin:0;padding:0;-webkit-box-sizing:border-box;box-sizing:border-box}
+  html,body{min-height:100%;background:#0b0b0c;color:#f4f2ef;
+    font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,sans-serif;
+    -webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+  body{padding:26px 20px 40px;max-width:560px;margin:0 auto}
+  #logo{height:34px;width:auto;display:block;margin:0 auto 6px;opacity:.92}
+  h1{font-family:Georgia,"Times New Roman",serif;font-weight:normal;
+     font-size:26px;text-align:center;letter-spacing:-.01em;margin-bottom:4px}
+  .hint{text-align:center;font-size:13px;opacity:.45;margin-bottom:24px}
+
+  /* The live strip mirrors the door itself, so you can see what you just did
+     without walking to it. */
+  #now{border-radius:16px;padding:18px 18px 16px;margin-bottom:26px;
+       background:#17171a;border:1px solid rgba(255,255,255,.09);
+       -webkit-transition:background-color .5s ease;transition:background-color .5s ease}
+  #nowWord{font-family:Georgia,serif;font-size:30px;line-height:1.05}
+  #nowSub{font-size:13px;opacity:.72;margin-top:5px}
+  #nowMeta{font-size:11px;opacity:.42;margin-top:9px;letter-spacing:.09em;
+           text-transform:uppercase;font-family:"SF Mono",Menlo,monospace}
+
+  .label{font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+         opacity:.42;margin:0 0 10px 2px;font-weight:700}
+  .grid{display:-webkit-box;display:-webkit-flex;display:flex;
+        -webkit-flex-wrap:wrap;flex-wrap:wrap;margin:0 -5px 24px}
+  .cell{width:50%;padding:5px}
+  button{display:block;width:100%;border:0;border-radius:14px;padding:17px 10px;
+    font-size:15px;font-weight:700;letter-spacing:.03em;color:#fff;cursor:pointer;
+    font-family:inherit;-webkit-appearance:none;
+    -webkit-transition:-webkit-transform .09s ease,opacity .15s ease;
+    transition:transform .09s ease,opacity .15s ease}
+  button:active{-webkit-transform:scale(.965);transform:scale(.965)}
+  button .k{display:block;font-size:11px;font-weight:600;opacity:.72;
+            margin-top:4px;letter-spacing:.04em}
+  button.on{-webkit-box-shadow:0 0 0 2.5px #fff inset;box-shadow:0 0 0 2.5px #fff inset}
+
+  textarea{width:100%;border-radius:14px;padding:14px;font-size:16px;
+    font-family:inherit;background:#17171a;color:#f4f2ef;resize:none;
+    border:1px solid rgba(255,255,255,.14);-webkit-appearance:none}
+  .row{display:-webkit-box;display:-webkit-flex;display:flex;margin:10px -5px 0}
+  .row > div{padding:0 5px;-webkit-box-flex:1;-webkit-flex:1;flex:1}
+  .ghost{background:#26262b}
+  .quick{margin:12px -4px 0;display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap}
+  .quick span{display:inline-block;margin:4px;padding:9px 13px;border-radius:999px;
+    background:#1e1e22;border:1px solid rgba(255,255,255,.1);font-size:13px;opacity:.85}
+  #toast{position:fixed;left:50%;bottom:26px;-webkit-transform:translateX(-50%);
+    transform:translateX(-50%);background:#f4f2ef;color:#111;padding:11px 20px;
+    border-radius:999px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;
+    -webkit-transition:opacity .25s ease;transition:opacity .25s ease;white-space:nowrap}
+  #toast.show{opacity:1}
+  a.signlink{display:block;text-align:center;margin-top:30px;font-size:13px;
+    color:#8fb7ff;text-decoration:none;opacity:.8}
+</style>
+
+<img id="logo" src="/nsm-full-white.png" alt="Nathaniel School of Music">
+<h1>Studio Door</h1>
+<div class="hint">Whatever you set here shows on the door and drives the light.</div>
+
+<div id="now">
+  <div id="nowWord">&mdash;</div>
+  <div id="nowSub">reading the door&hellip;</div>
+  <div id="nowMeta"></div>
+</div>
+
+<div class="label">Set the studio</div>
+<div class="grid" id="states"></div>
+
+<div class="label">Message on the door</div>
+<textarea id="msg" rows="2" maxlength="80" placeholder="e.g. Back at 4 — please wait downstairs"></textarea>
+<div class="quick" id="quick"></div>
+<div class="row">
+  <div><button id="send" style="background:#2f6f4f">Show this</button></div>
+  <div><button id="clear" class="ghost">Clear</button></div>
+</div>
+
+<a class="signlink" href="/sign.html" target="_blank">Open the door sign &rarr;</a>
+<div id="toast"></div>
+
+<script>
+/* Studio door control.
+ *
+ * Deliberately a plain page and not part of the React app: this link gets sent
+ * to whoever is nearest — an intern's phone, an old iPad — and it has to open
+ * and work first time on anything. It writes to the same /api/door the light
+ * board polls, so pressing a button here moves the actual strip.
+ */
+(function () {
+  var STATES = [
+    { id:"audio_rec", label:"ON AIR",    key:"recording audio",  bg:"#A5121A" },
+    { id:"video_rec", label:"FILMING",   key:"recording video",  bg:"#A5121A" },
+    { id:"class",     label:"CLASS",     key:"lesson running",   bg:"#A96410" },
+    { id:"meeting",   label:"MEETING",   key:"please wait",      bg:"#A96410" },
+    { id:"available", label:"COME IN",   key:"studio is free",   bg:"#1B5B3C" },
+    { id:"emergency", label:"EMERGENCY", key:"do not enter",     bg:"#5B21B6" }
+  ];
+  var QUICK = ["Back at 4", "In a take — knock please", "Class till 6",
+               "Come in, door is open", "Tuning — 10 minutes"];
+
+  var el = function (id) { return document.getElementById(id); };
+  var current = "";
+
+  function toast(t) {
+    var n = el("toast");
+    n.innerHTML = t; n.className = "show";
+    setTimeout(function () { n.className = ""; }, 1700);
+  }
+
+  function post(payload, okText) {
+    var x = new XMLHttpRequest();
+    x.open("POST", "/api/door", true);
+    x.setRequestHeader("Content-Type", "application/json");
+    x.timeout = 8000;
+    x.onreadystatechange = function () {
+      if (x.readyState !== 4) return;
+      if (x.status === 200) { toast(okText); refresh(); }
+      else toast("Did not go through");
+    };
+    x.ontimeout = function () { toast("No answer — try again"); };
+    x.onerror = function () { toast("No answer — try again"); };
+    x.send(JSON.stringify(payload));
+  }
+
+  function build() {
+    var host = el("states"), i;
+    for (i = 0; i < STATES.length; i++) {
+      (function (s) {
+        var cell = document.createElement("div");
+        cell.className = "cell";
+        var b = document.createElement("button");
+        b.style.background = s.bg;
+        b.setAttribute("data-id", s.id);
+        b.innerHTML = s.label + '<span class="k">' + s.key + "</span>";
+        b.onclick = function () { post({ state: s.id }, s.label + " is on the door"); };
+        cell.appendChild(b); host.appendChild(cell);
+      })(STATES[i]);
+    }
+    var q = el("quick");
+    for (i = 0; i < QUICK.length; i++) {
+      (function (text) {
+        var chip = document.createElement("span");
+        chip.innerHTML = text;
+        chip.onclick = function () { el("msg").value = text; };
+        q.appendChild(chip);
+      })(QUICK[i]);
+    }
+    el("send").onclick = function () {
+      var v = el("msg").value;
+      if (!v) { toast("Type something first"); return; }
+      post({ message: v }, "Message is on the door");
+    };
+    el("clear").onclick = function () {
+      el("msg").value = "";
+      post({ message: "" }, "Message cleared");
+    };
+  }
+
+  function refresh() {
+    var x = new XMLHttpRequest();
+    x.open("GET", "/api/door?t=" + new Date().getTime(), true);
+    x.timeout = 6000;
+    x.onreadystatechange = function () {
+      if (x.readyState !== 4 || x.status !== 200) return;
+      var b = null;
+      try { b = JSON.parse(x.responseText); } catch (e) { return; }
+      if (!b || typeof b.state !== "string") return;
+
+      var s = null, i;
+      for (i = 0; i < STATES.length; i++) if (STATES[i].id === b.state) s = STATES[i];
+      if (!s) return;
+
+      current = b.state;
+      el("now").style.backgroundColor = s.bg;
+      el("nowWord").innerHTML = s.label;
+      el("nowSub").innerHTML = b.message ? b.message : s.key;
+      /* dBA only appears once the board has actually reported one. Showing a
+         placeholder number on a door control would be worse than showing none. */
+      el("nowMeta").innerHTML = (b.dba || b.dba === 0)
+        ? ("board live &middot; " + b.dba + " dBA")
+        : "waiting for the board";
+
+      var btns = el("states").getElementsByTagName("button");
+      for (i = 0; i < btns.length; i++) {
+        btns[i].className = btns[i].getAttribute("data-id") === current ? "on" : "";
+      }
+    };
+    x.send();
+  }
+
+  build();
+  refresh();
+  setInterval(refresh, 4000);
+})();
+</script>
