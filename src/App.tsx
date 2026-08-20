@@ -207,7 +207,7 @@ export default function App() {
 
       {/* Whether the real door light is answering. Fixed, always visible,
           because "is it connected?" was previously unanswerable. */}
-      <div className="pointer-events-auto fixed left-4 top-4 z-[40] lg:left-60">
+      <div className="pointer-events-auto fixed right-4 top-14 z-[40]">
         <LedEspBadge />
       </div>
 
