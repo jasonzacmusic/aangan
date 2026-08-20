@@ -1,4 +1,10 @@
-# AANGAN · STUDIO DOOR UNIT — bulb (Board display)
+# AANGAN · STUDIO DOOR UNIT — "ledESP"  (label this board ledESP)
+#
+# THIS is the canonical door board as of 20 Aug 2026. Any other ESP32 flashed
+# with this config earlier is superseded — ignore it, or it will fight for
+# 192.168.0.248. The 7" Waveshare panel, when it arrives, replaces THIS chip:
+# reflash it with this same file plus the display block. Do not add a third
+# computer at the door.
 #
 # Spare ESP32, MAC 68:09:47:9c:8a:fc, static IP 192.168.0.248.
 # This is NOT one of the six room nodes. Copper stays in the studio.
@@ -27,6 +33,13 @@
 esphome:
   name: door-studio
   friendly_name: Studio door
+  # Without this the puck sits dark until data arrives or a button is pressed,
+  # which reads as broken wiring. -100 runs last, after the light exists.
+  on_boot:
+    priority: -100
+    then:
+      - delay: 2s
+      - script.execute: apply_hall
 
 esp32:
   board: esp32dev
@@ -295,6 +308,11 @@ binary_sensor:
     internal: false
 
 interval:
+  # Heartbeat: re-apply the light every 10s so it is self-healing if a
+  # trigger is ever missed. apply_hall is idempotent.
+  - interval: 10s
+    then:
+      - script.execute: apply_hall
   - interval: 400ms
     then:
       - if:
@@ -347,7 +365,7 @@ text_sensor:
 # ---------------------------------------------------------------------------
 select:
   - platform: template
-    name: "1 - Studio state"
+    name: "Studio state"
     id: test_state
     optimistic: true
     options: ["available", "class", "meeting", "audio_rec", "video_rec", "emergency"]
@@ -359,25 +377,25 @@ select:
 
 button:
   - platform: template
-    name: "2 - Room TOO LOUD"
+    name: "Test room too loud"
     on_press:
       then:
         - lambda: 'id(g_dba) = 60.0;'
         - script.execute: apply_hall
   - platform: template
-    name: "3 - Room quiet again"
+    name: "Test room quiet"
     on_press:
       then:
         - lambda: 'id(g_dba) = 40.0;'
         - script.execute: apply_hall
   - platform: template
-    name: "4 - Door OPEN"
+    name: "Test door open"
     on_press:
       then:
         - lambda: 'id(g_door_test) = true;'
         - script.execute: apply_hall
   - platform: template
-    name: "5 - Door shut again"
+    name: "Test door shut"
     on_press:
       then:
         - lambda: 'id(g_door_test) = false;'

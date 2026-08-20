@@ -5,6 +5,7 @@ import DbMeter from "../components/DbMeter";
 import NudgeBanner from "../components/NudgeBanner";
 import GuestQr from "../components/GuestQr";
 import AirBanner from "../components/AirBanner";
+import StudioDoorSign from "../components/StudioDoorSign";
 import { AlertIcon } from "../components/icons";
 
 /**
@@ -109,6 +110,19 @@ export default function DisplayPanel({ id }: { id: string }) {
     );
   }
 
+  const studio = rooms.find((r) => r.id === "music");
+  if (id === "front-studio" || display.content === "studio_door") {
+    return (
+      <StudioDoorSign
+        state={stateInfo.state}
+        dbLevel={studio?.dbLevel}
+        doorWarnDb={settings.doorWarnDb}
+        doorOpen={!!studio?.doorOpen}
+        visualOverride={studio?.signVisual}
+      />
+    );
+  }
+
   switch (display.content) {
     case "door": {
       const wording = DOOR_WORDING[stateInfo.state];
@@ -210,5 +224,7 @@ export default function DisplayPanel({ id }: { id: string }) {
           </div>
         </PanelChrome>
       );
+    case "studio_door":
+      return null;
   }
 }

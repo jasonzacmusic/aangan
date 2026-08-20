@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#140608"/>
+  <defs>
+    <radialGradient id="dndGlow" cx="50%" cy="48%" r="50%">
+      <stop offset="0%" stop-color="#e5484d" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#140608" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#dndGlow)"/>
+  <circle cx="800" cy="430" r="210" fill="#e5484d"/>
+  <circle cx="800" cy="430" r="132" fill="#140608"/>
+  <circle cx="800" cy="430" r="58" fill="#ff6b70"/>
+</svg>

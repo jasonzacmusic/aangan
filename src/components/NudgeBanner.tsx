@@ -14,7 +14,7 @@ export function useDoorNudge() {
   const music = rooms.find((r) => r.dbLevel != null);
   const openDoors = rooms.filter((r) => r.doorOpen);
   const db = music?.dbLevel ?? 0;
-  const threshold = settings.dbThreshold;
+  const threshold = settings.doorWarnDb;
   const on = db >= threshold;
   const off = db < threshold - 3;
   const active = openDoors.length > 0 && (wasActive.current ? !off : on);

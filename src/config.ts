@@ -4,7 +4,10 @@
  * Local/demo build (the safe default):
  *   VITE_DATA_SOURCE=mock
  *
- * House app build (served by the bridge, same origin):
+ * USB bench / same-origin live (Vite proxies /api → the USB bridge):
+ *   VITE_DATA_SOURCE=live
+ *
+ * House app build served by the bridge:
  *   VITE_DATA_SOURCE=live VITE_LIVE_BASE_URL=""
  *
  * Separate web host on the home LAN:
@@ -14,8 +17,7 @@ const requestedSource = String(import.meta.env.VITE_DATA_SOURCE ?? "mock").toLow
 
 export const USE_MOCK = requestedSource !== "live";
 
-// Port 8123 is Home Assistant. Aangan Bridge listens on 8126.
-// An empty value intentionally means "use this page's origin".
-export const LIVE_BASE_URL = String(
-  import.meta.env.VITE_LIVE_BASE_URL ?? "http://homeassistant.local:8126",
-).replace(/\/$/, "");
+// Empty means "use this page's origin". Vite's empty env vars are dropped, so
+// treat missing the same as empty when we asked for live.
+export const LIVE_BASE_URL = String(import.meta.env.VITE_LIVE_BASE_URL ?? "")
+  .replace(/\/$/, "");

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:live": "VITE_DATA_SOURCE=live VITE_LIVE_BASE_URL=http://localhost:5173 vite",
     "build": "vite build && node scripts/stamp-sw.mjs",
     "build:addon": "VITE_DATA_SOURCE=live VITE_LIVE_BASE_URL= npm run build && node scripts/build-addon.mjs",
     "typecheck": "tsc --noEmit",

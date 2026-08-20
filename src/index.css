@@ -228,6 +228,26 @@ select:focus-visible,
 .safe-bottom { padding-bottom: calc(env(safe-area-inset-bottom, 0px)); }
 .safe-top { padding-top: calc(env(safe-area-inset-top, 0px)); }
 
+.door-ticker-mask {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+.door-ticker-track {
+  display: flex;
+  width: max-content;
+  gap: 4.5rem;
+  padding-inline: 2rem;
+  animation: door-ticker 22s linear infinite;
+  white-space: nowrap;
+}
+.door-ticker-track span {
+  padding-inline: 1.25rem;
+}
+@keyframes door-ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *,

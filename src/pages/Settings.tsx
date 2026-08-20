@@ -64,7 +64,9 @@ export default function Settings() {
             <div className="text-sm font-medium">Recording quiet threshold</div>
             <div className="font-mono text-lg text-gold">{settings.dbThreshold} dB</div>
           </div>
-          <div className="mt-1 text-xs text-dim">Pre-flight goes red when the music-room mic reads above this.</div>
+          <div className="mt-1 text-xs text-dim">
+            Pre-flight / Record. The room rests at 42 dBA with the AC on — this line is for a take, not the hall sign.
+          </div>
           <input
             type="range"
             min={35}
@@ -79,6 +81,31 @@ export default function Settings() {
           <div className="flex justify-between font-mono text-[9px] text-dim">
             <span>35 · studio silence</span>
             <span>70 · traffic loud</span>
+          </div>
+        </div>
+        <div className="border-t border-line py-3.5">
+          <div className="flex items-baseline justify-between">
+            <div className="text-sm font-medium">Hall warning (G2 bulb + sign)</div>
+            <div className="font-mono text-lg text-gold">{settings.doorWarnDb} dB</div>
+          </div>
+          <div className="mt-1 text-xs text-dim">
+            Below this, the outside puck stays green and the plate says OK. At or above, both go WAIT together. Default is 52 — ten above the AC rest so the compressor cannot trip it.
+          </div>
+          <input
+            type="range"
+            min={45}
+            max={75}
+            step={1}
+            value={settings.doorWarnDb}
+            onChange={(e) => updateSettings({ doorWarnDb: Number(e.target.value) })}
+            className="mt-4 w-full accent-[#c9a84c]"
+            aria-label="Hall warning threshold in decibels"
+            aria-valuetext={`${settings.doorWarnDb} decibels`}
+          />
+          <div className="flex justify-between font-mono text-[9px] text-dim">
+            <span>42 · AC rest</span>
+            <span>52 · default warn</span>
+            <span>75 · very loud</span>
           </div>
         </div>
       </section>

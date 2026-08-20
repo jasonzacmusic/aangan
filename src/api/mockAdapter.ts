@@ -895,4 +895,24 @@ export class MockAdapter implements ApiAdapter {
     this.dbThreshold = v;
     this.emitPreflight();
   }
+
+  setDoorWarnDb(_v: number) {
+    // Hall warning is resolved in the G2 sign from Settings; mock rooms stay as-is.
+  }
+
+  async testDoorWarn() {
+    const music = this.rooms.find((r) => r.id === "music");
+    if (music) {
+      music.dbLevel = 68;
+      music.signColor = "#F5A623";
+      music.signVisual = "loud";
+      this.emit({ type: "rooms", rooms: this.rooms.map((r) => ({ ...r })) });
+      window.setTimeout(() => {
+        music.dbLevel = this.musicBase();
+        music.signVisual = undefined;
+        this.emit({ type: "rooms", rooms: this.rooms.map((r) => ({ ...r })) });
+        this.emitPreflight();
+      }, 8000);
+    }
+  }
 }

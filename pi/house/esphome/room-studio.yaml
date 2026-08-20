@@ -19,6 +19,14 @@
 esphome:
   name: room-studio
   friendly_name: Studio
+  on_boot:
+    priority: -100
+    then:
+      - delay: 3s
+      - lambda: |-
+          ESP_LOGI("main", "DOOR G1 %s", id(door_g1).state ? "OPEN" : "SHUT");
+          ESP_LOGI("main", "DOOR G2 %s", id(door_g2).state ? "OPEN" : "SHUT");
+          ESP_LOGI("main", "LEAK %s", id(studio_sink_leak).state ? "WET" : "DRY");
 
 esp32:
   board: esp32dev
@@ -58,6 +66,17 @@ captive_portal:
 web_server:
   port: 80
 
+# Door unit at 192.168.0.248 (MAC 68:09:47:9c:8a:fc). Sensor numbers leave
+# this room over Wi-Fi, not copper. ESP-NOW is the live path (the house mesh
+# still isolates HTTP clients). HTTP REST on this web_server is the fallback
+# once client isolation is turned off.
+espnow:
+  auto_add_peer: true
+  peers:
+    - "68:09:47:9C:8A:FC"
+
+# KEEP: HLK-LD2410 presence. Pins reserved. Jason solders and plugs this later.
+# Do not remove the uart / ld2410 / "Studio presence" block to "clean up" unused hardware.
 uart:
   id: ld2410_uart
   rx_pin: GPIO16
@@ -75,9 +94,9 @@ i2c:
   scan: true
 
 sensor:
-  # Second SHT31 lives here: the studio holds instruments too, and this is the
-  # precise sensor the climate guard needs. heater_enabled off because the Robu
-  # boards are generic clones that reject the heater command.
+  # KEEP: GY-SHT31-D temperature + humidity. Needs header soldering, then it
+  # just works on this I²C bus. Do not remove. heater_enabled off because the
+  # Robu boards are clones that reject the heater command.
   - platform: sht3xd
     address: 0x44
     heater_enabled: false
@@ -91,6 +110,9 @@ sensor:
     update_interval: 30s
 
   # DFRobot SEN0232: 0.6-2.6 V spans 30-130 dBA, so dBA = volts x 50.
+  # Door reeds are instant because they are a pin change. Sound is analog, so
+  # the only way to match that feel is: one ADC read, no software average.
+  # A slower copy for the recording gate can be added later — not this sensor.
   - platform: adc
     pin: GPIO34
     name: "Studio sound level"
@@ -98,13 +120,17 @@ sensor:
     unit_of_measurement: "dBA"
     device_class: sound_pressure
     attenuation: 12db
-    update_interval: 200ms
+    samples: 1
+    update_interval: 20ms
     filters:
       - multiply: 50.0
-      - sliding_window_moving_average:
-          window_size: 10
-          send_every: 5
     accuracy_decimals: 1
+    on_value:
+      then:
+        - logger.log:
+            level: INFO
+            format: "SOUND %.1f dBA"
+            args: ["x"]
 
 binary_sensor:
   # NOT inverted. Reed closed (magnet present, door shut) pulls the pin to GND,
@@ -112,19 +138,40 @@ binary_sensor:
   # other three are trusted.
   - platform: gpio
     name: "Studio door - G1 side"
+    id: door_g1
     pin: { number: GPIO25, mode: { input: true, pullup: true } }
     device_class: door
     filters: [delayed_on: 50ms, delayed_off: 50ms]
+    on_state:
+      then:
+        - logger.log:
+            level: INFO
+            format: "DOOR G1 %s"
+            args: ['id(door_g1).state ? "OPEN" : "SHUT"']
   - platform: gpio
     name: "Studio door - G2 side"
+    id: door_g2
     pin: { number: GPIO26, mode: { input: true, pullup: true } }
     device_class: door
     filters: [delayed_on: 50ms, delayed_off: 50ms]
+    on_state:
+      then:
+        - logger.log:
+            level: INFO
+            format: "DOOR G2 %s"
+            args: ['id(door_g2).state ? "OPEN" : "SHUT"']
   - platform: gpio
     name: "Studio sink leak"
+    id: studio_sink_leak
     pin: { number: GPIO27, mode: { input: true, pullup: true }, inverted: true }
     device_class: moisture
     filters: [delayed_on: 500ms]
+    on_state:
+      then:
+        - logger.log:
+            level: INFO
+            format: "LEAK %s"
+            args: ['id(studio_sink_leak).state ? "WET" : "DRY"']
   - platform: ld2410
     has_target:
       name: "Studio presence"
@@ -139,7 +186,23 @@ binary_sensor:
       if (isnan(id(studio_rh).state)) return {};
       return id(studio_rh).state < 35.0 || id(studio_rh).state > 65.0;
 
+# Compact JSON for the door board / phones: GET /text_sensor/studio_live
+# Throttled to 200 ms so the 20 ms ADC does not flood Wi-Fi.
 text_sensor:
+  - platform: template
+    name: "Studio live"
+    id: studio_live
+    update_interval: 200ms
+    lambda: |-
+      if (isnan(id(studio_dba).state)) return {};
+      char buf[128];
+      snprintf(buf, sizeof(buf),
+               "{\"dba\":%.1f,\"g1\":%s,\"g2\":%s,\"leak\":%s}",
+               id(studio_dba).state,
+               id(door_g1).state ? "true" : "false",
+               id(door_g2).state ? "true" : "false",
+               id(studio_sink_leak).state ? "true" : "false");
+      return {std::string(buf)};
   - platform: wifi_info
     ip_address:
       name: "IP address"
@@ -149,3 +212,16 @@ text_sensor:
               level: INFO
               format: "AANGAN READY - open http://%s/ on any phone"
               args: ["x.c_str()"]
+
+# Wi-Fi to the G2 door. 100 ms is fast enough for a clap; 20 ms would flood the radio.
+packet_transport:
+  - platform: espnow
+    peer_address: "68:09:47:9C:8A:FC"
+    encryption: "AanganDoor1"
+    update_interval: 100ms
+    sensors:
+      - studio_dba
+    binary_sensors:
+      - door_g1
+      - door_g2
+      - studio_sink_leak

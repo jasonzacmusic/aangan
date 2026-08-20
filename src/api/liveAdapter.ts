@@ -394,4 +394,14 @@ export class LiveAdapter implements ApiAdapter {
       this.setConnection("reconnecting");
     });
   }
+
+  setDoorWarnDb(v: number) {
+    void this.post<{ ok: true }>("/api/settings/door-warn-db", { value: v }).catch(() => {
+      this.setConnection("reconnecting");
+    });
+  }
+
+  testDoorWarn() {
+    return this.post<void>("/api/door-warn-test", {}).then(() => undefined);
+  }
 }

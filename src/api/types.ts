@@ -23,6 +23,8 @@ export interface Room {
   /** Null means the room does not have a commissioned temperature sensor yet. */
   tempC: number | null;
   signColor: string; // hex the WS2812B sign is showing
+  /** Married G2 plate id from the live bridge, when the USB bench is driving the door. */
+  signVisual?: "ok" | "wait" | "loud" | "dnd" | "onair" | "sos";
   dbLevel?: number; // music room only
 }
 
@@ -231,7 +233,7 @@ export interface DeliveryInput {
  * whose wording follows the studio state. A targeted active Delivery always
  * takes over its display, whatever the assigned content.
  */
-export type DisplayContent = "door" | "state" | "house" | "doorbell" | "message" | "clock";
+export type DisplayContent = "door" | "studio_door" | "state" | "house" | "doorbell" | "message" | "clock";
 
 export interface DisplayConfig {
   id: string;
@@ -242,6 +244,7 @@ export interface DisplayConfig {
 
 export const DISPLAY_CONTENT_META: Record<DisplayContent, { label: string; hint: string }> = {
   door: { label: "Door sign", hint: "Visitor wording follows the studio state" },
+  studio_door: { label: "Studio G2 sign", hint: "Preset picture on top, rolling line underneath, married to the bulb" },
   state: { label: "Studio state", hint: "Big ON AIR style state card" },
   house: { label: "House board", hint: "Rooms, doors and house pulse" },
   doorbell: { label: "Doorbell cam", hint: "Latest entrance snapshot" },
@@ -251,7 +254,7 @@ export const DISPLAY_CONTENT_META: Record<DisplayContent, { label: string; hint:
 
 export const DEFAULT_DISPLAYS: DisplayConfig[] = [
   { id: "front-house", name: "Front of House", content: "door", message: "" },
-  { id: "front-studio", name: "Front of Studio", content: "state", message: "" },
+  { id: "front-studio", name: "Front of Studio", content: "studio_door", message: "" },
   { id: "wall-ipad", name: "Wall iPad", content: "house", message: "" },
 ];
 
@@ -336,6 +339,10 @@ export interface ApiAdapter {
   subscribe(cb: (ev: StreamEvent) => void): () => void;
   /** Local recording-quiet threshold in dB (mock computes pre-flight with it). */
   setDbThreshold(v: number): void;
+  /** Hall warning line in dBA — bulb + G2 sign trip together above this. */
+  setDoorWarnDb?(v: number): void;
+  /** Force the two hall warnings (puck + sign) for a few seconds. */
+  testDoorWarn?(): Promise<void>;
 }
 
 export interface StateMeta {

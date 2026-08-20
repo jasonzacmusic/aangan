@@ -14,7 +14,7 @@ const NOTES = [
 ];
 const DURATIONS = [10, 20, 30, 60];
 
-const CONTENT_ORDER: DisplayContent[] = ["door", "state", "house", "doorbell", "message", "clock"];
+const CONTENT_ORDER: DisplayContent[] = ["studio_door", "door", "state", "house", "doorbell", "message", "clock"];
 
 /** Displays page — per-panel content assignment + the delivery OTP hand-off. */
 export default function Displays() {

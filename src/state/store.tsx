@@ -26,11 +26,14 @@ import {
   Utilities,
   UtilityAction,
 } from "../api/types";
+import { DEFAULT_DOOR_WARN_DBA } from "../door/studioDoorPresets";
 import { idbGet, idbSet } from "./idb";
 import { haptic, playReferenceTone, playStateChime } from "./audio";
 
 export interface Settings {
   dbThreshold: number;
+  /** G2 hall warning. Rest with AC on is 42 dBA; default 52 stays clear of that. */
+  doorWarnDb: number;
   chimes: boolean;
   emergencySiren: boolean;
   notifyStateChanges: boolean;
@@ -48,6 +51,7 @@ export interface Settings {
 
 const DEFAULT_SETTINGS: Settings = {
   dbThreshold: 45,
+  doorWarnDb: DEFAULT_DOOR_WARN_DBA,
   chimes: true,
   emergencySiren: true,
   notifyStateChanges: true,
@@ -200,6 +204,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setSettings(restored);
       settingsRef.current = restored;
       api.setDbThreshold(restored.dbThreshold);
+      api.setDoorWarnDb?.(restored.doorWarnDb);
 
       let attempt = 0;
       while (!cancelled) {
@@ -385,6 +390,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (patch.dbThreshold != null) {
         api.setDbThreshold(patch.dbThreshold);
         void api.getPreflight().then(setPreflight).catch(() => {});
+      }
+      if (patch.doorWarnDb != null) {
+        api.setDoorWarnDb?.(patch.doorWarnDb);
       }
       return next;
     });

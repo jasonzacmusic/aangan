@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { SceneDef, STATE_META, StudioState } from "../api/types";
 import StateDial from "../components/StateDial";
+import DbMeter from "../components/DbMeter";
 import { timeSince, useStore } from "../state/store";
 import { ArrowRightIcon, ChevronDownIcon, SceneIcon, TuningForkIcon } from "../components/icons";
+import { STUDIO_REST_DBA_AC_ON } from "../door/studioDoorPresets";
 
 interface Props {
   onSelect: (state: StudioState) => void;
@@ -17,11 +19,12 @@ const SEVERITY_COLOR = {
 };
 
 export default function Command({ onSelect, onScene }: Props) {
-  const { stateInfo, settings, committing, history, sceneRunning, playTone } = useStore();
+  const { stateInfo, settings, committing, history, sceneRunning, playTone, rooms } = useStore();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [tonePlaying, setTonePlaying] = useState(false);
   if (!stateInfo) return null;
   const meta = STATE_META[stateInfo.state];
+  const studio = rooms.find((r) => r.id === "music");
   const latestAge = history[0] ? timeSince(history[0].ts) : "";
   const latestWhen = latestAge === "just now" ? latestAge : `${latestAge} ago`;
 
@@ -36,6 +39,24 @@ export default function Command({ onSelect, onScene }: Props) {
       <StateDial info={stateInfo} committing={committing} chimes={settings.chimes} onSelect={onSelect} />
 
       <p className="mt-3 text-center text-sm text-paper/70 lg:text-base">{meta.tagline}</p>
+
+      {studio?.dbLevel != null && (
+        <div className="mt-6 w-full rounded-2xl border border-line bg-surface/80 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-dim">Studio · Board 1 live</div>
+            <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-dim">
+              <span className="h-2 w-2 rounded-full" style={{ background: studio.signColor, boxShadow: `0 0 8px ${studio.signColor}` }} />
+              {studio.doorOpen ? "door open" : "doors shut"}
+            </span>
+          </div>
+          <div className="mt-3">
+            <DbMeter value={studio.dbLevel} threshold={settings.doorWarnDb} />
+          </div>
+          <div className="mt-2 font-mono text-[10px] leading-relaxed text-dim">
+            Rest with AC on is {STUDIO_REST_DBA_AC_ON} dBA · hall warns at {settings.doorWarnDb} dBA (puck + sign together)
+          </div>
+        </div>
+      )}
 
       <div className="mt-7 w-full">
         <div className="mb-3 flex items-end justify-between">

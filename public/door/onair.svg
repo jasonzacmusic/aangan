@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#120405"/>
+  <path d="M120 90 h220 v24 H144 v196 h-24 Z" fill="#d93036"/>
+  <path d="M1480 90 h-220 v24 H1456 v196 h24 Z" fill="#d93036"/>
+  <path d="M120 810 h220 v-24 H144 v-196 h-24 Z" fill="#d93036"/>
+  <path d="M1480 810 h-220 v-24 H1456 v-196 h24 Z" fill="#d93036"/>
+  <circle cx="800" cy="450" r="70" fill="#d93036"/>
+</svg>
