@@ -31,8 +31,8 @@
   }
   #vig {
     position:fixed; top:0; left:0; right:0; bottom:0; pointer-events:none;
-    -webkit-box-shadow:inset 0 0 22vmin 6vmin rgba(0,0,0,.42);
-    box-shadow:inset 0 0 22vmin 6vmin rgba(0,0,0,.42);
+    -webkit-box-shadow:inset 0 0 22vmin 6vmin rgba(0,0,0,.30);
+    box-shadow:inset 0 0 22vmin 6vmin rgba(0,0,0,.30);
   }
   #stage {
     position:fixed; top:0; left:0; right:0; bottom:0;
@@ -103,12 +103,12 @@
  */
 (function () {
   var LOOK = {
-    audio_rec: { bg:"#8E1116", word:"ON AIR",    sub:"Recording — please do not enter", foot:"Studio" },
-    video_rec: { bg:"#8E1116", word:"ON AIR",    sub:"Filming — please do not enter",   foot:"Studio" },
-    class:     { bg:"#7A4A0B", word:"CLASS",     sub:"Lesson in progress",                   foot:"Studio" },
-    meeting:   { bg:"#7A4A0B", word:"MEETING",   sub:"Please wait",                          foot:"Studio" },
-    emergency: { bg:"#4C1D95", word:"EMERGENCY", sub:"Do not enter",                         foot:"Studio" },
-    available: { bg:"#0E3323", word:"COME IN",   sub:"The studio is free",                   foot:"Studio" }
+    audio_rec: { bg:"#A5121A", word:"ON AIR",    sub:"Recording — please do not enter", foot:"Studio" },
+    video_rec: { bg:"#A5121A", word:"ON AIR",    sub:"Filming — please do not enter",   foot:"Studio" },
+    class:     { bg:"#A96410", word:"CLASS",     sub:"Lesson in progress",                   foot:"Studio" },
+    meeting:   { bg:"#A96410", word:"MEETING",   sub:"Please wait",                          foot:"Studio" },
+    emergency: { bg:"#5B21B6", word:"EMERGENCY", sub:"Do not enter",                         foot:"Studio" },
+    available: { bg:"#123F2A", word:"COME IN",   sub:"The studio is free",                   foot:"Studio" }
   };
 
   var el = function (id) { return document.getElementById(id); };
@@ -151,10 +151,15 @@
     x.onreadystatechange = function () {
       if (x.readyState !== 4 || finished) return;
       finished = true;
+      var parsed = null;
       if (x.status === 200) {
-        try { done(JSON.parse(x.responseText)); return; } catch (e) {}
+        /* Parse inside the guard, hand over outside it. Calling done() in here
+           would let any error thrown while painting be swallowed by this catch,
+           which is exactly how this sign spent its first deploy stuck on
+           "connecting" with nothing in the console. */
+        try { parsed = JSON.parse(x.responseText); } catch (e) { parsed = null; }
       }
-      done(null);
+      done(parsed);
     };
     x.ontimeout = function () { if (!finished) { finished = true; done(null); } };
     x.onerror  = function () { if (!finished) { finished = true; done(null); } };
@@ -182,3 +187,4 @@
   /* An iPad by a door should never sleep, and should never bounce-scroll. */
   document.addEventListener("touchmove", function (e) { e.preventDefault(); }, false);
 })();
+</script>
