@@ -31,11 +31,17 @@ Bridging those two is the single biggest piece of unfinished work.
 An "already owned — do NOT buy again" block in `docs/aangan-FINAL-LIST.html` listed a Raspberry Pi 5,
 six ESP32s, an ESP32-CAM, an LED strip, and **certified smoke and LPG alarms** as owned.
 
-**None of it was owned.** Jason confirmed on 13 Aug that nothing existed before this project except
-his MacBook. That one wrong assumption hid the total absence of fire and gas protection for weeks,
-because every buy list dutifully skipped what was marked owned.
+That list has since been proved wrong **in both directions**, which is why it must not be used as
+evidence by anyone.
 
-**Treat that block as void.** This file replaces it.
+- On 13 Aug Jason said "nothing was owned except this computer". Claude applied that to all twenty
+  items without checking each. **The certified smoke and LPG alarms genuinely were missing** — that
+  gap hid for weeks and is now bought.
+- On 20 Aug Jason corrected the correction: **the WS2812 LED strip, the ESP32-CAM and the old iPad
+  are real and on the shelf.** Writing them off cost a near-miss on re-buying them.
+
+**Rule: never infer stock from a document. Ask, or look.** §5 below is the only list that has been
+checked item by item against vendor email or Jason's own eyes.
 
 ---
 
@@ -64,7 +70,7 @@ belongs in the app, and the app cannot see the boards. This is the top priority 
 | Goal | Blocked by |
 |---|---|
 | **Phone alerts when nobody has the app open** | Needs an ESP32 to push notifications itself. Designed, not built. **This is the honest safety gap.** |
-| **The app reading real sensors** | HTTPS app cannot read HTTP boards — see §8 |
+| **The app reading real sensors** | USB bench works on this Mac (see §4). HTTPS Vercel still cannot read HTTP boards — see §8 |
 | Door displays / tablets | Nothing bought, and a socket problem nobody costed — see §6 |
 | Recording tally light | LED strip + level shifter were on the false "owned" list |
 | History and trends | An ESP32 has no storage. Needs a hub of some kind. |
@@ -88,9 +94,12 @@ function-grouped design that assumed 180 m of two-core cable nobody ever bought.
 | 4 | Bathrooms B + washing machine | `00:70:07:a2:90:dc` | DHCP — needs a static | `node-4-bath-b.yaml` |
 | 5 | Kitchen | `88:f1:55:30:7f:84` | DHCP — needs a static | `node-5-kitchen.yaml` |
 | 6 | Hall / entrance | `8c:94:df:69:1e:5c` | DHCP — needs a static | `node-6-hall.yaml` |
+| door | Studio door bulb | `68:09:47:9c:8a:fc` | **192.168.0.248** (static) | `door-studio.yaml` |
 
-All six flashed. **36 sensors, no pin conflicts.** Each serves its own page and announces its address
+All six room nodes flashed. **36 sensors, no pin conflicts.** The door stick is a spare ESP32, not a seventh room node. Each room board serves its own page and announces its address
 over USB on boot. Pins 25/26/27 are the doors-and-probes pins on nearly every board.
+
+**USB bench (19 Aug 2026):** Studio Command still reads Board 1 over USB on this Mac (`pi/house/usb_bridge.py`). **Door data path is Wi-Fi:** Board 1 broadcasts dBA / reeds / leak over ESP-NOW every 100 ms to `door-studio` (and HTTP `/text_sensor/studio_live` + `/sensor/studio_sound_level` as fallback). House mesh isolation still blocks phone → `192.168.0.250`; ESP-NOW does not go through the AP so the puck can still follow the mic.
 
 **There are four bathrooms, not two** — that is why the wet zones need two boards.
 **Boards 1 and 2 are currently at DEBUG log level** so sensor changes can be read over USB while
@@ -101,6 +110,9 @@ wiring. Set back to INFO once each room is signed off.
 - Assign static addresses to boards 3–6, continuing `.252`, `.253`, `.254`, `.249`.
 - **Calibration, which can only happen after wiring:** the dBA threshold that means "too loud",
   the MQ-6 clean-air baseline, the HX711 scale factor, and the LD2410 distance gates.
+- **Studio rest (measured 19 Aug 2026):** ~**42 dBA** with the AC on. Recording quiet stays a
+  separate slider (default 45). The G2 hall warning is **52 dBA** (10 above rest) so the
+  compressor cannot trip the outside puck + sign. Those two warnings are one married state.
 
 ---
 
@@ -128,6 +140,9 @@ Purchase orders: **Robocraze 351816** (₹2,782), **Robu 3625143** (₹10,842),
 | Jumper wires | M-F ×80, M-M ×40 | **no female-to-female — two M-F back to back does the job** |
 | microSD | 1 | SanDisk **Ultra (A1)** — the plan wanted 3 × Extreme A2 |
 | White ABS enclosures, double-sided tape | — | in hand, confirmed by Jason |
+| **WS2812 LED strip, 5V, 60 LED/m, 5 m reel, IP20** | 1 reel | **confirmed 20 Aug.** Black PCB. Factory 3-wire JST lead on the input end, so a first run needs no connector |
+| **ESP32-CAM** | 1 | **confirmed 20 Aug.** Needs a USB-serial adapter to program — it has no USB socket |
+| **Old iPad** | 1 | **confirmed 20 Aug.** Usable as a temporary display; rejected as a door panel — see §6 |
 
 **Amazon order, 13 Aug:** Hikvision HF-GP110 LPG detector **with a potential-free relay** (the one
 input that actually matters), 2 × Hikvision HF-S2E smoke alarms (**no relay** — they protect the
@@ -136,29 +151,58 @@ house but cannot talk to the app), 6 × 20W dual-port USB adapters, 8 × micro-U
 
 ---
 
-## 6. The displays — the piece nobody costed
+## 6. The studio door sign and light — DECIDED 20 Aug
 
-The app has a whole panel system built (`src/pages/Displays.tsx`, `DisplayPanel.tsx`, routes at
-`/#/display/<id>`) supporting Door sign, Studio state, House board, Doorbell cam, Custom message and
-Clock — plus the **delivery OTP hand-off** (Swiggy, Zomato, Blinkit and five more).
+The earlier plan here (two Android tablets, wall mounts, Fully Kiosk licences) is **abandoned**.
+Jason's objection was correct: a tablet screwed to a dark mahogany door looks like a phone taped to
+an antique, and the app it would show still runs on simulated data.
 
-**None of the hardware exists, and three costs were never counted:**
+### What is being built instead
 
-| Item | Approx | Note |
+| Part | Status | Note |
 |---|---|---|
-| Tablet, 8.7" Wi-Fi ×2 | ₹20,000 | Galaxy Tab A9 or Lenovo Tab M9 |
-| Screw-in wall mount ×2 | ₹1,400 | theft-resistant beside each door |
-| Flat USB-C cable + charger ×2 | ₹1,000 | run under trunking |
-| **Fully Kiosk Browser licence ×2** | **~₹1,400** | **never costed.** Locks the tablet to one page, stops sleep, auto-restarts. Without it a tablet is not a wall panel. |
-| **A mains socket at each door** | **unknown** | **never costed, and it is the one item that may need an electrician** |
+| **Waveshare ESP32-S3 7" capacitive touch display**, 800×480 | **On order, ~₹4,299–4,799** | Robu SKU 27078. **The ESP32 is inside the display** — it is not a screen wired to another board |
+| **WS2812 LED strip** | **Owned, and PROVEN — see below** | 1 m cut, centred above the door |
+| **Aluminium profile + frosted diffuser** | On order, ~₹369 | Frosted, never clear — clear shows the LEDs as dots |
+| **74AHCT125 level shifter** | On order, ₹160 | ESP32 drives 3.3 V, strip wants ~3.5 V. Works without, then fails when the room warms |
+| **USB-A to bare-wire pigtail ×2** | On order, ₹168 | Powers the strip from the 20 W adapters already owned |
+| **Wooden bezel** | Local carpenter, ~₹800–1,500 | Routed rebate so the screen sits inset, and a channel for the diffuser so the light appears to come out of the wood |
 
-**Three things to settle before buying any tablet:**
-1. **Is there a socket within cable reach of the studio door and the front door?** If not, that is
-   the only part of this project that needs an electrician — exactly the thing we told Jason he could
-   avoid. Check this first; it changes the plan.
-2. **A display showing simulated data is worse than no display.** The app must read the real boards
-   before a tablet goes on a wall. See §8.
-3. Disable Android battery optimisation for Fully Kiosk, or the OS kills it overnight.
+### The architecture that makes this work
+
+**Nothing wires between the studio and the door.** Board 1 already broadcasts studio state over
+**ESP-NOW**, which is chip-to-chip and **does not go through the router** — so the light keeps
+following the studio even in a Wi-Fi outage. The display listens to that same broadcast.
+
+One 5 V supply at the door feeds the display and the strip in parallel, grounds common. **The
+ESP32 supplies no power to the strip — only the data line.** One plug, one unit.
+
+### The socket question is ANSWERED
+
+There is a **tube light above the studio door on the G1 hall side**, already mains-fed. That is the
+power, in exactly the right place.
+
+**The one electrician job on this entire project, ~30 minutes:** remove the tube fitting and put a
+**5 A socket on an UNSWITCHED, always-live feed** in its place, positioned to be hidden behind the
+new profile. Unswitched matters — on the wall switch, someone kills the recording light mid-take.
+
+### Placement decisions
+
+- **Light:** where the tube was. Above the curtain rod so nothing shadows it. **Use one full 1 m
+  profile centred over the door** rather than matching the 1.2 m tube — a centred 1 m bar reads as
+  design, a 1.2 m bar with a seam reads as a bodge.
+- **Display:** beside the door at eye height, handle side. Not above the door — a sign above a door
+  gets read as a clock and ignored.
+- **The studio has a door on each side** (G1 hall and G2 hall). A light at only one is invisible from
+  the other. WS2812 chains, so **one pin drives both** with wire between the segments.
+
+### Still open
+
+- **Which GPIO is free on the Waveshare board** after the RGB panel and touch take theirs. If one is
+  free, a single unit drives screen and light. If not, a spare ESP32 lives behind the same bezel.
+  **Needs the Waveshare pinout PDF.**
+- The G1 front-door screen still waits on the app, because the delivery OTP is typed by a human into
+  the app — no board can invent it.
 
 ---
 
@@ -205,6 +249,17 @@ Everything else on all six boards is push-fit.
   convincing nonsense — the studio sound level read "7.1 dBA" before its meter was attached, and a
   believable-looking number is worse than a blank.
 - **MQ-6 modules are not a safety device.** The certified detector is. Never describe them otherwise.
+- **The WS2812 strip is PROVEN (20 Aug).** Driven from a spare ESP32 on GPIO4, cycling red/green/
+  blue/white at 50% brightness. Colour order `GRB`. Config is `pi/house/esphome/strip-test.yaml`,
+  static IP `192.168.0.247`. That firmware transfers unchanged to the Waveshare board.
+- **`on_boot` at priority 600 runs BEFORE the light component exists.** A boot colour sequence there
+  silently does nothing and looks like dead wiring. Use an `interval:` or a low priority instead.
+  This cost a debugging round.
+- **Power the strip from its own supply, never the board's 5 V pin.** 60 LED/m means a full 5 m reel
+  at white is ~18 A. Even 1 m at white is >4 A. Cap brightness in firmware; a browned-out board looks
+  exactly like a software bug.
+- **A WS2812 strip is directional.** Arrows are printed on it; data enters at the end they point away
+  from. Wrong end = nothing lights, nothing is damaged.
 - `secrets.yaml` is gitignored and local-only. It was **not** ignored when first created — a real
   Wi-Fi password nearly went public. Anyone cloning this repo must create it from
   `secrets.example.yaml`.
@@ -216,12 +271,13 @@ Everything else on all six boards is push-fit.
 1. **Wire the six rooms.** Boards 1 and 2 are in progress. Everything is push-fit except §7.
 2. **Static addresses on boards 3–6**, so no bookmark ever breaks again.
 3. **Calibrate** — reed direction, dBA threshold, radar gates, cylinder scale. All remote over Wi-Fi.
-4. **Connect the app to the real boards.** Solves §8. This is what turns six sensor pages into a
-   product, and it is the gate for everything below.
+4. **Connect the app to the real boards.** USB bench is working for Board 1 + the door bulb (this Mac, port 8126). Phones still cannot see the boards until mesh isolation is off. This remains the gate for a wall panel.
 5. **The recording gate** — one glance before a take, with a named reason when the answer is no.
 6. **Unattended safety alerting** — ESP32 pushing to phones directly, so a 3 a.m. leak wakes someone
    with no app open. Designed, not built.
-7. **Then, and only then, the displays** — after the socket question in §6 is answered.
+7. **The studio door sign and light** — see §6. Socket question answered; parts on order.
+   Sequence: electrician fits the unswitched socket → carpenter makes the bezel → mount and plug in.
+8. **The G1 front-door screen last**, because it needs the app.
 
 **Deliberately deferred:** both Raspberry Pis, the DAC Pro and XLR board, the 7" display, the air
 sensors, tank levels, and everything in the technician-only group (panic loop, geyser, pump).
