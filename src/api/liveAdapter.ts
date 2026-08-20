@@ -23,6 +23,7 @@ import {
   Utilities,
   UtilityAction,
 } from "./types";
+import { pushLedEspState } from "./ledesp";
 
 /**
  * Authoritative Raspberry Pi wrapper contract.
@@ -157,7 +158,10 @@ export class LiveAdapter implements ApiAdapter {
   getState() {
     return this.get<StudioStateInfo>("/api/state");
   }
-  setState(state: StudioState) {
+  async setState(state: StudioState) {
+    // Fire at the light first and do not await: the board is an output, and a
+    // sleeping board must never delay the app's own state change.
+    void pushLedEspState(state);
     return this.post<StudioStateInfo>("/api/state", { state });
   }
   getRooms() {
@@ -184,7 +188,8 @@ export class LiveAdapter implements ApiAdapter {
   async panic() {
     await this.post<{ ok: true }>("/api/panic");
   }
-  scene(name: string, state: StudioState) {
+  async scene(name: string, state: StudioState) {
+    void pushLedEspState(state);
     return this.post<StudioStateInfo>("/api/scene", { name, state });
   }
   preparePreflight() {
