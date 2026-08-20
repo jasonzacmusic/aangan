@@ -266,6 +266,32 @@ Everything else on all six boards is push-fit.
 
 ---
 
+### The two public pages — LIVE
+
+| Page | What it is |
+|---|---|
+| `aangan.nathanielschool.com/door.html` | Control. Six states, free-text note, five presets. Mirrors the door back at you. |
+| `aangan.nathanielschool.com/sign.html` | The door sign. Add to Home Screen on the iPad for full screen. |
+
+Both are plain ES5 files in `public/`, deliberately **not** routes in the React
+app: they get opened on whatever is nearest, including an old iPad by a door,
+and a modern bundle cannot be trusted there. Both read the same `/api/door` the
+light board polls, so the sign, the control page and the strip cannot disagree.
+
+**Both are completely public.** Anyone with the link can set the studio state or
+put text on the door. That was Jason's call on 20 Aug for a light in his own
+building. If it ever needs locking down, a key in the query string is the
+cheapest fix that keeps it a one-tap bookmark.
+
+**The note carries its own timestamp (`mat`), separate from the state's (`at`).**
+Setting a state used to wipe a note already on the door, because a serverless
+instance that had never seen the note looked like the freshest source of it once
+a state write bumped the shared stamp. Both pages now keep the newest `mat` they
+have seen and ignore anything older. Do not merge the two stamps back together.
+
+**The logo comes from the iCloud logo library and copies out at mode 0600.**
+Chmod it 0644 or the host serves a broken image on the door.
+
 ### Traps found on 20 Aug, all of which cost hours
 
 **Never put a `uart:` on GPIO1 or GPIO3.** Those two pins *are* the USB serial
