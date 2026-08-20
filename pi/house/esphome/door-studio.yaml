@@ -104,6 +104,15 @@ packet_transport:
         encryption: "AanganDoor1"
 
 globals:
+  # Epoch-ms of the newest relay value this board has accepted. Serverless
+  # instances come and go, and a blank one would otherwise talk the light back
+  # to "available" out of pure ignorance. Only a strictly newer stamp is
+  # believed, so a cold instance (which reports 0) can never win.
+  - id: g_relay_at
+    type: double
+    restore_value: no
+    initial_value: '0'
+
   - id: g_state
     type: std::string
     restore_value: no
@@ -343,6 +352,12 @@ interval:
                         if (response->status_code != 200) return;
                         json::parse_json(body, [](JsonObject root) -> bool {
                           if (!root["state"].is<const char*>()) return false;
+                          // Stamp of 0, missing, or not newer than what we
+                          // already have means this instance knows less than
+                          // we do. Say nothing and wait for a better answer.
+                          double at = root["at"].is<double>() ? root["at"].as<double>() : 0.0;
+                          if (at <= id(g_relay_at)) return false;
+                          id(g_relay_at) = at;
                           std::string next = root["state"].as<std::string>();
                           if (next.empty() || next == id(g_state)) return false;
                           id(g_state) = next;

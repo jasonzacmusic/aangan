@@ -12,10 +12,16 @@
  *   GET  /api/door                             ← ledESP, every couple of seconds
  *
  * Storage is Vercel KV over its REST API, called with plain fetch so this file
- * needs no dependency. If KV is not configured the route still answers, from
- * module memory, and says so in the payload — a warm instance holds it fine,
- * but a cold start forgets, so `store` is reported honestly rather than
- * pretending the value is durable.
+ * needs no dependency. If KV is not configured the route still answers from
+ * module memory, and says so in the payload.
+ *
+ * Memory has one failure mode worth naming: several instances can be warm at
+ * once, and a freshly started one begins blank. The board must not be told
+ * "available" by an instance that has simply never been written to. So every
+ * answer carries `at`, the moment the value was set, and the board ignores
+ * anything not newer than what it already applied. A blank instance reports
+ * at: 0 and is therefore never believed. This costs nothing and removes the
+ * need for a paid store.
  */
 
 const KEY = "aangan:door:state";
@@ -83,12 +89,15 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ ok: false, error: "unknown state", got: state });
     }
     await writeState(state);
-    return res.status(200).json({ ok: true, state, store: kvReady ? "kv" : "memory" });
+    return res.status(200).json({ ok: true, state, at: memory.at, store: kvReady ? "kv" : "memory" });
   }
 
   const current = await readState();
   return res.status(200).json({
     state: current.state,
+    // Epoch ms of the last write. 0 means this instance has never been
+    // written to, which the board reads as "I know nothing, ignore me".
+    at: current.at,
     age_s: current.at ? Math.round((Date.now() - current.at) / 1000) : null,
     store: kvReady ? "kv" : "memory",
   });
