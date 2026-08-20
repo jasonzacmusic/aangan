@@ -122,6 +122,17 @@
   var el = function (id) { return document.getElementById(id); };
   var lastKey = "";
   var misses = 0;
+  /* Newest note stamp we have actually seen. Serverless instances come and go
+     and a fresh one has never heard of the note, so an answer carrying an older
+     stamp is an instance that knows less than we do — not a cleared note. */
+  var bestMat = 0;
+  var bestMsg = "";
+
+  function note(body) {
+    var mat = (typeof body.mat === "number") ? body.mat : 0;
+    if (mat >= bestMat) { bestMat = mat; bestMsg = body.message || ""; }
+    return bestMsg;
+  }
 
   function paint(state, visual, dba, online, note) {
     el("dot").className = online ? "" : "bad";
@@ -188,7 +199,7 @@
         return;
       }
       misses = 0;
-      paint(body.state, body.visual || "ok", body.dba || "", true, body.message || "");
+      paint(body.state, body.visual || "ok", body.dba || "", true, note(body));
     });
   }
 

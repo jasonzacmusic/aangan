@@ -59,10 +59,14 @@ type Door = {
   dba: number | null;
   /** A free-text note for the sign. Empty means "use the state's own words". */
   message: string;
+  /** Epoch ms of the last note write, tracked separately from `at`.
+   *  The note needs its own stamp: a state change must not make an instance
+   *  that has never seen the note look like the freshest source of it. */
+  mat: number;
 };
 
 /** Survives between invocations on a warm instance; lost on a cold start. */
-let memory: Door = { state: "available", at: 0, visual: "ok", dba: null, message: "" };
+let memory: Door = { state: "available", at: 0, visual: "ok", dba: null, message: "", mat: 0 };
 
 /** Long enough for "Back at 4, please wait downstairs", short enough to read
  *  across a hall. A sign nobody can read from the door is not a sign. */
@@ -115,12 +119,12 @@ export default async function handler(req: any, res: any) {
     const hasMessage = body && typeof body.message === "string";
     if (hasMessage) {
       memory.message = body.message.replace(/\s+/g, " ").trim().slice(0, MESSAGE_MAX);
-      memory.at = Date.now();
+      memory.mat = Date.now();
     }
     // A note with no state is a complete request. Answer it here, before the
     // board branch, so it is never mistaken for a board report.
     if (hasMessage && body.state === undefined) {
-      return res.status(200).json({ ok: true, message: memory.message, at: memory.at });
+      return res.status(200).json({ ok: true, message: memory.message, mat: memory.mat });
     }
 
     // A board report. Never touches `state` or `at` — the board is not allowed
@@ -155,6 +159,7 @@ export default async function handler(req: any, res: any) {
     visual: memory.visual,
     dba: memory.dba,
     message: memory.message,
+    mat: memory.mat,
     age_s: current.at ? Math.round((Date.now() - current.at) / 1000) : null,
     store: kvReady ? "kv" : "memory",
   });

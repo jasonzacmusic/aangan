@@ -108,6 +108,14 @@
 
   var el = function (id) { return document.getElementById(id); };
   var current = "";
+  /* Same guard as the sign: never let an instance that has not heard of the
+     note convince us the note was cleared. */
+  var bestMat = 0, bestMsg = "";
+  function note(body) {
+    var mat = (typeof body.mat === "number") ? body.mat : 0;
+    if (mat >= bestMat) { bestMat = mat; bestMsg = body.message || ""; }
+    return bestMsg;
+  }
 
   function toast(t) {
     var n = el("toast");
@@ -181,7 +189,9 @@
       current = b.state;
       el("now").style.backgroundColor = s.bg;
       el("nowWord").innerHTML = s.label;
-      el("nowSub").innerHTML = b.message ? b.message : s.key;
+      var msg = note(b);
+      /* textContent so a note typed on a phone cannot inject markup here. */
+      el("nowSub").textContent = msg ? msg : s.key;
       /* dBA only appears once the board has actually reported one. Showing a
          placeholder number on a door control would be worse than showing none. */
       el("nowMeta").innerHTML = (b.dba || b.dba === 0)
