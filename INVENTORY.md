@@ -94,7 +94,7 @@ function-grouped design that assumed 180 m of two-core cable nobody ever bought.
 | 4 | Bathrooms B + washing machine | `00:70:07:a2:90:dc` | DHCP — needs a static | `node-4-bath-b.yaml` |
 | 5 | Kitchen | `88:f1:55:30:7f:84` | DHCP — needs a static | `node-5-kitchen.yaml` |
 | 6 | Hall / entrance | `8c:94:df:69:1e:5c` | DHCP — needs a static | `node-6-hall.yaml` |
-| door | Studio door bulb | `68:09:47:9c:8a:fc` | **192.168.0.248** (static) | `door-studio.yaml` |
+| door | Studio door bulb | `68:09:47:9d:b7:c4` | **192.168.0.248** (static) | `door-studio.yaml` |
 
 All six room nodes flashed. **36 sensors, no pin conflicts.** The door stick is a spare ESP32, not a seventh room node. Each room board serves its own page and announces its address
 over USB on boot. Pins 25/26/27 are the doors-and-probes pins on nearly every board.

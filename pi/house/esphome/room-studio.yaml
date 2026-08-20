@@ -66,14 +66,14 @@ captive_portal:
 web_server:
   port: 80
 
-# Door unit at 192.168.0.248 (MAC 68:09:47:9c:8a:fc). Sensor numbers leave
+# Door unit at 192.168.0.248 (MAC 68:09:47:9d:b7:c4). Sensor numbers leave
 # this room over Wi-Fi, not copper. ESP-NOW is the live path (the house mesh
 # still isolates HTTP clients). HTTP REST on this web_server is the fallback
 # once client isolation is turned off.
 espnow:
   auto_add_peer: true
   peers:
-    - "68:09:47:9C:8A:FC"
+    - "68:09:47:9D:B7:C4"
 
 # KEEP: HLK-LD2410 presence. Pins reserved. Jason solders and plugs this later.
 # Do not remove the uart / ld2410 / "Studio presence" block to "clean up" unused hardware.
@@ -216,7 +216,7 @@ text_sensor:
 # Wi-Fi to the G2 door. 100 ms is fast enough for a clap; 20 ms would flood the radio.
 packet_transport:
   - platform: espnow
-    peer_address: "68:09:47:9C:8A:FC"
+    peer_address: "68:09:47:9D:B7:C4"
     encryption: "AanganDoor1"
     update_interval: 100ms
     sensors:

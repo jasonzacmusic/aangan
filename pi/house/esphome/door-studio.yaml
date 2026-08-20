@@ -6,7 +6,7 @@
 # reflash it with this same file plus the display block. Do not add a third
 # computer at the door.
 #
-# Spare ESP32, MAC 68:09:47:9c:8a:fc, static IP 192.168.0.248.
+# Spare ESP32, MAC 68:09:47:9d:b7:c4, static IP 192.168.0.248.
 # This is NOT one of the six room nodes. Copper stays in the studio.
 #
 # DATA PATH (Wi-Fi, not USB):
@@ -55,7 +55,7 @@ esp32:
     type: esp-idf
 
 logger:
-  baud_rate: 0
+  baud_rate: 115200   # TEMP: diagnosing wifi. Back to 0 once solved.
   level: INFO
 
 api:
