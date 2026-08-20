@@ -1,0 +1,384 @@
+# AANGAN · STUDIO DOOR UNIT — bulb (Board display)
+#
+# Spare ESP32, MAC 68:09:47:9c:8a:fc, static IP 192.168.0.248.
+# This is NOT one of the six room nodes. Copper stays in the studio.
+#
+# DATA PATH (Wi-Fi, not USB):
+#   Board 1 (192.168.0.250) broadcasts dBA + door reeds + leak over ESP-NOW
+#   every 100 ms, and also serves HTTP JSON at /text_sensor/studio_live.
+#   This chip listens on ESP-NOW first. HTTP poll is the fallback for when
+#   the house mesh stops isolating clients.
+#   USB one-line commands still work as a bench overlay (STATE from the app).
+#
+# Married warnings from the paper: puck colour + (later) 7" plate. Same state.
+# Acoustic: rest with AC on is 42 dBA; hall WAIT trips at 52 dBA.
+# Rec / class / SOS from STATE still win over the mic.
+#
+# The 7" picture lives in Studio Command at /#/display/front-studio until the
+# Waveshare ESP32-S3 panel is on the lintel. That panel *is* this door chip
+# (do not add a third computer). Reflash it with the same Wi-Fi contract.
+#
+# WIRING (bulb — do not power the ring from the ESP 3V3 pin):
+#   GPIO2   onboard LED
+#   GPIO4   WS2812 DIN  (5 V + GND from the USB PSU, grounds joined;
+#           74AHCT125 level shifter before a long run)
+#   12 LEDs assumed for a puck/ring.
+
+esphome:
+  name: door-studio
+  friendly_name: Studio door
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+  baud_rate: 0
+  level: INFO
+
+api:
+  encryption:
+    key: !secret api_key_studio_sense
+  reboot_timeout: 0s
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+  reboot_timeout: 5min
+  manual_ip:
+    static_ip: 192.168.0.248
+    gateway: 192.168.0.1
+    subnet: 255.255.255.0
+    dns1: 192.168.0.1
+  ap:
+    ssid: "door-studio setup"
+    password: !secret ap_password
+captive_portal:
+
+web_server:
+  port: 80
+
+json:
+
+http_request:
+  timeout: 1s
+  watchdog_timeout: 15s
+
+espnow:
+  auto_add_peer: true
+  peers:
+    - "8C:94:DF:69:20:20"
+
+packet_transport:
+  - platform: espnow
+    providers:
+      - name: room-studio
+        encryption: "AanganDoor1"
+
+globals:
+  - id: g_state
+    type: std::string
+    restore_value: no
+    initial_value: '"available"'
+  - id: g_dba
+    type: float
+    restore_value: no
+    initial_value: "42"
+  - id: g_warn
+    type: float
+    restore_value: no
+    initial_value: "52"
+  - id: g_door_test
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: g_http_ok
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+script:
+  - id: apply_hall
+    mode: restart
+    then:
+      - lambda: |-
+          std::string st = id(g_state);
+          float dba = id(g_dba);
+          bool door_open = id(remote_g1).state || id(remote_g2).state || id(g_door_test);
+          bool recording = (st == "audio_rec" || st == "video_rec");
+          bool too_loud  = (!isnan(dba) && dba >= id(g_warn));
+
+          // Jason's rules, 20 Aug:
+          //   recording          -> solid red
+          //   door open mid-take -> red, FAST flash   (most urgent)
+          //   too loud mid-take  -> red, SLOW pulse
+          //   class              -> amber
+          //   available          -> dim green
+          //   emergency          -> purple, overrides everything
+          unsigned long rgb = 0x2FBF71;   // green
+          float bright      = 0.22f;      // dim when nothing is happening
+          const char *fx    = "None";
+          const char *visual = "ok";
+          const char *mark   = "OK";
+
+          if (st == "emergency") {
+            rgb = 0x7C3AED; bright = 1.0f; fx = "fast_flash";
+            visual = "sos";  mark = "SOS";
+          } else if (recording) {
+            rgb = 0xD93036; bright = 1.0f;
+            visual = "onair"; mark = "ON AIR";
+            if (door_open) {            // urgent beats loud
+              fx = "fast_flash"; visual = "door"; mark = "DOOR OPEN";
+            } else if (too_loud) {
+              fx = "slow_pulse"; visual = "loud"; mark = "TOO LOUD";
+            }
+          } else if (st == "class" || st == "meeting") {
+            rgb = 0xF5A623; bright = 0.85f;
+            visual = "wait"; mark = "WAIT";
+          } else if (too_loud) {
+            rgb = 0xF5A623; bright = 0.85f;
+            visual = "loud"; mark = "WAIT";
+          }
+
+          float r = ((rgb >> 16) & 0xFF) / 255.0f;
+          float g = ((rgb >> 8) & 0xFF) / 255.0f;
+          float b = (rgb & 0xFF) / 255.0f;
+          auto puck = id(door_puck).turn_on();
+          puck.set_rgb(r, g, b);
+          puck.set_brightness(bright);
+          puck.set_effect(fx);
+          puck.perform();
+          auto led = id(door_led).turn_on();
+          led.set_brightness(r > g ? (r > b ? r : b) : (g > b ? g : b));
+          led.perform();
+          char dba_s[16];
+          if (isnan(dba)) snprintf(dba_s, sizeof(dba_s), "--");
+          else snprintf(dba_s, sizeof(dba_s), "%.1f", dba);
+          id(door_dba).publish_state(dba_s);
+          id(door_state).publish_state(st);
+          id(door_visual).publish_state(visual);
+          id(door_mark).publish_state(mark);
+
+# USB overlay so Studio Command can still set rec / class from this Mac.
+uart:
+  id: usb_cmd
+  baud_rate: 115200
+  tx_pin: GPIO1
+  rx_pin: GPIO3
+  debug:
+    direction: RX
+    dummy_receiver: true
+    after:
+      delimiter: "\n"
+    sequence:
+      - lambda: |-
+          std::string line(bytes.begin(), bytes.end());
+          while (!line.empty() && (line.back() == '\r' || line.back() == '\n' || line.back() == ' '))
+            line.pop_back();
+          if (line.empty()) return;
+          if (line.rfind("COLOR ", 0) == 0) {
+            std::string hex = line.substr(6);
+            if (!hex.empty() && hex[0] == '#') hex.erase(0, 1);
+            if (hex.size() >= 6) {
+              unsigned long n = strtoul(hex.c_str(), nullptr, 16);
+              float r = ((n >> 16) & 0xFF) / 255.0f;
+              float g = ((n >> 8) & 0xFF) / 255.0f;
+              float b = (n & 0xFF) / 255.0f;
+              auto puck = id(door_puck).turn_on();
+              puck.set_rgb(r, g, b);
+              puck.set_brightness(1.0f);
+              puck.perform();
+            }
+          } else if (line.rfind("TEXT ", 0) == 0) {
+            id(door_ticker).publish_state(line.substr(5));
+          } else if (line.rfind("STATE ", 0) == 0) {
+            id(g_state) = line.substr(6);
+            id(apply_hall).execute();
+          } else if (line.rfind("VISUAL ", 0) == 0) {
+            id(door_visual).publish_state(line.substr(7));
+          } else if (line.rfind("MARK ", 0) == 0) {
+            id(door_mark).publish_state(line.substr(5));
+          } else if (line.rfind("DBA ", 0) == 0) {
+            id(g_dba) = atof(line.substr(4).c_str());
+            id(apply_hall).execute();
+          } else if (line.rfind("DOOR ", 0) == 0) {
+            id(door_leaf).publish_state(line.substr(5));
+          }
+
+output:
+  - platform: ledc
+    pin: GPIO2
+    id: onboard_pwm
+
+light:
+  - platform: monochromatic
+    name: "Door onboard LED"
+    id: door_led
+    output: onboard_pwm
+    restore_mode: ALWAYS_OFF
+  - platform: esp32_rmt_led_strip
+    name: "Door puck"
+    id: door_puck
+    pin: GPIO4
+    num_leds: 12
+    rgb_order: GRB
+    chipset: WS2812
+    restore_mode: ALWAYS_OFF
+    effects:
+      # Too loud mid-take: a slow breath. Noticeable, not alarming.
+      - pulse:
+          name: slow_pulse
+          transition_length: 900ms
+          update_interval: 1800ms
+          min_brightness: 25%
+          max_brightness: 100%
+      # Door open mid-take: fast and urgent. Someone is about to walk in.
+      - pulse:
+          name: fast_flash
+          transition_length: 100ms
+          update_interval: 220ms
+          min_brightness: 0%
+          max_brightness: 100%
+
+sensor:
+  - platform: packet_transport
+    provider: room-studio
+    remote_id: studio_dba
+    id: remote_dba
+    name: "Door heard dBA"
+    internal: false
+    unit_of_measurement: "dBA"
+    accuracy_decimals: 1
+    on_value:
+      then:
+        - lambda: |-
+            id(g_dba) = x;
+            id(g_http_ok) = true;
+        - script.execute: apply_hall
+
+binary_sensor:
+  - platform: packet_transport
+    provider: room-studio
+    remote_id: door_g1
+    id: remote_g1
+    name: "Door heard G1"
+    internal: false
+    on_state:
+      then:
+        - lambda: |-
+            bool open = id(remote_g1).state || id(remote_g2).state;
+            id(door_leaf).publish_state(open ? "OPEN" : "SHUT");
+        - script.execute: apply_hall
+  - platform: packet_transport
+    provider: room-studio
+    remote_id: door_g2
+    id: remote_g2
+    name: "Door heard G2"
+    internal: false
+    on_state:
+      then:
+        - lambda: |-
+            bool open = id(remote_g1).state || id(remote_g2).state;
+            id(door_leaf).publish_state(open ? "OPEN" : "SHUT");
+        - script.execute: apply_hall
+  - platform: packet_transport
+    provider: room-studio
+    remote_id: studio_sink_leak
+    id: remote_leak
+    name: "Door heard leak"
+    internal: false
+
+interval:
+  - interval: 400ms
+    then:
+      - if:
+          condition:
+            wifi.connected
+          then:
+            - http_request.get:
+                url: http://192.168.0.250/sensor/studio_sound_level
+                capture_response: true
+                max_response_buffer_size: 512
+                on_response:
+                  then:
+                    - lambda: |-
+                        if (response->status_code != 200) return;
+                        json::parse_json(body, [](JsonObject root) -> bool {
+                          if (!root["value"]) return false;
+                          id(g_dba) = root["value"];
+                          id(g_http_ok) = true;
+                          return true;
+                        });
+                        id(apply_hall).execute();
+
+text_sensor:
+  - platform: template
+    name: "Door ticker"
+    id: door_ticker
+  - platform: template
+    name: "Door studio state"
+    id: door_state
+  - platform: template
+    name: "Door visual"
+    id: door_visual
+  - platform: template
+    name: "Door mark"
+    id: door_mark
+  - platform: template
+    name: "Door dBA"
+    id: door_dba
+  - platform: template
+    name: "Door leaf"
+    id: door_leaf
+  - platform: wifi_info
+    ip_address:
+      name: "IP address"
+
+
+# ---------------------------------------------------------------------------
+# BENCH CONTROLS. These drive the same code path as the real ESP-NOW data, so
+# what you see here is exactly what the door will do. Harmless to leave in.
+# ---------------------------------------------------------------------------
+select:
+  - platform: template
+    name: "1 - Studio state"
+    id: test_state
+    optimistic: true
+    options: ["available", "class", "meeting", "audio_rec", "video_rec", "emergency"]
+    initial_option: "available"
+    on_value:
+      then:
+        - lambda: 'id(g_state) = x;'
+        - script.execute: apply_hall
+
+button:
+  - platform: template
+    name: "2 - Room TOO LOUD"
+    on_press:
+      then:
+        - lambda: 'id(g_dba) = 60.0;'
+        - script.execute: apply_hall
+  - platform: template
+    name: "3 - Room quiet again"
+    on_press:
+      then:
+        - lambda: 'id(g_dba) = 40.0;'
+        - script.execute: apply_hall
+  - platform: template
+    name: "4 - Door OPEN"
+    on_press:
+      then:
+        - lambda: 'id(g_door_test) = true;'
+        - script.execute: apply_hall
+  - platform: template
+    name: "5 - Door shut again"
+    on_press:
+      then:
+        - lambda: 'id(g_door_test) = false;'
+        - script.execute: apply_hall
