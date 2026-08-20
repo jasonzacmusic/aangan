@@ -266,6 +266,60 @@ Everything else on all six boards is push-fit.
 
 ---
 
+### Traps found on 20 Aug, all of which cost hours
+
+**Never put a `uart:` on GPIO1 or GPIO3.** Those two pins *are* the USB serial
+port. `door-studio.yaml` had a UART there for the old Mac-cable overlay, which
+forced `logger: baud_rate: 0`, which meant the board could not print a boot log,
+which meant a board that would not join Wi-Fi was completely undiagnosable. Every
+attempt to read it failed before it started. Removed; do not put one back.
+
+**A board that answers ARP but refuses TCP instantly is not a network fault.**
+`Immediate connect fail ... after 1 ms` is a local filter, not a lost packet. On
+this Mac it was NordVPN: quitting the app leaves `utun6` up, the default route
+captured, and `com.nordvpn.macos.Shield` still filtering. Disconnect inside the
+app — quitting is what strands it.
+
+**`http_request: timeout: 1s` cannot do TLS.** 1s is fine for a plain LAN call to
+another board. A TLS handshake to a CDN on a 240 MHz ESP32 takes seconds, and at
+1s every single request died with `ESP_ERR_HTTP_CONNECT`. The board was working
+perfectly and was simply never given time to finish shaking hands. Now 10s.
+
+**ESPHome renamed `headers:` to `request_headers:`** in `http_request` actions.
+
+**An https page may never read an http device.** This is a browser rule and no
+code changes it. It is the whole reason the relay exists: the deployed app and
+the door sign are https, the board is plain http, so the app writes to
+`/api/door` and the board polls *out*. An outbound call from the board is immune
+to mixed content, to mesh client isolation, and to whether the Mac is even on.
+
+**The door board's MAC is `68:09:47:9d:b7:c4`**, read off the chip with
+`esptool read-mac` and confirmed by ARP. The previously recorded
+`68:09:47:9c:8a:fc` belongs to no board here. It was `room-studio`'s ESP-NOW peer
+address, so every dB reading, door state and leak flag board 1 sent went to a
+device that does not exist — silently, because ESP-NOW never reports an unknown
+peer. **Board 1 still needs reflashing for the fix to take effect.**
+
+**The relay keeps state in memory, not a database.** Several serverless
+instances can be warm at once and a fresh one starts blank, so every answer
+carries `at`, the epoch-ms of its last write. The board accepts a value only if
+`at` is strictly newer than what it already applied; a blank instance reports
+`at: 0` and is never believed. Without this the recording light would flicker
+back to green mid-take. Do not "simplify" this away.
+
+**The board's poll is a POST, deliberately.** One call reports what the board can
+see (door open, room dB — facts that arrive on ESP-NOW and exist nowhere else)
+and receives the studio state in the reply. Splitting it into a read and a write
+doubles the serverless invocations for no gain. The interval is 3s and not
+faster for the same reason: 2s is ~1.3M calls/month and over Vercel's included
+million; 3s is ~860k and under it.
+
+**The door sign is deliberately not part of the React app.** `public/sign.html`
+is plain ES5 with no build step, because it runs on an old iPad propped by the
+door and that Safari cannot be trusted with a modern bundle. It reads the same
+`/api/door` as the light, from the same origin, so the sign and the strip cannot
+contradict each other.
+
 ## 9. What comes next, in order
 
 1. **Wire the six rooms.** Boards 1 and 2 are in progress. Everything is push-fit except §7.

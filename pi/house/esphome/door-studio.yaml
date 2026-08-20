@@ -88,8 +88,23 @@ web_server:
 json:
 
 http_request:
-  timeout: 1s
-  watchdog_timeout: 15s
+  # Two opposing pressures, and this number is the compromise.
+  #
+  # Too short and TLS cannot finish: at 1s every request died mid-handshake with
+  # ESP_ERR_HTTP_CONNECT, because a handshake to a CDN on a 240 MHz chip takes
+  # seconds, not milliseconds. The board was working perfectly and was simply
+  # never given time to shake hands.
+  #
+  # Too long and a FAILED request freezes the board, because ESPHome's http
+  # client is blocking — at 10s the log showed "interval took a long time for an
+  # operation (10011 ms)". Ten seconds of a frozen board means ten seconds where
+  # a door opening mid-take does not flash the light. That is the whole point of
+  # the device, so the stall is the thing to bound, not the latency.
+  #
+  # 4s clears a healthy handshake with room to spare and caps the worst case at
+  # four seconds. A successful call takes well under a second and never stalls.
+  timeout: 4s
+  watchdog_timeout: 12s
   verify_ssl: false   # payload is one public word; a CA bundle costs flash for nothing
 
 espnow:
