@@ -1,0 +1,12 @@
+name = "aangan-door-store"
+main = "src/index.js"
+compatibility_date = "2026-07-08"
+workers_dev = true
+
+[[durable_objects.bindings]]
+name = "DOOR_STATE"
+class_name = "DoorState"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["DoorState"]
