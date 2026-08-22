@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-title" content="Studio Door">
 <meta name="theme-color" content="#0b0b0c">
 <title>Studio Door — Control</title>
+<link rel="icon" type="image/png" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <style>
   /* Same restraint as the sign: plain ES5-friendly CSS, because this gets
      opened on whatever phone is nearest, including old ones. */
@@ -192,11 +194,16 @@
       var msg = note(b);
       /* textContent so a note typed on a phone cannot inject markup here. */
       el("nowSub").textContent = msg ? msg : s.key;
-      /* dBA only appears once the board has actually reported one. Showing a
-         placeholder number on a door control would be worse than showing none. */
-      el("nowMeta").innerHTML = (b.dba || b.dba === 0)
-        ? ("board live &middot; " + b.dba + " dBA")
-        : "waiting for the board";
+      /* The strip and door display are independent boards, so report their
+         own check-ins. dBA is optional telemetry from the room sensor board;
+         its absence must not make healthy door hardware look offline. */
+      var health = [];
+      health.push((typeof b.strip_age_s === "number" && b.strip_age_s <= 45)
+        ? "strip live" : "strip waiting");
+      health.push((typeof b.screen_age_s === "number" && b.screen_age_s <= 45)
+        ? "screen live" : "screen waiting");
+      if (b.dba || b.dba === 0) health.push(b.dba + " dBA");
+      el("nowMeta").innerHTML = health.join(" &middot; ");
 
       var btns = el("states").getElementsByTagName("button");
       for (i = 0; i < btns.length; i++) {
