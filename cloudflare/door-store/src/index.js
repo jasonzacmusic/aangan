@@ -6,7 +6,10 @@ const STATES = new Set([
   "video_rec",
   "emergency",
 ]);
-const VISUALS = new Set(["ok", "loud", "door"]);
+// Every word the light board can say. Listing only three of them meant "onair"
+// (door shut again mid-take), "wait" and "sos" were dropped, so the screen kept
+// flashing DOOR OPEN for the rest of the take.
+const VISUALS = new Set(["ok", "loud", "door", "onair", "wait", "sos"]);
 const MESSAGE_MAX = 80;
 const STORAGE_KEY = "door";
 

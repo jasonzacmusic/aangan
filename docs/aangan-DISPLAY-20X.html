@@ -1,0 +1,299 @@
+<title>Aangan Door Screen 20×</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#f6f7f4; --ink:#14202b; --ink-2:#46525c; --ink-3:#7a8690;
+  --line:#d6dbd9; --panel:#ffffff; --panel-2:#eef1ee;
+  --pcb:#1f4f8f; --pcb-ink:#ffffff; --silk:#dbe6f5;
+  --red:#c8262c; --amber:#c27a12; --green:#1f6f49; --purple:#6b3fb8;
+  --red-bg:#fbe9e9; --amber-bg:#fbf1df; --green-bg:#e6f2ea;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0f161d; --ink:#e9eef2; --ink-2:#b4bec7; --ink-3:#7f8b95;
+    --line:#27333d; --panel:#161f28; --panel-2:#1d2832;
+    --pcb:#2b62a8; --pcb-ink:#ffffff; --silk:#1a2b42;
+    --red:#ff6b6b; --amber:#f0b040; --green:#5ccf8f; --purple:#b18cff;
+    --red-bg:#3a1b1d; --amber-bg:#3a2d12; --green-bg:#163026;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0f161d; --ink:#e9eef2; --ink-2:#b4bec7; --ink-3:#7f8b95;
+  --line:#27333d; --panel:#161f28; --panel-2:#1d2832;
+  --pcb:#2b62a8; --pcb-ink:#ffffff; --silk:#1a2b42;
+  --red:#ff6b6b; --amber:#f0b040; --green:#5ccf8f; --purple:#b18cff;
+  --red-bg:#3a1b1d; --amber-bg:#3a2d12; --green-bg:#163026;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:"Bricolage Grotesque","Archivo",system-ui,sans-serif;text-wrap:balance;margin:0;line-height:1.08}
+h1{font-size:clamp(2.2rem,6vw,4.4rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.5rem,3vw,2.1rem);font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0}
+a{color:var(--pcb);text-decoration-thickness:1px;text-underline-offset:3px}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.88em}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+
+/* masthead styled like the PCB silkscreen block */
+.mast{background:var(--pcb);color:var(--pcb-ink);padding:44px 0 36px}
+.mast .eyebrow{color:var(--silk)}
+.mast h1{margin-top:10px}
+.mast .lede{margin-top:18px;max-width:62ch;font-size:1.12rem;color:var(--silk)}
+.board{margin-top:26px;display:flex;flex-wrap:wrap;gap:8px}
+.board span{font-family:"IBM Plex Mono",monospace;font-size:.78rem;border:1px solid rgba(255,255,255,.45);padding:4px 10px;border-radius:3px;color:#fff}
+
+/* answer strip */
+.answers{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:-22px 0 0;position:relative}
+.ans{background:var(--panel);border:1px solid var(--line);padding:16px 16px 14px;border-radius:6px;display:flex;flex-direction:column;gap:6px}
+.ans .q{font-size:.85rem;color:var(--ink-3)}
+.ans .a{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:1.35rem;line-height:1.1}
+.ans .a.yes{color:var(--green)}.ans .a.no{color:var(--red)}.ans .a.maybe{color:var(--amber)}
+.ans .why{font-size:.9rem;color:var(--ink-2)}
+
+section{padding:44px 0 8px}
+section>.wrap>h2{margin-bottom:8px}
+section .intro{color:var(--ink-2);max-width:68ch;margin-bottom:22px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+
+/* bug cards: severity stripe on the left */
+.bugs{display:flex;flex-direction:column;gap:12px}
+.bug{background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--amber);border-radius:6px;padding:14px 18px;display:grid;grid-template-columns:1fr;gap:6px}
+.bug.red{border-left-color:var(--red)}.bug.green{border-left-color:var(--green)}
+.bug h3{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.bug .tag{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:var(--amber-bg);color:var(--amber)}
+.bug.red .tag{background:var(--red-bg);color:var(--red)}.bug.green .tag{background:var(--green-bg);color:var(--green)}
+.bug p{color:var(--ink-2);max-width:75ch}
+.bug .fix{color:var(--ink);font-weight:500}
+.bug .fix::before{content:"Fix → ";color:var(--ink-3);font-weight:400}
+
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:500;background:var(--panel-2)}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.ok{color:var(--green);font-weight:600}.no{color:var(--red);font-weight:600}.mid{color:var(--amber);font-weight:600}
+
+/* the back of the board, drawn */
+.backplate{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px}
+.backplate svg{width:100%;height:auto;display:block}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px 18px;margin-top:14px;font-size:.93rem}
+.legend b{font-family:"IBM Plex Mono",monospace;font-weight:500;color:var(--pcb);margin-right:6px}
+
+/* 20x menu */
+.tiers{display:flex;flex-direction:column;gap:14px}
+.tier{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px}
+.tier h3{display:flex;align-items:baseline;gap:12px;margin-bottom:10px}
+.tier h3 small{font-family:"IBM Plex Mono",monospace;font-size:.75rem;color:var(--ink-3);font-weight:400;letter-spacing:.06em;text-transform:uppercase}
+.tier ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;color:var(--ink-2)}
+.tier li b{color:var(--ink);font-weight:600}
+.tier.now{border-top:4px solid var(--green)}.tier.next{border-top:4px solid var(--pcb)}.tier.later{border-top:4px solid var(--amber)}.tier.never{border-top:4px solid var(--red)}
+
+.callout{background:var(--silk);border-radius:6px;padding:16px 18px;color:var(--ink);max-width:75ch}
+.callout b{color:var(--pcb)}
+.cost{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.cost div{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.cost .v{font-family:"Bricolage Grotesque",sans-serif;font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
+.cost .l{font-size:.85rem;color:var(--ink-3)}
+
+footer{padding:40px 0 60px;color:var(--ink-3);font-size:.88rem}
+.share{display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#072a12;font-weight:600;padding:10px 16px;border-radius:6px;text-decoration:none;margin-bottom:18px}
+.share:focus-visible,a:focus-visible{outline:2px solid var(--pcb);outline-offset:2px}
+hr.sep{border:0;border-top:1px solid var(--line);margin:36px 0 0}
+</style>
+
+<header class="mast">
+  <div class="wrap">
+    <div class="eyebrow">Aangan · studio door · audit + 20× plan · 22 Aug 2026</div>
+    <h1>One screen, one light, one plug.</h1>
+    <p class="lede">What the Waveshare 7" door screen can and cannot do, what is wrong in the code that runs it today, and how to get twenty times more out of it without buying the wrong thing.</p>
+    <div class="board">
+      <span>ESP32-S3-Touch-LCD-7 Rev 1.2</span><span>800×480 · 5-point touch</span><span>8 MB PSRAM</span><span>Wi-Fi 2.4 GHz · BLE only</span><span>192.168.0.249</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="answers">
+    <div class="ans"><div class="q">Can the strip hang off the screen?</div><div class="a yes">Yes — GPIO6</div><div class="why">The "Sensor AD" plug is a free pin. One unit drives screen and light. Closes the open question in INVENTORY §6.</div></div>
+    <div class="ans"><div class="q">Speaker? Bluetooth speaker?</div><div class="a no">No audio on board</div><div class="why">No codec, no jack. Chip is Bluetooth LE only — it can never talk to a Bluetooth speaker. A ₹200 MP3 module on the UART plug gives a chime.</div></div>
+    <div class="ans"><div class="q">SD card — worth it?</div><div class="a maybe">Not today</div><div class="why">Slot exists (SPI, chip-select on the I/O expander). ESPHome can't feed images from it to the screen. Pull pictures from a URL instead.</div></div>
+    <div class="ans"><div class="q">Teleprompter with a foot pedal?</div><div class="a no">Wrong device</div><div class="why">iPad + one BLE pedal does it today, with voice-following. The ESP32 can't host a Bluetooth pedal in ESPHome.</div></div>
+    <div class="ans"><div class="q">Pocket tablet for the band?</div><div class="a no">Buy tablets</div><div class="why">No PDF, no Tamil/Kannada/Hindi text, 3 h battery. A ₹10k Android + OnSong wins on every axis but instant-on.</div></div>
+  </div>
+</div>
+
+<section id="code">
+  <div class="wrap">
+    <div class="eyebrow">1 · Code audit</div>
+    <h2>It works — and the screen can lie for a whole take.</h2>
+    <p class="intro">Checked live at 18:00: both devices check in (<code>strip 57 s · screen 6 s</code>), state <code>audio_rec</code>, note "Back at 4". The real work lives on branch <code>cursor/studio-page-visible</code>, 21 commits ahead of <code>main</code> — <code>main</code> has no display code at all. Two devices today: the old ESP32 "ledESP" drives the strip, the Waveshare drives the screen; both poll <code>/api/door</code>.</p>
+    <div class="bugs">
+      <div class="bug red"><h3><span class="tag">Bug · fixed, not deployed</span>Relay throws away half the light's reports</h3><p><code>api/door.ts</code> accepts only <code>ok / loud / door</code>; the light sends six words (<code>onair, wait, sos</code> too). Recording, door opens → "door" stored. Door shuts → light says "onair" → rejected → the screen keeps flashing <b>DOOR OPEN — please close it</b> for the rest of the take.</p><p class="fix">accept all six words. One line in <code>cloudflare/door-store/src/index.js</code>, committed; needs a <code>wrangler deploy</code> — say the word.</p></div>
+      <div class="bug red"><h3><span class="tag">Bug</span>Screen and strip can disagree for ~20 s</h3><p>Strip polls every 15 s (its own comment still says 3 s); the screen only learns "door open" via strip → relay → screen. INVENTORY says the screen listens to the ESP-NOW broadcast — it does not; there is no <code>espnow:</code> block in <code>door-display.yaml</code>.</p><p class="fix">add the same <code>espnow + packet_transport</code> block to the screen so door/dBA arrive in milliseconds, like the strip.</p></div>
+      <div class="bug"><h3><span class="tag">Mismatch</span>Two rulebooks</h3><p>Strip goes amber WAIT when the room is loud even with nothing booked; screen shows green COME IN. The rules exist twice, in two files.</p><p class="fix">one rulebook — the strip's <code>mark</code> word becomes the screen's word.</p></div>
+      <div class="bug"><h3><span class="tag">Stall</span>A 400 ms poll with a 12 s timeout</h3><p>ledESP hits <code>192.168.0.250</code> every 400 ms on a blocking client. The repo itself documents the mesh blocking that route; when it fails the board can freeze up to 12 s — fast flash stutters, relay poll starves.</p><p class="fix">only run it when ESP-NOW has been silent 5 s, with a 1 s timeout — or delete it.</p></div>
+      <div class="bug green"><h3><span class="tag">Fixed today</span>State now lives in one place</h3><p>At 17:51 the relay answered <code>"store":"memory"</code> — no store behind it, state split across warm serverless instances. Commit <code>d24f7a1</code> (18:00) moved the door state into a Cloudflare Durable Object; the relay is now a thin proxy and returns 503 rather than inventing a blank state. Right call. The word-list bug above was copied into the Worker verbatim — fixed there too.</p></div>
+      <div class="bug"><h3><span class="tag">Cost</span>≈1.05 M Vercel calls a month</h3><p>Screen every 3 s ≈ 864k + strip ≈ 173k + the app. Hobby plan includes 1 M. Pro: 1 M included, then paid. Check the plan in the Vercel dashboard before adding a second screen.</p><p class="fix">MQTT push replaces polling entirely, and removes the 10-second TLS handshake the firmware comments complain about.</p></div>
+      <div class="bug green"><h3><span class="tag">Good</span>What is right</h3><p>Monotonic <code>at/mat</code> stamps; paint-on-change (no timer repaint) on the RGB panel; logger on native USB; the two-port trap documented. Keep all of it.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="board">
+  <div class="wrap">
+    <div class="eyebrow">2 · The back of the board, explained</div>
+    <h2>Every plug, what it is, what you can do with it.</h2>
+    <p class="intro">From Waveshare's wiki and schematic, not guessed. Orientation as in your photo (USB ports on the left).</p>
+    <div class="backplate">
+      <svg viewBox="0 0 800 420" role="img" aria-label="Back of the ESP32-S3-Touch-LCD-7 board with plugs labelled">
+        <rect x="20" y="20" width="760" height="380" rx="10" fill="var(--silk)" stroke="var(--line)"/>
+        <rect x="140" y="60" width="520" height="300" rx="8" fill="var(--pcb)"/>
+        <g font-family="IBM Plex Mono, monospace" font-size="13" fill="#fff">
+          <rect x="142" y="95" width="22" height="30" rx="3" fill="#0b2344"/><text x="170" y="115">USB · power + native USB (D)</text>
+          <rect x="142" y="150" width="22" height="30" rx="3" fill="#0b2344"/><text x="170" y="170">UART · flashing + logs (C)</text>
+          <rect x="190" y="70" width="40" height="32" rx="3" fill="#0b2344"/><text x="238" y="90">microSD (E)</text>
+          <rect x="150" y="200" width="70" height="70" rx="4" fill="#0b2344"/><text x="150" y="290">S3 module · antenna</text>
+          <rect x="620" y="70" width="30" height="40" rx="3" fill="#0b2344"/><text x="490" y="85" text-anchor="end">(A) Sensor AD · GPIO6 → LED strip</text>
+          <rect x="620" y="120" width="30" height="40" rx="3" fill="#0b2344"/><text x="600" y="145" text-anchor="end">(B) I2C 3V3/5V · expander bus</text>
+          <rect x="620" y="170" width="30" height="40" rx="3" fill="#0b2344"/><text x="600" y="195" text-anchor="end">CAN / RS485 (F)</text>
+          <rect x="620" y="222" width="30" height="26" rx="3" fill="#0b2344"/><text x="600" y="240" text-anchor="end">(G) Battery PH2.0 · 3.7 V</text>
+          <rect x="600" y="300" width="24" height="40" rx="3" fill="#e3b341"/><rect x="632" y="300" width="24" height="40" rx="3" fill="#e3b341"/><text x="590" y="325" text-anchor="end">120R jumpers · leave</text>
+          <circle cx="560" cy="280" r="4" fill="#ff5a5a"/><circle cx="575" cy="280" r="4" fill="#ff5a5a"/><circle cx="590" cy="280" r="4" fill="#ff5a5a"/><text x="545" y="265" text-anchor="end">DONE · CHG · PWR</text>
+          <rect x="300" y="320" width="34" height="18" rx="3" fill="#0b2344"/><text x="300" y="352">RESET</text>
+          <rect x="360" y="320" width="34" height="18" rx="3" fill="#0b2344"/><text x="360" y="352">BOOT</text>
+          <rect x="420" y="320" width="40" height="18" rx="3" fill="#0b2344"/><text x="420" y="352">UART switch</text>
+        </g>
+        <g fill="var(--ink-3)" font-family="IBM Plex Mono, monospace" font-size="12">
+          <rect x="60" y="110" width="22" height="22" rx="4" fill="none" stroke="var(--ink-3)"/><rect x="60" y="290" width="22" height="22" rx="4" fill="none" stroke="var(--ink-3)"/>
+          <rect x="718" y="110" width="22" height="22" rx="4" fill="none" stroke="var(--ink-3)"/><rect x="718" y="290" width="22" height="22" rx="4" fill="none" stroke="var(--ink-3)"/>
+          <text x="30" y="395">4 × M3 tabs · 126.2 × 65.65 mm — same pattern as the Pi 7" display v1</text>
+        </g>
+      </svg>
+      <div class="legend">
+        <div><b>A</b><strong>Sensor AD</strong> — plain GPIO6 with GND/3V3 next to it. This is your LED-strip data pin (through the 74AHCT125 already on order). Or a wired foot pedal. Or a beeper.</div>
+        <div><b>B</b><strong>I2C plug</strong> — same bus as the touch chip; 3.3/5 V selectable. Add a temp/humidity sensor, a light sensor, a keypad.</div>
+        <div><b>C</b><strong>UART USB-C</strong> — the flashing port (CH343). The small switch can reroute these two pins to the 3-pin UART header → plug a <strong>DFPlayer Mini</strong> MP3 module there for a chime or a voice line.</div>
+        <div><b>D</b><strong>USB USB-C</strong> — power in, and the S3's own USB. This is the one you had it in when it "looked dead". Same pins as CAN; one or the other.</div>
+        <div><b>E</b><strong>microSD</strong> — SPI, chip-select on the I/O expander. Fine for logging, not usable for images in ESPHome today.</div>
+        <div><b>F</b><strong>RS485 / CAN</strong> — industrial bus terminals. Irrelevant for us; GPIO15 is a second usable pin if RS485 stays unused.</div>
+        <div><b>G</b><strong>Battery</strong> — JST PH2.0, single 3.7 V cell ≤ 2000 mAh, charges at 580 mA and runs the board alone (~3 h). <strong>No reverse-polarity protection</strong> — check the red wire against the silkscreen before plugging in.</div>
+      </div>
+    </div>
+    <div class="tbl" style="margin-top:16px">
+      <table>
+        <tr><th>It can</th><th>It cannot</th></tr>
+        <tr><td>Draw text, icons, pre-made pictures, arcs/bars, QR codes, clocks, touch buttons, pages; pull a PNG from a URL; drive a short LED strip; beep; play MP3 via a UART module; run off a battery</td><td>Play video or a web page; show a PDF; render Kannada/Hindi/Tamil words (no shaping — letters come out unjoined); talk to Bluetooth speakers; dim the backlight (on/off only); 5 GHz Wi-Fi; more than ~3 spare pins</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="templates">
+  <div class="wrap">
+    <div class="eyebrow">3 · Layouts</div>
+    <h2>Split screen, pictures, templates — yes, via LVGL pages.</h2>
+    <p class="intro">ESPHome's LVGL component turns the screen into named pages, each with its own layout (grid/flex). The server sends one small JSON — <code>{"page":"split","title":"ON AIR","img":"…/hero.png"}</code> — and the screen switches page and fills the text. Images come from a URL into PSRAM; Indian-language text is rendered to a PNG on the server and sent the same way. A working LVGL config for this exact board exists (inytar's package) and needs ESPHome ≥ 2025.8 with <code>display: mipi_rgb</code>.</p>
+    <div class="tbl">
+      <table>
+        <tr><th>Template</th><th>What it shows</th><th>Widgets</th></tr>
+        <tr><td>Big word</td><td>COME IN / ON AIR / CLASS — today's sign, flashing rules included</td><td>label 130 px, colour background</td></tr>
+        <tr><td>Split hero</td><td>Left: picture or poster; right: title + two lines</td><td>grid 2 col · image · 2 labels</td></tr>
+        <tr><td>Next up</td><td>Today's classes, the next free slot</td><td>flex rows of labels</td></tr>
+        <tr><td>Delivery OTP</td><td>Courier name + 4-digit code, "Got it" button, auto-hides</td><td>label · button · delay</td></tr>
+        <tr><td>Countdown</td><td>Lesson ends in 12:40, ring fills, chime at zero</td><td>label · arc · rtttl</td></tr>
+        <tr><td>dB meter</td><td>Live room level with the 52 dBA line</td><td>arc / meter</td></tr>
+        <tr><td>QR</td><td>Guest Wi-Fi, UPI, class sign-up</td><td>qrcode widget</td></tr>
+        <tr><td>Poster</td><td>Full-screen 800×480 PNG from Photo Hub; swap by URL</td><td>image</td></tr>
+        <tr><td>Setlist</td><td>Song list for a rehearsal, tap to advance</td><td>roller · tileview</td></tr>
+        <tr><td>House board</td><td>Clock / schedule / poster rotating, touch to hold</td><td>tileview · sntp time</td></tr>
+      </table>
+    </div>
+    <p class="callout" style="margin-top:16px"><b>Budget:</b> one full-screen picture baked into firmware costs 768 KB of a ~2 MB asset budget — bake 2–3 backgrounds, pull everything else from a URL.</p>
+  </div>
+</section>
+
+<section id="mount">
+  <div class="wrap">
+    <div class="eyebrow">4 · Mounting</div>
+    <h2>The panel is a Raspberry Pi 7" display in disguise.</h2>
+    <p class="intro">Glass 192.96 × 110.76 mm, four M3 tabs at 126.2 × 65.65 mm centres — identical to the official Pi 7" Touch Display v1. So every bezel made for that fits the front; only the back differs. Waveshare sells <strong>no case</strong> for this board. Overall depth ≈ 17 mm; allow a 20 mm cavity.</p>
+    <div class="two">
+      <div class="tier now"><h3>Door sign <small>recommended</small></h3><ul>
+        <li><b>Print Sergey Morozov's wall-mount case</b> (Printables 1030369) in PETG via 3Ding or Robu's print service — ₹1,000–2,000, 24–48 h.</li>
+        <li>Screw the panel to the case back from <b>inside</b> via the tabs (M3×6 with a plate, or M3×10 into bosses — never long screws, they bottom on the glass). Front shows no fasteners.</li>
+        <li>Back plate on the wall; the sign lifts off on two screws for reflashing. USB-C out through a left-edge notch into raceway.</li>
+        <li>Or the carpenter's wooden bezel already in INVENTORY §6 — route a 193 × 111 rebate and a 155 × 87 window, offset 19 mm left / 13 mm top.</li>
+        <li>No printer, no carpenter: a Pi 7" v1 aluminium wall mount, blank the Pi openings, drill one USB-C slot.</li>
+      </ul></div>
+      <div class="tier later"><h3>Handheld <small>only if you insist</small></h3><ul>
+        <li>colany V3 case on Cults3D has an <b>18650 bay</b> — the safer cell for a gig bag. Billkater's slim shell + a 2000 mAh PCM Li-Po taped in a printed pocket is the flat option.</li>
+        <li>Runtime ≈ 3 h at full backlight; backlight can't be dimmed. For a full gig carry a USB-C power bank instead.</li>
+        <li>Pouch cells: rigid pocket, nothing pressing on it, room to swell, never charge sealed and unattended.</li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="twentyx">
+  <div class="wrap">
+    <div class="eyebrow">5 · The 20× menu</div>
+    <h2>Where the leverage is, in order.</h2>
+    <div class="tiers">
+      <div class="tier now"><h3>Now <small>this board, this week</small></h3><ul>
+        <li><b>Merge the branch into main.</b> Main is stale; GitHub is the source of truth.</li>
+        <li><b>Fix the relay word list</b> (done on branch) and <b>give the screen ESP-NOW</b> so it flashes DOOR OPEN in milliseconds, not 20 s.</li>
+        <li><b>Move the strip onto GPIO6 of the Waveshare.</b> One unit, one plug, retire ledESP to the drawer as a spare. Keep the strip short (the 12-LED ring or 1 m), separate 5 V supply, level shifter, <code>use_psram: false</code> on the LED buffer to avoid flicker.</li>
+        <li><b>Swap polling for MQTT.</b> Mosquitto can run on chorale-pi (already owned) or a free hosted broker. Push, retained state, no TLS stall, zero Vercel invocations. This is the single change that makes everything after it cheap.</li>
+        <li><b>Convert the sign to LVGL pages.</b> Today's big-word sign becomes page 1; split-hero and OTP become pages 2 and 3.</li>
+      </ul></div>
+      <div class="tier next"><h3>Next <small>₹200 – ₹2,000 each</small></h3><ul>
+        <li><b>Chime + voice line:</b> DFPlayer Mini on the UART header, ₹150–250 + a small speaker. "Recording in progress" spoken when the door opens mid-take; doorbell tone; OTP received beep.</li>
+        <li><b>Touch on the sign:</b> "Got it" for OTPs, "Knock" button that pings the studio, "Back in 10" presets — the screen already has 5-point touch nobody is using.</li>
+        <li><b>Pictures from Photo Hub:</b> a poster URL per state — the week's workshop on the free screen, NSM logo on ON AIR.</li>
+        <li><b>Second screen at the G1 front door</b> (same board, ₹4,299 at Hubtronics / ₹4,799 Robu) on the same MQTT topic family — the house board + OTP.</li>
+        <li><b>Wired pedal on GPIO6 of a spare board</b> if you ever want a foot tap to advance a setlist on the screen — ₹400 sustain pedal, 10 lines of YAML, no pairing.</li>
+      </ul></div>
+      <div class="tier later"><h3>Later <small>bigger screens</small></h3><ul>
+        <li><b>Waveshare ESP32-S3-Touch-LCD-7B</b>, 1024×600, ~₹5.5–7k on Amazon.in — same YAML family, 60% more pixels. The sensible "bigger".</li>
+        <li><b>ESP32-P4 10.1" (1280×800)</b>, ~₹10–14k — video decode, 32 MB RAM, but ESPHome support landed only in 2026.2 and the 10.1" panels aren't in the model list yet. Six months.</li>
+        <li><b>History and alerts</b> need a hub — that is the Pi, not a screen.</li>
+      </ul></div>
+      <div class="tier never"><h3>Not this board <small>buy the right tool</small></h3><ul>
+        <li><b>Teleprompter:</b> old iPad (owned) + AirTurn PEDpro / Donner BLE pedal (₹3–9k, Bajaao/Amazon.in) + TeleprompterPAD (<code>###</code> chapter markers, pedal jumps) or PromptSmart Pro (voice-following). "Intelligent" = generated from the nsm-script output, one chapter per YouTube chapter, tap times logged → chapter list for the upload. All trivial in a browser, impossible on ESP32. If the text must sit in the lens axis: a ₹300 70/30 glass hood, or Pi 5 + Touch Display 2 as a permanent rig.</li>
+        <li><b>Band pocket tablets:</b> ₹10–12k Android or iPad mini + OnSong/forScore + the same pedal. PDFs, transposition, setlists, band sync — done. A custom ESP32 version only makes sense as a branded NSM product and still can't show a PDF or a Tamil lyric.</li>
+        <li><b>Anything with Bluetooth audio.</b> The chip cannot.</li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="cost">
+  <div class="wrap">
+    <div class="eyebrow">6 · Money</div>
+    <h2>What the "Now + Next" tier costs.</h2>
+    <div class="cost">
+      <div><div class="v">₹0</div><div class="l">Strip onto GPIO6, ESP-NOW on screen, MQTT, LVGL pages — firmware only</div></div>
+      <div><div class="v">₹250</div><div class="l">DFPlayer Mini + 3 W speaker</div></div>
+      <div><div class="v">₹1,500</div><div class="l">Printed PETG case, approx.</div></div>
+      <div><div class="v">₹4,299</div><div class="l">Second screen, front door</div></div>
+      <div><div class="v">₹3–9k</div><div class="l">One BLE pedal — serves prompter and charts</div></div>
+    </div>
+    <hr class="sep">
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <a class="share" id="wa" href="#">Share on WhatsApp</a>
+    <p>Sources: Waveshare wiki + Rev 1.2 schematic; esphome.io (lvgl, mipi_rgb, online_image, mqtt, esp32_rmt_led_strip, http_request); inytar / bennydiamond LVGL configs for this board; Printables / MakerWorld / Cults3D; Robu, Hubtronics, Amazon.in listings read 22 Aug 2026. Prices marked approx. were computed from USD list + landed cost, not quoted. Code audited at branch <code>cursor/studio-page-visible</code> commits <code>2178c53</code>–<code>d24f7a1</code>.</p>
+  </div>
+</footer>
+<script>
+(function(){var t="Aangan door screen — audit + 20x plan:\n• Strip can hang off the screen (GPIO6) → one unit, one plug\n• No speaker/Bluetooth audio on board; DFPlayer Mini for a chime\n• Screen can show stale DOOR OPEN for a whole take — relay bug, fixed on branch\n• Layout templates: yes via LVGL pages; pictures from a URL, not SD\n• Case: Pi 7\" v1 pattern fits; print Morozov case ~₹1.5k\n• Teleprompter + band tablets: iPad/Android + one BLE pedal, not this board\nFull page: "+location.href;document.getElementById("wa").href="https://wa.me/?text="+encodeURIComponent(t);})();
+</script>
