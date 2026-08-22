@@ -46,6 +46,11 @@ psram:
 
 logger:
   level: INFO
+  # This board is flashed over the S3's NATIVE usb (it enumerates as usbmodem,
+  # not usbserial), and the default hardware UART goes to a port nothing is
+  # plugged into. Without this the board runs perfectly and prints absolutely
+  # nothing, which is indistinguishable from a board that did not boot.
+  hardware_uart: USB_SERIAL_JTAG
 
 api:
   encryption:
