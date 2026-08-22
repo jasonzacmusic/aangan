@@ -1,0 +1,349 @@
+# AANGAN · STUDIO DOOR DISPLAY — Waveshare ESP32-S3-Touch-LCD-7
+#
+# 7" 800x480 IPS, EK9716 RGB565 parallel panel, GT911 5-point touch, and its own
+# ESP32-S3. It is a SECOND, INDEPENDENT device. It does not connect to the LED
+# board in any way — no wires between them. Both simply read the same
+# /api/door, which is why the screen and the strip can never disagree.
+#
+# HOW IT IS WIRED: it is not. Plug the USB-C into a 5V supply and that is all.
+# The panel is bonded to the board at the factory.
+#
+# THE PIN MAP IS NOT NEGOTIABLE. Every number below is from Waveshare's own
+# documentation for this exact model, cross-checked against a working config.
+# A wrong RGB pin gives a black screen with no error to diagnose.
+#
+# THE TRAP ON THIS BOARD: the backlight, the LCD reset and the touch reset are
+# NOT on the ESP32. They hang off a CH422G I/O expander on I2C. A config that
+# ignores the expander boots perfectly and shows nothing at all, because the
+# backlight is never switched on.
+
+substitutions:
+  # Same address the light board collects from.
+  relay_url: "https://aangan.nathanielschool.com/api/door"
+
+esphome:
+  name: door-display
+  friendly_name: Studio Door Display
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 8MB
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
+      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
+      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
+      CONFIG_SPIRAM_RODATA: "y"
+
+# An 800x480 framebuffer does not fit in internal RAM. Octal PSRAM at 80MHz
+# rather than 120: 120 is faster but marginal on some units, and a display that
+# tears once an hour is worse than one a few frames slower.
+psram:
+  mode: octal
+  speed: 80MHz
+
+logger:
+  level: INFO
+
+api:
+  encryption:
+    key: !secret api_key_studio_sense
+  reboot_timeout: 0s   # no Home Assistant here; do NOT reboot waiting for one
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none   # the house mesh drops the association otherwise
+  reboot_timeout: 5min
+  manual_ip:
+    static_ip: 192.168.0.249
+    gateway: 192.168.0.1
+    subnet: 255.255.255.0
+    # Public resolvers first. On the light board a router-only resolver was the
+    # prime suspect for handshakes that stalled with a strong signal: a hung DNS
+    # lookup is indistinguishable from a hung TLS handshake from up here.
+    dns1: 8.8.8.8
+    dns2: 1.1.1.1
+  ap:
+    ssid: "door-display setup"
+    password: !secret ap_password
+captive_portal:
+
+web_server:
+  port: 80
+
+json:
+
+http_request:
+  # Same reasoning as the light board: 1s cannot complete a TLS handshake on
+  # this chip, and a long timeout freezes a blocking client. 4s clears a healthy
+  # handshake and caps the worst case.
+  # Measured on the light board: a handshake to this host wants close to ten
+  # seconds on an ESP32. The S3 is faster, but not that much faster.
+  timeout: 12s
+  watchdog_timeout: 30s
+  verify_ssl: false   # payload is one public word; a CA bundle costs flash for nothing
+
+i2c:
+  sda: GPIO8
+  scl: GPIO9
+  scan: true
+  id: bus_a
+
+# The expander. Backlight and both reset lines live here, not on the ESP32.
+#   EXIO1 = touch reset   EXIO2 = backlight (DISP)   EXIO3 = LCD reset
+# ESPHome's ch422g component addresses the chip itself; it takes no address
+# option, so do not add one back.
+ch422g:
+  - id: ch422g_hub
+
+output:
+  - platform: gpio
+    id: backlight_out
+    pin:
+      ch422g: ch422g_hub
+      number: 2
+      mode:
+        output: true
+
+light:
+  - platform: binary
+    name: "Screen backlight"
+    id: backlight
+    output: backlight_out
+    restore_mode: ALWAYS_ON
+
+globals:
+  - id: g_state
+    type: std::string
+    restore_value: no
+    initial_value: '"available"'
+  - id: g_message
+    type: std::string
+    restore_value: no
+    initial_value: '""'
+  - id: g_visual
+    type: std::string
+    restore_value: no
+    initial_value: '"ok"'
+  - id: g_dba
+    type: float
+    restore_value: no
+    initial_value: '0'
+  # Newest note stamp seen. A serverless instance that has never heard of the
+  # note reports 0, and must never be allowed to blank the door.
+  - id: g_mat
+    type: double
+    restore_value: no
+    initial_value: '0'
+  - id: g_at
+    type: double
+    restore_value: no
+    initial_value: '0'
+  - id: g_online
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  # Flips twice a second so a flash or a breath has something to ride on.
+  - id: g_phase
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+font:
+  # Fraunces is the app's serif, so the door and the app are visibly one thing.
+  - file: "gfonts://Fraunces@700"
+    id: font_word
+    size: 130
+    glyphs: "ABCDEFGHIJKLMNOPQRSTUVWXYZ -—"
+  - file: "gfonts://Inter@500"
+    id: font_sub
+    size: 30
+  - file: "gfonts://Inter@700"
+    id: font_note
+    size: 38
+  - file: "gfonts://Inter@500"
+    id: font_small
+    size: 22
+
+color:
+  - id: c_white
+    red: 100%
+    green: 100%
+    blue: 100%
+  - id: c_dim
+    red: 88%
+    green: 88%
+    blue: 88%
+
+touchscreen:
+  - platform: gt911
+    id: my_touch
+    interrupt_pin: GPIO4
+    reset_pin:
+      ch422g: ch422g_hub
+      number: 1
+      mode:
+        output: true
+
+display:
+  - platform: rpi_dpi_rgb
+    id: door_screen
+    update_interval: 500ms
+    auto_clear_enabled: false
+    color_order: RGB
+    pclk_frequency: 16MHz
+    # This panel latches on the falling edge. Without this you get a rolling or
+    # ghosted image that looks like a broken cable.
+    pclk_inverted: true
+    dimensions:
+      width: 800
+      height: 480
+    de_pin:
+      number: 5
+    hsync_pin:
+      number: 46
+      ignore_strapping_warning: true
+    vsync_pin:
+      number: 3
+      ignore_strapping_warning: true
+    pclk_pin: 7
+    reset_pin:
+      ch422g: ch422g_hub
+      number: 3
+    hsync_back_porch: 8
+    hsync_front_porch: 8
+    hsync_pulse_width: 4
+    vsync_back_porch: 16
+    vsync_front_porch: 16
+    vsync_pulse_width: 4
+    data_pins:
+      red: [1, 2, 42, 41, 40]
+      green: [39, 0, 45, 48, 47, 21]
+      blue: [14, 38, 18, 17, 10]
+    lambda: |-
+      // Same five rules as the strip, same urgency order. A door opening
+      // mid-take outranks the room merely being loud: someone is about to walk
+      // into shot, which is the more expensive problem.
+      const std::string st = id(g_state);
+      const bool recording = (st == "audio_rec" || st == "video_rec");
+      const bool emergency = (st == "emergency");
+      const std::string vis = id(g_visual);
+
+      int r = 18, g = 63, b = 42;                 // available, a dim green
+      const char *word = "COME IN";
+      const char *sub  = "The studio is free";
+
+      if (recording)                { r = 165; g = 18;  b = 26;
+                                      word = (st == "video_rec") ? "FILMING" : "ON AIR";
+                                      sub  = "Recording — please do not enter"; }
+      else if (st == "class")       { r = 169; g = 100; b = 16; word = "CLASS";
+                                      sub = "Lesson in progress"; }
+      else if (st == "meeting")     { r = 169; g = 100; b = 16; word = "MEETING";
+                                      sub = "Please wait"; }
+      else if (emergency)           { r = 91;  g = 33;  b = 182; word = "EMERGENCY";
+                                      sub = "Do not enter"; }
+
+      bool dark = false;
+      if (recording || emergency) {
+        if (vis == "door")      { dark = (id(g_phase) % 2) == 1;      // fast flash
+                                  sub = "DOOR OPEN — please close it"; }
+        else if (vis == "loud") { dark = (id(g_phase) % 4) < 2;       // slow breath
+                                  sub = "Too loud for a take"; }
+        else if (emergency)     { dark = (id(g_phase) % 2) == 1; }
+      }
+      if (dark) { r = r / 4; g = g / 4; b = b / 4; }
+
+      auto bg = Color(r, g, b);
+      it.filled_rectangle(0, 0, 800, 480, bg);
+
+      it.printf(400, 210, id(font_word), c_white, TextAlign::CENTER, "%s", word);
+      it.printf(400, 315, id(font_sub), c_dim, TextAlign::CENTER, "%s", sub);
+
+      // The note is the one thing on this door somebody chose to say, so it is
+      // set larger than the stock wording. Two lines, split on a space rather
+      // than mid-word.
+      const std::string note = id(g_message);
+      if (!note.empty()) {
+        if (note.size() <= 34) {
+          it.printf(400, 385, id(font_note), c_white, TextAlign::CENTER, "%s", note.c_str());
+        } else {
+          size_t cut = note.rfind(' ', 34);
+          if (cut == std::string::npos) cut = 34;
+          it.printf(400, 372, id(font_note), c_white, TextAlign::CENTER, "%s",
+                    note.substr(0, cut).c_str());
+          it.printf(400, 414, id(font_note), c_white, TextAlign::CENTER, "%s",
+                    note.substr(cut + 1).c_str());
+        }
+      }
+
+      if (id(g_dba) > 0) {
+        it.printf(780, 22, id(font_small), c_dim, TextAlign::TOP_RIGHT, "%.0f dBA", id(g_dba));
+      }
+      if (!id(g_online)) {
+        it.printf(20, 22, id(font_small), c_dim, TextAlign::TOP_LEFT, "offline");
+      }
+
+interval:
+  - interval: 250ms
+    then:
+      - lambda: 'id(g_phase)++;'
+
+  # Collect the studio state. GET, not POST: this screen has nothing to report —
+  # the dB and door figures come from the sensor board via the light board.
+  - interval: 3s
+    then:
+      - if:
+          condition:
+            wifi.connected
+          then:
+            - http_request.get:
+                url: ${relay_url}
+                capture_response: true
+                max_response_buffer_size: 384
+                on_response:
+                  then:
+                    - lambda: |-
+                        if (response->status_code != 200) { id(g_online) = false; return; }
+                        json::parse_json(body, [](JsonObject root) -> bool {
+                          if (!root["state"].is<const char*>()) return false;
+                          id(g_online) = true;
+
+                          double at = root["at"].is<double>() ? root["at"].as<double>() : 0.0;
+                          if (at >= id(g_at)) {
+                            id(g_at) = at;
+                            id(g_state) = root["state"].as<std::string>();
+                          }
+
+                          // The note has its own stamp, deliberately. A state
+                          // change must not let an instance that has never seen
+                          // the note look like the freshest source of it.
+                          double mat = root["mat"].is<double>() ? root["mat"].as<double>() : 0.0;
+                          if (mat >= id(g_mat)) {
+                            id(g_mat) = mat;
+                            id(g_message) = root["message"].is<const char*>()
+                                            ? root["message"].as<std::string>() : std::string();
+                          }
+
+                          if (root["visual"].is<const char*>())
+                            id(g_visual) = root["visual"].as<std::string>();
+                          if (root["dba"].is<float>()) id(g_dba) = root["dba"].as<float>();
+                          return true;
+                        });
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP address"
+      on_value:
+        then:
+          - logger.log:
+              level: INFO
+              format: "DOOR DISPLAY READY - http://%s/"
+              args: ["x.c_str()"]

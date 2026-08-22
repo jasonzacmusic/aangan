@@ -76,7 +76,12 @@ wifi:
     static_ip: 192.168.0.248
     gateway: 192.168.0.1
     subnet: 255.255.255.0
-    dns1: 192.168.0.1
+    # The router was the only resolver, and a stalled DNS lookup looks exactly
+    # like a stalled TLS handshake from up here: connect() simply never returns
+    # and select() times out. Signal measured -47 dBm, so this is not a weak
+    # link; public resolvers first, router as the fallback.
+    dns1: 8.8.8.8
+    dns2: 1.1.1.1
   ap:
     ssid: "door-studio setup"
     password: !secret ap_password
@@ -101,10 +106,16 @@ http_request:
   # a door opening mid-take does not flash the light. That is the whole point of
   # the device, so the stall is the thing to bound, not the latency.
   #
-  # 4s clears a healthy handshake with room to spare and caps the worst case at
-  # four seconds. A successful call takes well under a second and never stalls.
-  timeout: 4s
-  watchdog_timeout: 12s
+  # 4s was too tight and every single handshake died in it. The stall is still
+  # worth bounding, but a light that never updates is worse than one that
+  # hesitates, so: 8s to finish the handshake, and the poll below slowed to 5s
+  # so a slow call cannot collide with the next attempt.
+  # Measured behaviour: at 4s every handshake died, at 8s nearly all did, and at
+  # 10s some got through. So the handshake genuinely wants close to ten seconds.
+  # 12s gives it room. The blocking stall this creates is the real problem with
+  # polling https from this chip at all — see the note on MQTT in INVENTORY.md.
+  timeout: 12s
+  watchdog_timeout: 30s
   verify_ssl: false   # payload is one public word; a CA bundle costs flash for nothing
 
 espnow:
@@ -257,6 +268,19 @@ light:
           max_brightness: 100%
 
 sensor:
+  # Signal strength, so "the handshake is slow" can be told apart from "this
+  # board is sitting at the far edge of the mesh".
+  - platform: wifi_signal
+    name: "Door wifi signal"
+    id: door_rssi
+    update_interval: 30s
+    on_value:
+      then:
+        - logger.log:
+            level: INFO
+            format: "WIFI %.0f dBm (weaker than -75 explains slow TLS)"
+            args: ["x"]
+
   - platform: packet_transport
     provider: room-studio
     remote_id: studio_dba
@@ -315,7 +339,7 @@ interval:
   # not pass client-to-client traffic. Anything other than a clean 200 with a
   # known state is ignored, so a redirect to a login page or a flat network
   # simply leaves the light where it was.
-  - interval: 3s
+  - interval: 15s
     then:
       - if:
           condition:
