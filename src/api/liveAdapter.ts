@@ -186,6 +186,7 @@ export class LiveAdapter implements ApiAdapter {
     return this.get<Utilities>("/api/utilities");
   }
   async panic() {
+    void pushLedEspState("emergency");
     await this.post<{ ok: true }>("/api/panic");
   }
   async scene(name: string, state: StudioState) {
@@ -229,6 +230,7 @@ export class LiveAdapter implements ApiAdapter {
     return this.get<Sos | null>("/api/sos");
   }
   triggerSos(who: string, message: string) {
+    void pushLedEspState("emergency");
     return this.post<Sos>("/api/sos", { who, message });
   }
   async clearSos() {
