@@ -224,7 +224,5 @@ export default function DisplayPanel({ id }: { id: string }) {
           </div>
         </PanelChrome>
       );
-    case "studio_door":
-      return null;
   }
 }

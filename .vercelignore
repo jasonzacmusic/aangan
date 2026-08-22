@@ -1,0 +1,7 @@
+# Firmware build caches are local-only and exceed 2 GB. Shipping them in every
+# web deployment used to create a 596 MB archive for a 1 MB site.
+pi/house/esphome/.esphome/
+
+# Vercel installs dependencies and builds these outputs itself.
+node_modules/
+dist/

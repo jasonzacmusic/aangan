@@ -87,8 +87,9 @@ export class DoorState {
       this.door.strip_at = Date.now();
       const visual = String(body.visual ?? "");
       if (VISUALS.has(visual)) this.door.visual = visual;
-      const dba = Number(body.dba);
-      if (Number.isFinite(dba)) this.door.dba = Math.round(dba * 10) / 10;
+      if (typeof body.dba === "number" && Number.isFinite(body.dba)) {
+        this.door.dba = Math.round(body.dba * 10) / 10;
+      }
       await this.persist();
       return json({
         state: this.door.state,

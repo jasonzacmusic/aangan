@@ -158,6 +158,13 @@ globals:
     type: int
     restore_value: no
     initial_value: '0'
+  # Last frame content actually sent to the panel. HTTP response callbacks run
+  # outside the display update path, so they only change globals; this main-loop
+  # fingerprint is what requests one redraw when visible content changes.
+  - id: g_draw_fingerprint
+    type: std::string
+    restore_value: no
+    initial_value: '""'
 
 font:
   # Fraunces is the app's serif, so the door and the app are visibly one thing.
@@ -307,9 +314,15 @@ interval:
           const bool alert = (st == "emergency") ||
                              ((st == "audio_rec" || st == "video_rec") &&
                               (id(g_visual) == "door" || id(g_visual) == "loud"));
-          if (!alert) return;
-          id(g_phase)++;
-          id(door_screen).update();
+          const int shown_dba = id(g_dba) > 0 ? (int) lroundf(id(g_dba)) : 0;
+          const std::string fingerprint = st + "|" + id(g_message) + "|" +
+                                          id(g_visual) + "|" +
+                                          std::to_string(shown_dba) + "|" +
+                                          (id(g_online) ? "1" : "0");
+          const bool changed = fingerprint != id(g_draw_fingerprint);
+          if (changed) id(g_draw_fingerprint) = fingerprint;
+          if (alert) id(g_phase)++;
+          if (changed || alert) id(door_screen).update();
 
   # Collect the studio state. GET, not POST: this screen has nothing to report —
   # the dB and door figures come from the sensor board via the light board.
@@ -358,9 +371,6 @@ interval:
                           if (root["visual"].is<const char*>())
                             id(g_visual) = root["visual"].as<std::string>();
                           if (root["dba"].is<float>()) id(g_dba) = root["dba"].as<float>();
-                          // Something arrived, so paint once. This is the only
-                          // routine redraw; there is no repaint on a timer.
-                          id(door_screen).update();
                           return true;
                         });
 

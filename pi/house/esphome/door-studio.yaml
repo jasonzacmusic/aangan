@@ -1,20 +1,17 @@
 # AANGAN · STUDIO DOOR UNIT — "ledESP"  (label this board ledESP)
 #
-# THIS is the canonical door board as of 20 Aug 2026. Any other ESP32 flashed
-# with this config earlier is superseded — ignore it, or it will fight for
-# 192.168.0.248. The 7" Waveshare panel, when it arrives, replaces THIS chip:
-# reflash it with this same file plus the display block. Do not add a third
-# computer at the door.
+# This is the LED half of the door: a plain ESP32 driving the WS2812 strip.
+# The 7" Waveshare panel is a separate S3 with door-display.yaml. There is no
+# wire between them; both poll the same public relay state.
 #
-# Spare ESP32, MAC 68:09:47:9d:b7:c4, static IP 192.168.0.248.
+# Spare ESP32, MAC 68:09:47:9d:b7:c4, on DHCP.
 # This is NOT one of the six room nodes. Copper stays in the studio.
 #
 # DATA PATH (Wi-Fi, not USB):
-#   Board 1 (192.168.0.250) broadcasts dBA + door reeds + leak over ESP-NOW
-#   every 100 ms, and also serves HTTP JSON at /text_sensor/studio_live.
-#   This chip listens on ESP-NOW first. HTTP poll is the fallback for when
-#   the house mesh stops isolating clients.
-#   USB one-line commands still work as a bench overlay (STATE from the app).
+#   Board 1 broadcasts dBA + door reeds + leak over ESP-NOW every 100 ms.
+#   This chip receives those facts over ESP-NOW. There is deliberately no HTTP
+#   fallback: ESPHome HTTP is blocking, and a missing room board used to freeze
+#   this light for a full timeout every 400 ms.
 #
 # Married warnings from the paper: puck colour + (later) 7" plate. Same state.
 # Acoustic: rest with AC on is 42 dBA; hall WAIT trips at 52 dBA.
@@ -143,7 +140,9 @@ globals:
   - id: g_dba
     type: float
     restore_value: no
-    initial_value: "42"
+    # Unknown until room-studio actually sends a sensor reading. A plausible
+    # placeholder looked like real telemetry in the app and hid a dead sensor.
+    initial_value: "NAN"
   - id: g_warn
     type: float
     restore_value: no
@@ -195,9 +194,6 @@ script:
           } else if (st == "class" || st == "meeting") {
             rgb = 0xF5A623; bright = 0.85f;
             visual = "wait"; mark = "WAIT";
-          } else if (too_loud) {
-            rgb = 0xF5A623; bright = 0.85f;
-            visual = "loud"; mark = "WAIT";
           }
 
           float r = ((rgb >> 16) & 0xFF) / 255.0f;
@@ -378,28 +374,6 @@ interval:
   - interval: 10s
     then:
       - script.execute: apply_hall
-  - interval: 400ms
-    then:
-      - if:
-          condition:
-            wifi.connected
-          then:
-            - http_request.get:
-                url: http://192.168.0.250/sensor/studio_sound_level
-                capture_response: true
-                max_response_buffer_size: 512
-                on_response:
-                  then:
-                    - lambda: |-
-                        if (response->status_code != 200) return;
-                        json::parse_json(body, [](JsonObject root) -> bool {
-                          if (!root["value"]) return false;
-                          id(g_dba) = root["value"];
-                          id(g_http_ok) = true;
-                          return true;
-                        });
-                        id(apply_hall).execute();
-
 text_sensor:
   - platform: template
     name: "Door ticker"
