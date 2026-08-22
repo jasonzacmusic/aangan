@@ -66,15 +66,13 @@ wifi:
   password: !secret wifi_password
   power_save_mode: none   # the house mesh drops the association otherwise
   reboot_timeout: 5min
-  manual_ip:
-    static_ip: 192.168.0.249
-    gateway: 192.168.0.1
-    subnet: 255.255.255.0
-    # Public resolvers first. On the light board a router-only resolver was the
-    # prime suspect for handshakes that stalled with a strong signal: a hung DNS
-    # lookup is indistinguishable from a hung TLS handshake from up here.
-    dns1: 8.8.8.8
-    dns2: 1.1.1.1
+  # DHCP, deliberately. This board had a static IP from the days when the app
+  # talked to it directly; nothing connects TO it any more, it only makes
+  # outbound calls, so the fixed address bought nothing. It cost plenty though:
+  # with manual_ip, ESP-IDF's resolver kept failing with
+  #   couldn't get hostname for aangan.nathanielschool.com: getaddrinfo()
+  # after working for a few minutes. DHCP hands over working DNS with the lease.
+  # If a fixed address is ever needed again, reserve it on the router instead.
   ap:
     ssid: "door-display setup"
     password: !secret ap_password
@@ -200,7 +198,11 @@ touchscreen:
 display:
   - platform: rpi_dpi_rgb
     id: door_screen
-    update_interval: 500ms
+    # never, NOT a timer. Repainting the whole 800x480 frame on a clock while
+    # the panel is scanning it out is exactly what makes the screen flash. The
+    # sign is static for minutes at a time, so it is redrawn when something
+    # actually changes, and only ticked continuously while an alert is pulsing.
+    update_interval: never
     auto_clear_enabled: false
     color_order: RGB
     pclk_frequency: 16MHz
@@ -296,9 +298,18 @@ display:
       }
 
 interval:
+  # Only while an alert is actually pulsing. Outside that the screen is left
+  # alone, which is both still and much kinder to the panel.
   - interval: 250ms
     then:
-      - lambda: 'id(g_phase)++;'
+      - lambda: |-
+          const std::string st = id(g_state);
+          const bool alert = (st == "emergency") ||
+                             ((st == "audio_rec" || st == "video_rec") &&
+                              (id(g_visual) == "door" || id(g_visual) == "loud"));
+          if (!alert) return;
+          id(g_phase)++;
+          id(door_screen).update();
 
   # Collect the studio state. GET, not POST: this screen has nothing to report —
   # the dB and door figures come from the sensor board via the light board.
@@ -347,6 +358,9 @@ interval:
                           if (root["visual"].is<const char*>())
                             id(g_visual) = root["visual"].as<std::string>();
                           if (root["dba"].is<float>()) id(g_dba) = root["dba"].as<float>();
+                          // Something arrived, so paint once. This is the only
+                          // routine redraw; there is no repaint on a timer.
+                          id(door_screen).update();
                           return true;
                         });
 

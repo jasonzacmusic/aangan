@@ -72,16 +72,13 @@ wifi:
   password: !secret wifi_password
   power_save_mode: none
   reboot_timeout: 5min
-  manual_ip:
-    static_ip: 192.168.0.248
-    gateway: 192.168.0.1
-    subnet: 255.255.255.0
-    # The router was the only resolver, and a stalled DNS lookup looks exactly
-    # like a stalled TLS handshake from up here: connect() simply never returns
-    # and select() times out. Signal measured -47 dBm, so this is not a weak
-    # link; public resolvers first, router as the fallback.
-    dns1: 8.8.8.8
-    dns2: 1.1.1.1
+  # DHCP, deliberately. This board had a static IP from the days when the app
+  # talked to it directly; nothing connects TO it any more, it only makes
+  # outbound calls, so the fixed address bought nothing. It cost plenty though:
+  # with manual_ip, ESP-IDF's resolver kept failing with
+  #   couldn't get hostname for aangan.nathanielschool.com: getaddrinfo()
+  # after working for a few minutes. DHCP hands over working DNS with the lease.
+  # If a fixed address is ever needed again, reserve it on the router instead.
   ap:
     ssid: "door-studio setup"
     password: !secret ap_password

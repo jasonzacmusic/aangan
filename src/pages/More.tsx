@@ -45,6 +45,58 @@ export default function More({ onOpen }: { onOpen: (tab: Tab) => void }) {
         </button>
       )}
 
+      {/* The studio door. These are plain pages rather than tabs because they
+          also have to open on an old iPad by the door and on whichever phone is
+          nearest, so they must not depend on this app's bundle running. Linked
+          from here so the door is reachable from inside Aangan and nobody has
+          to be handed a URL. */}
+      <div className="mb-3 space-y-3">
+        <a
+          href="/door.html"
+          className="lift flex min-h-24 w-full items-center gap-4 rounded-2xl border border-line bg-surface/80 p-4 text-left no-underline backdrop-blur active:scale-[0.99]"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-surface2 text-gold">
+            <MonitorIcon size={22} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-xl text-paper">Studio door</span>
+            <span className="mt-1 block text-xs text-dim">Set the light and the sign, and write a message on the door</span>
+            <span className="mt-2 block font-mono text-[9px] uppercase tracking-wider text-st-available">strip + screen</span>
+          </span>
+          <span aria-hidden className="text-xl text-dim">›</span>
+        </a>
+        <a
+          href="/sign.html"
+          target="_blank"
+          rel="noreferrer"
+          className="lift flex min-h-24 w-full items-center gap-4 rounded-2xl border border-line bg-surface/80 p-4 text-left no-underline backdrop-blur active:scale-[0.99]"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-surface2 text-gold">
+            <MonitorIcon size={22} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-xl text-paper">The door sign</span>
+            <span className="mt-1 block text-xs text-dim">What the door shows. Put this on the iPad by the studio</span>
+            <span className="mt-2 block font-mono text-[9px] uppercase tracking-wider text-dim">opens full screen</span>
+          </span>
+          <span aria-hidden className="text-xl text-dim">›</span>
+        </a>
+        <a
+          href="/team.html"
+          className="lift flex min-h-24 w-full items-center gap-4 rounded-2xl border border-line bg-surface/80 p-4 text-left no-underline backdrop-blur active:scale-[0.99]"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-surface2 text-gold">
+            <ChipIcon size={22} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-xl text-paper">Send to the team</span>
+            <span className="mt-1 block text-xs text-dim">One page with both links and QR codes to scan</span>
+            <span className="mt-2 block font-mono text-[9px] uppercase tracking-wider text-dim">shareable</span>
+          </span>
+          <span aria-hidden className="text-xl text-dim">›</span>
+        </a>
+      </div>
+
       <div className="space-y-3">
         {items.map((item) => (
           <button key={item.tab} onClick={() => onOpen(item.tab)} className="lift flex min-h-24 w-full items-center gap-4 rounded-2xl border border-line bg-surface/80 p-4 text-left backdrop-blur active:scale-[0.99]">
