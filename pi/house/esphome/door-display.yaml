@@ -308,10 +308,18 @@ interval:
           condition:
             wifi.connected
           then:
-            - http_request.get:
+            # POST rather than GET, for one reason: it lets the screen say who
+            # it is. The reply is identical, the invocation costs the same, and
+            # it is the only way the app can honestly tell you the screen is
+            # alive rather than guessing from when the state last changed.
+            - http_request.post:
                 url: ${relay_url}
                 capture_response: true
                 max_response_buffer_size: 384
+                request_headers:
+                  Content-Type: application/json
+                json: |-
+                  root["device"] = "display";
                 on_response:
                   then:
                     - lambda: |-

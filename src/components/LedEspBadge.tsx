@@ -1,28 +1,46 @@
 import { useEffect, useState } from "react";
-import { LEDESP_URL, ledespLink, type LinkStatus } from "../api/ledesp";
+import { doorStatus, type DoorStatus } from "../api/ledesp";
 
 /**
- * Honest status for the door light.
+ * Honest status for the two devices at the studio door.
  *
- * When the light does not follow the app it is almost never the app — it is
- * the network, or the board is unplugged. So name which road is open instead
- * of failing quietly, and let it be tapped to open the board directly.
+ * It reports each one separately because they fail separately: the screen can
+ * be fine while the strip is unplugged, and saying "door light unreachable"
+ * about that is worse than saying nothing. A device that has never checked in
+ * on this serverless instance shows as unknown rather than faulty — not the
+ * same thing, and claiming a fault that is not there costs trust.
  */
-const LOOK: Record<LinkStatus | "checking", { label: string; fg: string; bg: string; edge: string; dot: string }> = {
-  checking: { label: "Door light · checking", fg: "#b9b9c2", bg: "rgba(255,255,255,.06)", edge: "rgba(255,255,255,.14)", dot: "#8a8a94" },
-  direct:   { label: "Door light · live",     fg: "#7ee2a8", bg: "rgba(46,160,97,.13)",   edge: "rgba(46,160,97,.35)",  dot: "#35d07f" },
-  relay:    { label: "Door light · via cloud", fg: "#8ec8ff", bg: "rgba(56,120,220,.14)", edge: "rgba(56,120,220,.4)",  dot: "#5b9dff" },
-  down:     { label: "Door light · unreachable", fg: "#ff9b9b", bg: "rgba(185,28,28,.15)", edge: "rgba(185,28,28,.4)",  dot: "#e0484d" },
+const DOT = {
+  on: { fill: "#35d07f", glow: "0 0 7px rgba(53,208,127,.85)" },
+  off: { fill: "#e0484d", glow: "none" },
+  unknown: { fill: "#7a7a84", glow: "none" },
 };
 
+function Dot({ state }: { state: boolean | null }) {
+  const look = state === null ? DOT.unknown : state ? DOT.on : DOT.off;
+  return (
+    <span
+      style={{
+        width: 7,
+        height: 7,
+        borderRadius: "50%",
+        background: look.fill,
+        boxShadow: look.glow,
+        display: "inline-block",
+        marginRight: 5,
+      }}
+    />
+  );
+}
+
 export default function LedEspBadge() {
-  const [link, setLink] = useState<LinkStatus | "checking">("checking");
+  const [s, setS] = useState<DoorStatus | null>(null);
 
   useEffect(() => {
     let alive = true;
     const check = async () => {
-      const l = await ledespLink();
-      if (alive) setLink(l);
+      const next = await doorStatus();
+      if (alive) setS(next);
     };
     void check();
     const t = setInterval(check, 6000);
@@ -32,32 +50,39 @@ export default function LedEspBadge() {
     };
   }, []);
 
-  const look = LOOK[link];
-  const title =
-    link === "direct" ? `Talking straight to ${LEDESP_URL} on the house Wi-Fi`
-    : link === "relay" ? "The board is polling the app over the internet"
-    : link === "down" ? "Nothing is answering at the door — check the board's power, and any VPN blocking local network"
-    : "Looking for the door light";
+  const word = (v: boolean | null) => (v === null ? "unknown" : v ? "live" : "not answering");
+  const title = !s?.reachable
+    ? "Cannot reach the door service"
+    : `Strip ${word(s.strip)} · Screen ${word(s.screen)}` +
+      (s.dba != null ? ` · ${s.dba} dBA at the door` : "");
 
   return (
     <a
-      href={LEDESP_URL || "/api/door"}
-      target="_blank"
-      rel="noreferrer"
+      href="/door.html"
       title={title}
       style={{
-        display: "inline-flex", alignItems: "center", gap: 7,
-        padding: "5px 11px 5px 9px", borderRadius: 999,
-        fontSize: 12, fontWeight: 600, letterSpacing: ".01em",
-        textDecoration: "none", color: look.fg,
-        background: look.bg, border: `1px solid ${look.edge}`,
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 10,
+        padding: "5px 12px",
+        borderRadius: 999,
+        fontSize: 12,
+        fontWeight: 600,
+        letterSpacing: ".02em",
+        textDecoration: "none",
+        color: "#d8d8de",
+        background: "rgba(255,255,255,.06)",
+        border: "1px solid rgba(255,255,255,.13)",
       }}
     >
-      <span style={{
-        width: 8, height: 8, borderRadius: "50%", background: look.dot,
-        boxShadow: link === "direct" ? "0 0 8px rgba(53,208,127,.8)" : "none",
-      }} />
-      {look.label}
+      {!s?.reachable ? (
+        <span><Dot state={false} />door offline</span>
+      ) : (
+        <>
+          <span><Dot state={s.strip} />strip</span>
+          <span><Dot state={s.screen} />screen</span>
+        </>
+      )}
     </a>
   );
 }

@@ -1,112 +1,134 @@
 /**
- * Getting the studio state onto the door light.
+ * The app's link to the two devices at the studio door: the LED strip (driven
+ * by ledESP) and the 7" screen. Neither is wired to the other; both simply read
+ * /api/door, which is what stops them ever disagreeing.
  *
- * There are two roads to the board and the app takes both, because each one
- * fails in a situation where the other works:
+ * There are two roads to the strip and the app takes whichever is open:
  *
- *  1. DIRECT — the browser calls the board's own web server on the house
- *     Wi-Fi. Instant, needs nothing else running. But it only works when the
- *     page itself is served over http (a LAN build): an https page is barred
- *     from reading an http device by the browser, and no code can lift that.
- *     It also needs the network to actually pass client-to-client traffic — a
- *     VPN with LAN access switched off will silently swallow every request.
+ *  1. DIRECT — the browser calls ledESP's own web server on the house Wi-Fi.
+ *     Instant, but only possible when this page is itself served over http. An
+ *     https page may not read an http device; that is a browser rule and no
+ *     code changes it. So this is attempted only on a LAN build.
  *
- *  2. RELAY — the app POSTs to its own /api/door, and the board polls that
- *     over https. Slower by a second or two, and it needs the board to be
- *     online, but it is immune to mixed content, to client isolation, and to
- *     whether the Mac is switched on. This is the one that works from a phone
- *     on mobile data.
+ *  2. RELAY — the app writes to /api/door and the devices poll it. Slower by a
+ *     few seconds, but immune to mixed content, to mesh client isolation, and
+ *     to whether the Mac is switched on. This is the one that works from a
+ *     phone on mobile data, and it is how the deployed app talks to the door.
  *
- * Both are best effort and neither ever throws. The light is an output, not a
- * source of truth — if it is unplugged, the app carries on exactly as before.
+ * Everything here is best effort and never throws. The door is an output, not a
+ * source of truth — if it is unplugged the app carries on exactly as before.
  */
 
 const RAW = String(import.meta.env.VITE_LEDESP_URL ?? "").replace(/\/$/, "");
 
-/** The board's address on the house Wi-Fi. Empty on an https build. */
+/** ledESP's address on the house Wi-Fi. */
 export const LEDESP_URL = RAW;
-/** Whether the direct road is even worth attempting. */
-export const ledespEnabled = RAW.length > 0;
 
-/** The relay is same-origin, so it is available on every build. */
+/**
+ * Whether the direct road is worth attempting at all.
+ *
+ * On an https page it never is: the request is blocked before it leaves the
+ * browser. Trying anyway just spends a timeout on every check and fills the
+ * console with errors that look like a fault and are not one.
+ */
+export const ledespEnabled =
+  RAW.length > 0 &&
+  (typeof location === "undefined" || location.protocol !== "https:");
+
 const RELAY = "/api/door";
 
 let lastPushed: string | null = null;
 
-async function post(url: string, init: RequestInit, ms: number): Promise<boolean> {
+async function req(url: string, init: RequestInit, ms: number): Promise<Response | null> {
   const ctrl = new AbortController();
   const bail = setTimeout(() => ctrl.abort(), ms);
   try {
-    const res = await fetch(url, { ...init, signal: ctrl.signal });
-    return res.ok;
+    return await fetch(url, { ...init, signal: ctrl.signal });
   } catch {
-    return false;
+    return null;
   } finally {
     clearTimeout(bail);
   }
 }
 
 /**
- * Tell the door light which state the studio is in.
+ * Tell the door which state the studio is in. Drives the strip and the screen
+ * together, because both read the value this writes.
  * Safe to call on every change; unchanged repeats are dropped.
- * Resolves true if either road got through.
  */
 export async function pushLedEspState(state: string): Promise<boolean> {
   if (!state || state === lastPushed) return true;
 
-  const roads: Promise<boolean>[] = [
-    post(RELAY, {
+  const roads = [
+    req(RELAY, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ state }),
-    }, 4000),
+    }, 6000),
   ];
 
   if (ledespEnabled) {
-    const direct = `${LEDESP_URL}/select/studio_state/set?option=${encodeURIComponent(state)}`;
-    roads.push(post(direct, { method: "POST", mode: "cors" }, 1500));
+    roads.push(req(
+      `${LEDESP_URL}/select/studio_state/set?option=${encodeURIComponent(state)}`,
+      { method: "POST", mode: "cors" }, 1500,
+    ));
   }
 
-  const results = await Promise.all(roads);
-  const ok = results.some(Boolean);
-  // Only remember it as sent if something actually accepted it, so a failed
-  // push is retried on the next change instead of being deduplicated away.
+  const ok = (await Promise.all(roads)).some((r) => r !== null && r.ok);
+  // Only remember it as sent if something accepted it, so a failed push is
+  // retried on the next change rather than being deduplicated away.
   if (ok) lastPushed = state;
   return ok;
 }
 
-export type LinkStatus = "direct" | "relay" | "down";
+/** Put a line of text on the door. Empty clears it. */
+export async function pushDoorMessage(message: string): Promise<boolean> {
+  const res = await req(RELAY, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ message }),
+  }, 6000);
+  return res !== null && res.ok;
+}
+
+export type DoorStatus = {
+  /** Is the relay itself answering? */
+  reachable: boolean;
+  /** Each device, by when it last checked in. null = unknown, not faulty. */
+  strip: boolean | null;
+  screen: boolean | null;
+  state: string | null;
+  dba: number | null;
+};
 
 /**
- * Which road is currently open. Drives the on-screen badge, nothing else —
- * the app must never gate a house action on the state of a lamp.
+ * A device counts as present if it has spoken recently. The strip polls every
+ * 15s and the screen every 3s, so 45s is comfortably more than a missed turn
+ * without being so long that a genuinely dead device looks alive for minutes.
+ *
+ * This replaces an earlier check that asked how long ago the STATE changed,
+ * which reported "unreachable" about two perfectly healthy devices that simply
+ * had nothing new to be told.
  */
-export async function ledespLink(): Promise<LinkStatus> {
-  if (ledespEnabled) {
-    const ctrl = new AbortController();
-    const bail = setTimeout(() => ctrl.abort(), 1200);
-    try {
-      const res = await fetch(`${LEDESP_URL}/`, { signal: ctrl.signal, mode: "cors" });
-      if (res.ok) return "direct";
-    } catch {
-      /* fall through to the relay */
-    } finally {
-      clearTimeout(bail);
-    }
-  }
+const PRESENT_WITHIN_S = 45;
 
-  const ctrl = new AbortController();
-  const bail = setTimeout(() => ctrl.abort(), 4000);
+export async function doorStatus(): Promise<DoorStatus> {
+  const res = await req(RELAY, { cache: "no-store" }, 6000);
+  if (!res || !res.ok) {
+    return { reachable: false, strip: null, screen: null, state: null, dba: null };
+  }
   try {
-    const res = await fetch(RELAY, { signal: ctrl.signal, cache: "no-store" });
-    if (!res.ok) return "down";
-    const body = await res.json();
-    // A board that is polling keeps the record fresh. A stale record means the
-    // relay is up but nothing is listening at the door.
-    return body?.age_s === null || body?.age_s < 120 ? "relay" : "down";
+    const b = await res.json();
+    const seen = (age: unknown) =>
+      typeof age === "number" ? age < PRESENT_WITHIN_S : null;
+    return {
+      reachable: true,
+      strip: seen(b?.strip_age_s),
+      screen: seen(b?.screen_age_s),
+      state: typeof b?.state === "string" ? b.state : null,
+      dba: typeof b?.dba === "number" ? b.dba : null,
+    };
   } catch {
-    return "down";
-  } finally {
-    clearTimeout(bail);
+    return { reachable: false, strip: null, screen: null, state: null, dba: null };
   }
 }

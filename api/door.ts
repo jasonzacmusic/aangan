@@ -10,7 +10,8 @@
  *
  *   POST /api/door  { "state": "audio_rec" }        ← the app, on every change
  *   POST /api/door  { "message": "Back at 4" }      ← a note for the door sign
- *   POST /api/door  { "visual": "door", "dba": 61 }  ← the board, every 3s
+ *   POST /api/door  { "visual": "door", "dba": 61 }  ← the light board
+ *   POST /api/door  { "device": "display" }          ← the door screen
  *   GET  /api/door                                   ← the door sign / anyone
  *
  * The board's poll is a POST rather than a GET so that one call does both jobs:
@@ -63,10 +64,19 @@ type Door = {
    *  The note needs its own stamp: a state change must not make an instance
    *  that has never seen the note look like the freshest source of it. */
   mat: number;
+  /** Epoch ms each device last checked in. This is what "is it connected"
+   *  actually means — the old badge asked how long ago the STATE changed,
+   *  which said "unreachable" about a perfectly healthy pair of devices that
+   *  simply had nothing new to be told. */
+  strip_at: number;
+  screen_at: number;
 };
 
 /** Survives between invocations on a warm instance; lost on a cold start. */
-let memory: Door = { state: "available", at: 0, visual: "ok", dba: null, message: "", mat: 0 };
+let memory: Door = {
+  state: "available", at: 0, visual: "ok", dba: null,
+  message: "", mat: 0, strip_at: 0, screen_at: 0,
+};
 
 /** Long enough for "Back at 4, please wait downstairs", short enough to read
  *  across a hall. A sign nobody can read from the door is not a sign. */
@@ -127,9 +137,22 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({ ok: true, message: memory.message, mat: memory.mat });
     }
 
+    // The screen checking in. It has nothing to report — it only needs the
+    // reply — but saying who it is costs nothing and is the only way the app
+    // can honestly tell you the screen is alive.
+    if (body && body.device === "display") {
+      memory.screen_at = Date.now();
+      const now = await readState();
+      return res.status(200).json({
+        state: now.state, at: now.at, visual: memory.visual,
+        dba: memory.dba, message: memory.message, mat: memory.mat,
+      });
+    }
+
     // A board report. Never touches `state` or `at` — the board is not allowed
     // to decide what the studio is doing, only to say what it can see.
     if (body && body.state === undefined) {
+      memory.strip_at = Date.now();
       const visual = String(body.visual ?? "");
       if (VISUALS.has(visual)) memory.visual = visual;
       const dba = Number(body.dba);
@@ -160,6 +183,11 @@ export default async function handler(req: any, res: any) {
     dba: memory.dba,
     message: memory.message,
     mat: memory.mat,
+    // Seconds since each device last spoke. null means "never, on this
+    // instance" — which is not the same as "offline", so the app must treat it
+    // as unknown rather than reporting a fault.
+    strip_age_s: memory.strip_at ? Math.round((Date.now() - memory.strip_at) / 1000) : null,
+    screen_age_s: memory.screen_at ? Math.round((Date.now() - memory.screen_at) / 1000) : null,
     age_s: current.at ? Math.round((Date.now() - current.at) / 1000) : null,
     store: kvReady ? "kv" : "memory",
   });
