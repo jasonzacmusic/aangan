@@ -292,6 +292,33 @@ have seen and ignore anything older. Do not merge the two stamps back together.
 **The logo comes from the iCloud logo library and copies out at mode 0600.**
 Chmod it 0644 or the host serves a broken image on the door.
 
+### The door display — Waveshare ESP32-S3-Touch-LCD-7
+
+MAC `3c:dc:75:f7:66:74`, static `192.168.0.249`, config `door-display.yaml`.
+
+**It has TWO USB-C ports.** One is power only; the other is silkscreened
+USB TO UART and is the one that programs. Plugged into the power port the board
+runs perfectly and never appears as a serial device, which reads exactly like a
+dead board or a charge-only cable. Check the port before replacing cables.
+
+**It is a second, independent device.** No wire connects it to ledESP and none
+can — the panel is bonded to its own ESP32-S3. Both simply read `/api/door`,
+which is what stops the screen and the strip ever disagreeing. Install is a
+USB-C charger and nothing else.
+
+**Backlight, LCD reset and touch reset are on a CH422G expander, not the S3.**
+EXIO1 touch reset, EXIO2 backlight, EXIO3 LCD reset. Ignore the expander and the
+board boots, joins Wi-Fi and shows a black screen, because the backlight is
+never switched on.
+
+**`pclk_inverted: true`.** This panel latches on the falling clock edge; without
+it the image rolls and looks like damaged hardware.
+
+**Stand it off the wall ~15mm.** The metal backing sits near the antenna.
+
+**The touchscreen is configured but bound to nothing, deliberately.** A tappable
+state-changer on a public door lets a guest set the studio live mid-lesson.
+
 ### Traps found on 20 Aug, all of which cost hours
 
 **Never put a `uart:` on GPIO1 or GPIO3.** Those two pins *are* the USB serial
