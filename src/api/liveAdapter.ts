@@ -63,10 +63,9 @@ import {
  *   The wrapper forwards cues to the piano Pi's status server over HTTP and
  *   must tolerate the rig being offline (return online:false, never block).
  *
- * Fleet health (fed by nsm-health on the LAN)
+ * Fleet health
  *   GET  /api/fleet                 -> FleetDevice[]
- *   The wrapper pings each machine (Macs, Pis, panels, router) or reads the
- *   nsm-health snapshot; emit a fleet SSE frame whenever a device changes.
+ *   On the LAN server this is the six ESP32 boards. A later hub can add Macs.
  *
  * Air, ventilation and purifiers
  *   GET  /api/air                   -> AirState

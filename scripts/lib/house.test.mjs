@@ -9,6 +9,8 @@ import {
   parseOn,
   pollHouse,
   recordingOpenDoors,
+  resetHostCache,
+  saneStudioDba,
   snapshotFromReadings,
 } from "./house.mjs";
 
@@ -17,6 +19,11 @@ describe("ESPHome payload parsing", () => {
     assert.equal(parseNumber({ state: "46.6 dBA", value: 46.6 }), 46.6);
     assert.equal(parseNumber({ state: "nan", value: NaN }), null);
     assert.equal(parseNumber(null), null);
+  });
+
+  it("rejects the unconnected ADC floor as not a real room", () => {
+    assert.equal(saneStudioDba(7.1), null);
+    assert.equal(saneStudioDba(30.2), 30.2);
   });
 
   it("treats a door ON as open", () => {
@@ -131,6 +138,33 @@ describe("recording gate", () => {
     });
     assert.equal(preflight.quietEnough, false);
     assert.equal(preflight.ready, false);
+    assert.equal(preflight.dbLevel, null);
+  });
+
+  it("does not treat the 7.1 dBA unconnected-pin lie as a quiet room", () => {
+    const readings = emptyReadings();
+    readings.studio.online = true;
+    readings.studio.doorA = false;
+    readings.studio.doorB = false;
+    readings.studio.dba = 7.1;
+    const snap = snapshotFromReadings(readings, { dbThreshold: 45 });
+    assert.equal(snap.preflight.quietEnough, false);
+    assert.equal(snap.rooms.find((r) => r.id === "studio")?.dbLevel, undefined);
+    assert.equal(snap.preflight.ready, false);
+  });
+
+  it("does not wait for unplugged bathroom boards before a studio take", () => {
+    const readings = emptyReadings();
+    readings.studio.online = true;
+    readings.studio.doorA = false;
+    readings.studio.doorB = false;
+    readings.studio.dba = 38.2;
+    const snap = snapshotFromReadings(readings, { dbThreshold: 45 });
+    assert.equal(snap.preflight.sensorsHealthy, true);
+    assert.equal(snap.preflight.doorsClosed, true);
+    assert.equal(snap.preflight.quietEnough, true);
+    assert.equal(snap.preflight.ready, true);
+    assert.ok(!snap.preflight.openDoorNames.includes("Teaching doors (board silent)"));
   });
 });
 
@@ -147,6 +181,7 @@ describe("leaf combining", () => {
 
 describe("pollHouse", () => {
   it("maps ESPHome REST payloads onto studio readings", async () => {
+    resetHostCache();
     const payloads = {
       "http://192.168.0.250/binary_sensor/Studio%20door%20leaf%20A": { state: "OFF", value: false },
       "http://192.168.0.250/binary_sensor/Studio%20door%20leaf%20B": { state: "ON", value: true },
@@ -163,5 +198,32 @@ describe("pollHouse", () => {
     assert.equal(readings.studio.doorB, true);
     assert.equal(readings.studio.dba, 46.6);
     assert.deepEqual(recordingOpenDoors(readings).filter((n) => n.startsWith("Studio")), ["Studio door · leaf B"]);
+  });
+
+  it("follows a DHCP leftover when the static address is silent", async () => {
+    resetHostCache();
+    const fetchFn = async (url) => {
+      if (url.startsWith("http://192.168.0.250")) throw new Error("silent static");
+      if (url === "http://192.168.0.158/") return { ok: true, status: 200, json: async () => ({}) };
+      if (url === "http://192.168.0.158/sensor/Studio%20sound%20level") {
+        return { ok: true, status: 200, json: async () => ({ state: "46.6 dBA", value: 46.6 }) };
+      }
+      return { ok: false, status: 404, json: async () => ({}) };
+    };
+    const readings = await pollHouse(fetchFn, [
+      {
+        id: "studio",
+        sticker: 1,
+        name: "Studio",
+        host: "192.168.0.250",
+        fallbackHosts: ["192.168.0.158"],
+        mac: "8c:94:df:69:20:20",
+        critical: true,
+        roomId: "studio",
+      },
+    ]);
+    assert.equal(readings.studio.host, "192.168.0.158");
+    assert.equal(readings.studio.online, true);
+    assert.equal(readings.studio.dba, 46.6);
   });
 });

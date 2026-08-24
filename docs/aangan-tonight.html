@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aangan tonight — boards, buy, threshold</title>
+<style>
+  :root {
+    --ink: #0c0b09;
+    --paper: #f4efe4;
+    --dim: #8a8378;
+    --gold: #c9a84c;
+    --line: #2a271f;
+    --ok: #2fbf71;
+    --bad: #e5484d;
+    --warn: #f5a623;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--ink);
+    color: var(--paper);
+    line-height: 1.5;
+    padding: 20px 16px 48px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  h1 { font-family: Georgia, "Fraunces", serif; font-size: 1.75rem; font-weight: 500; }
+  h2 { font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); margin: 28px 0 10px; }
+  p, li { font-size: 0.95rem; color: #d8d2c6; }
+  .sub { color: var(--dim); font-size: 0.8rem; font-family: ui-monospace, Menlo, monospace; margin: 6px 0 18px; }
+  .hero {
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 20px 18px;
+    background: #12110c;
+  }
+  .row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .name { font-weight: 600; }
+  .ip { font-family: ui-monospace, Menlo, monospace; font-size: 0.75rem; color: var(--dim); }
+  .tag { font-family: ui-monospace, Menlo, monospace; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .up { color: var(--ok); }
+  .down { color: var(--bad); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  th { text-align: left; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); padding: 8px 6px; border-bottom: 1px solid var(--line); }
+  td { padding: 10px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .call { border-radius: 14px; padding: 14px 14px; margin: 12px 0; font-size: 0.9rem; }
+  .go { background: #132016; border: 1px solid #1e4a2c; }
+  .wait { background: #1a160c; border: 1px solid #3d3214; }
+  .no { background: #1a1010; border: 1px solid #4a1f22; }
+  ol, ul { margin: 8px 0 8px 1.2rem; }
+  li { padding: 3px 0; }
+  button.copy {
+    width: 100%;
+    margin-top: 16px;
+    border: 1px solid var(--gold);
+    background: transparent;
+    color: var(--gold);
+    border-radius: 999px;
+    padding: 12px;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .foot { margin-top: 28px; color: var(--dim); font-size: 0.72rem; }
+</style>
+</head>
+<body>
+  <h1>Aangan tonight</h1>
+  <p class="sub">18 Aug 2026 · 4:30pm IST probe · Langford Town</p>
+
+  <div class="hero">
+    <p>The app already talks to all six ESP32s. Unplugged boards simply do not answer. <strong style="color:var(--ok)">Board 1 (studio) is live.</strong> The acoustic meter is a real room now — <strong style="color:var(--gold)">43.5 dB</strong>. Studio door leaf B is reading open, so Rec stays locked until that leaf shuts (or the reed is wired). Boards 2–6 are off; they no longer block a studio take.</p>
+  </div>
+
+  <h2>Boards right now</h2>
+  <div>
+    <div class="row"><div><div class="name">1 · Studio</div><div class="ip">192.168.0.250</div></div><div class="tag up">Up · 43.5 dB · leaf B open</div></div>
+    <div class="row"><div><div class="name">2 · Music / teaching</div><div class="ip">192.168.0.251</div></div><div class="tag down">Silent</div></div>
+    <div class="row"><div><div class="name">3 · Bathrooms A</div><div class="ip">192.168.0.252</div></div><div class="tag down">Was up this afternoon</div></div>
+    <div class="row"><div><div class="name">4 · Bathrooms B</div><div class="ip">192.168.0.253</div></div><div class="tag down">Needs reflash + power</div></div>
+    <div class="row"><div><div class="name">5 · Kitchen</div><div class="ip">192.168.0.254</div></div><div class="tag down">Needs reflash + power</div></div>
+    <div class="row"><div><div class="name">6 · Hall</div><div class="ip">192.168.0.249</div></div><div class="tag down">Needs reflash + power</div></div>
+  </div>
+
+  <h2>How noise alerts work</h2>
+  <ol>
+    <li>The studio meter reports dB every few seconds.</li>
+    <li>Settings holds the quiet line (default 45 dB, slider 35–70).</li>
+    <li>If live dB is at or above that line, Pre-flight is Not Ready, Home goes red, and a banner says the studio is too loud.</li>
+    <li>Turn on <em>Studio too loud</em> in Settings and tap Enable — the phone can banner while the app is open or installed to the home screen.</li>
+    <li>A 3 a.m. ping with the phone locked is not built. That needs the ESP32 to push by itself.</li>
+  </ol>
+  <p>Right now the empty studio is sitting at about 43–46 dB and the line is 45, so the verdict will flicker until we calibrate.</p>
+
+  <h2>Calibrate with me</h2>
+  <ol>
+    <li>The meter is already a real number. You do not need to prove the wire first.</li>
+    <li>Message me <strong>quiet now</strong> while the room is take-quiet (doors shut, fan how you record).</li>
+    <li>Then <strong>noisy now</strong> with the noisy thing (AC, fan, traffic).</li>
+    <li>I set the slider just above the quiet sample. You do not type anything.</li>
+  </ol>
+  <p>Leaf B of the studio door is ON / open. Close it (or fit that reed) or Rec will stay locked even after the threshold is right.</p>
+
+  <h2>Screens and On-Air bulbs</h2>
+  <p>The app already has door-sign pages. There are <strong>no tablets, no wall screens, no tally LEDs</strong> in inventory. Rec state lives in the phone app. Nothing on the wall lights up.</p>
+  <div class="call wait">
+    <p><strong>Do not buy tablets yet.</strong> First: is there a mains socket within cable reach of the studio door and the front door? If not, that is an electrician job. A wall panel with no power is a brick.</p>
+  </div>
+  <div class="call go">
+    <p><strong>Buy only if you want a physical Rec light:</strong> WS2812B LED strip, a 5 V power supply, and a 74AHCT level shifter. Firmware slot is ready (GPIO18). Not in the house today.</p>
+  </div>
+
+  <h2>Already in the building</h2>
+  <table>
+    <thead><tr><th>Have</th><th>Qty</th><th>Honest note</th></tr></thead>
+    <tbody>
+      <tr><td>ESP32 boards</td><td>9</td><td>6 programmed, 3 spare</td></tr>
+      <tr><td>Reed switches</td><td>12</td><td>5 used</td></tr>
+      <tr><td>Leak probes</td><td>9 + 2</td><td>Allocated</td></tr>
+      <tr><td>SEN0232 sound meter</td><td>1</td><td>Studio only. Live at 43.5 dB tonight. Music room never bought.</td></tr>
+      <tr><td>SHT31 climate</td><td>2</td><td>Headers not soldered — temp stays blank</td></tr>
+      <tr><td>MQ-6 gas modules</td><td>4</td><td>Trend only. Not a safety alarm.</td></tr>
+      <tr><td>Hikvision LPG (relay)</td><td>1</td><td>The real gas alarm</td></tr>
+      <tr><td>Hikvision smoke</td><td>2</td><td>Protect the house. No relay into the app.</td></tr>
+      <tr><td>USB adapters + cables</td><td>6 + 8</td><td>Amazon 13 Aug</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Do not buy</h2>
+  <div class="call no">
+    <ul>
+      <li>Tablets / Fully Kiosk — until we know there is a socket at each door</li>
+      <li>Raspberry Pi — not required</li>
+      <li>CO₂ / dust / VOC — app already hides them as not fitted</li>
+      <li>A second sound meter until you want the teaching room metered too</li>
+    </ul>
+  </div>
+
+  <h2>Do next, in order</h2>
+  <ol>
+    <li>Close studio door leaf B (or wire that reed).</li>
+    <li>Message “quiet now”, then “noisy now”, so I can set the line.</li>
+    <li>Plug the other boards when you want those rooms.</li>
+    <li>Ask the third party to solder both SHT31 headers (four joints each).</li>
+    <li>Answer the door-socket question before any tablet order.</li>
+  </ol>
+
+  <button class="copy" type="button" id="copy">Copy WhatsApp note</button>
+  <p class="foot">Internal · Nathaniel School of Music · not a public post. Live phones use the Mac LAN app, not the internet demo.</p>
+
+<script>
+const NOTE = `Aangan tonight
+Board 1 (studio) is live. Acoustic meter is a real room — 43.5 dB. Studio door leaf B is open, so Rec stays locked until that leaf shuts.
+Boards 2–6 are unplugged. They no longer block a studio take.
+No wall screens or Rec bulbs in stock. Do not buy tablets until we know there is a socket at each door.
+Noise alerts: Settings → Studio too loud, then Enable. Works with the app open. Locked-phone 3 a.m. alerts are not built.
+The empty studio is sitting right on the 45 dB line, so it will flicker until we calibrate. Say “quiet now”, then “noisy now”.`;
+document.getElementById("copy").onclick = async () => {
+  await navigator.clipboard.writeText(NOTE);
+  document.getElementById("copy").textContent = "Copied";
+};
+</script>
+</body>
+</html>

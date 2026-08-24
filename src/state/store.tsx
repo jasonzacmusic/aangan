@@ -37,6 +37,8 @@ export interface Settings {
   notifyStateChanges: boolean;
   notifyEmergency: boolean;
   notifyDoorbell: boolean;
+  /** Phone banner when the studio meter crosses the recording-quiet threshold. */
+  notifyNoise: boolean;
   /** Standing directions appended to every delivery hand-off (lift, floor, landmark). */
   deliveryDirections: string;
   /** Ask for fresh air above this CO₂ (ppm). 1000 is the usual comfort line. */
@@ -54,6 +56,7 @@ const DEFAULT_SETTINGS: Settings = {
   notifyStateChanges: true,
   notifyEmergency: true,
   notifyDoorbell: false,
+  notifyNoise: true,
   deliveryDirections: "",
   co2Threshold: 1000,
   rhMin: INSTRUMENT_RH_MIN,
@@ -143,6 +146,18 @@ async function showSafetyNotification(safety: Safety) {
   }
 }
 
+async function showNoiseNotification(db: number, threshold: number) {
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  const body = `Studio is at ${Math.round(db)} dB — over the ${threshold} dB quiet line.`;
+  try {
+    const registration = await navigator.serviceWorker?.ready;
+    if (registration) await registration.showNotification("Studio is too loud", { body, icon: "/icons/icon-192.png", tag: "studio-noise" });
+    else new Notification("Studio is too loud", { body, icon: "/icons/icon-192.png", tag: "studio-noise" });
+  } catch {
+    // The in-app noise banner still shows.
+  }
+}
+
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [stateInfo, setStateInfo] = useState<StudioStateInfo | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -171,6 +186,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const settingsRef = useRef(settings);
   const prepRef = useRef(preflightPrep);
   const safetyRef = useRef<Safety | null>(null);
+  const noiseLoudRef = useRef(false);
   const commitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sceneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   settingsRef.current = settings;
@@ -185,6 +201,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       new Promise<void>((resolve) => {
         retryTimer = setTimeout(resolve, ms);
       });
+
+    const maybeNoiseNotify = (db: number | null) => {
+      const { notifyNoise, dbThreshold } = settingsRef.current;
+      if (!notifyNoise || db == null) return;
+      const hysteresis = 3;
+      if (!noiseLoudRef.current && db >= dbThreshold) {
+        noiseLoudRef.current = true;
+        void showNoiseNotification(db, dbThreshold);
+      } else if (noiseLoudRef.current && db < dbThreshold - hysteresis) {
+        noiseLoudRef.current = false;
+      }
+    };
 
     const applySafety = (next: Safety, notify: boolean) => {
       const prior = safetyRef.current;
@@ -246,8 +274,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           if (sosNow.status === "fulfilled") setSos(sosNow.value);
           if (fleetNow.status === "fulfilled") setFleet(fleetNow.value);
           if (airNow.status === "fulfilled") setAir(airNow.value);
-          const dbRoom = rm.find((room) => room.dbLevel != null);
-          if (dbRoom?.dbLevel != null) setDbHistory([dbRoom.dbLevel]);
+          const dbRoom = rm.find((room) => room.id === "studio" && room.dbLevel != null) ?? rm.find((room) => room.dbLevel != null);
+          if (dbRoom?.dbLevel != null) {
+            setDbHistory([dbRoom.dbLevel]);
+            maybeNoiseNotify(dbRoom.dbLevel);
+          }
           setConnected(true);
           setConnectionStatus("online");
           setLastError(null);
@@ -257,8 +288,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             if (ev.type === "state") setStateInfo(ev.state);
             if (ev.type === "rooms") {
               setRooms(ev.rooms);
-              const dbRoom = ev.rooms.find((room) => room.dbLevel != null);
+              const dbRoom = ev.rooms.find((room) => room.id === "studio" && room.dbLevel != null) ?? ev.rooms.find((room) => room.dbLevel != null);
               if (dbRoom?.dbLevel != null) setDbHistory((samples) => [...samples.slice(-89), dbRoom.dbLevel!]);
+              maybeNoiseNotify(dbRoom?.dbLevel ?? null);
             }
             if (ev.type === "safety") applySafety(ev.safety, true);
             if (ev.type === "doorbell") setDoorbell(ev.doorbell);

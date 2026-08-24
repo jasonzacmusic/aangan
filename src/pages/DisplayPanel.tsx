@@ -142,7 +142,7 @@ export default function DisplayPanel({ id }: { id: string }) {
         </PanelChrome>
       );
     case "house": {
-      const music = rooms.find((r) => r.dbLevel != null);
+      const studio = rooms.find((r) => r.dbLevel != null);
       return (
         <PanelChrome accent={meta.color}>
           <div className="mb-8 flex items-center gap-4">
@@ -167,9 +167,9 @@ export default function DisplayPanel({ id }: { id: string }) {
               </div>
             )}
           </div>
-          {music?.dbLevel != null && (
+          {studio?.dbLevel != null && (
             <div className="mt-6 w-full max-w-xl">
-              <DbMeter value={music.dbLevel} threshold={settings.dbThreshold} />
+              <DbMeter value={studio.dbLevel} threshold={settings.dbThreshold} />
               <div className="mt-1 font-mono text-[10px] text-dim">{dbHistory.length ? "studio · live" : ""}</div>
             </div>
           )}

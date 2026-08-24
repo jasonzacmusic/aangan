@@ -23,6 +23,7 @@ export default function UtilitiesPanel() {
   const { utilities, runUtilityAction } = useStore();
   if (!utilities) return null;
   const { water, power, lpg, air } = utilities;
+  if (!water.online && !power.online && !lpg.online && !air.online) return null;
   const airColor = air.aqi <= 50 ? "#2fbf71" : air.aqi <= 100 ? "#f5a623" : "#e5484d";
   const gasColor = lpg.remainingPct < 20 ? "#e5484d" : "#c9a84c";
 

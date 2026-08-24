@@ -62,6 +62,7 @@ export default function AirCard() {
   }, [air?.purgeUntil]);
 
   if (!air) return null;
+  if (air.rooms.length === 0 && air.purifiers.length === 0) return null;
   const purging = !!air.purgeUntil && air.purgeUntil > Date.now();
   const minsLeft = purging ? Math.max(1, Math.ceil((air.purgeUntil! - Date.now()) / 60000)) : 0;
   const recording = stateInfo?.state === "audio_rec" || stateInfo?.state === "video_rec";

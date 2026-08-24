@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """NSM Record Gate — runs on the recording Mac. Stdlib only.
 
-Reads the ONE authoritative studio_ready sensor from Home Assistant and
+Reads the one authoritative pre-flight verdict from the Aangan LAN server
+(the Mac process that talks to the ESP32s — there is no Raspberry Pi) and:
+
 1) serves it at http://127.0.0.1:8952/ready for anything local (the REAPER
    GuardedRecord.lua action asks this before allowing Record),
 2) pops a macOS alert if a take starts while the studio is NOT ready,
 3) `train` mode: learns the dB threshold from real labelled takes instead of
-   a guessed number, then writes it to HA's input_number.studio_db_threshold.
+   a guessed number, then writes it to the LAN server.
 
 Usage:
   python3 record_gate.py serve                 # the always-on gate (launchd)
@@ -15,8 +17,7 @@ Usage:
   python3 record_gate.py train apply           # compute + push the trained threshold
 
 Config in ~/.config/nsm/studio.env:
-  HA_URL=http://homeassistant.local:8123
-  HA_TOKEN=<long-lived token>
+  AANGAN_URL=http://127.0.0.1:8126
 """
 import json
 import os
@@ -31,9 +32,6 @@ from pathlib import Path
 CONF = Path.home() / ".config/nsm/studio.env"
 SAMPLES = Path.home() / ".config/nsm/noise-training.json"
 PORT = 8952
-DB_SENSOR = "sensor.studio_sound_level"
-READY_SENSOR = "binary_sensor.studio_ready"
-THRESHOLD_ENTITY = "input_number.studio_db_threshold"
 
 
 def load_env():
@@ -47,42 +45,66 @@ def load_env():
 
 
 ENV = load_env()
-HA_URL = ENV.get("HA_URL", "http://homeassistant.local:8123").rstrip("/")
-HA_TOKEN = ENV.get("HA_TOKEN", "")
+AANGAN_URL = ENV.get("AANGAN_URL", os.environ.get("AANGAN_URL", "http://127.0.0.1:8126")).rstrip("/")
 
 
-def ha(path, method="GET", body=None):
+def aangan(path, method="GET", body=None):
+    data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(
-        f"{HA_URL}{path}",
-        data=json.dumps(body).encode() if body is not None else None,
-        headers={"Authorization": f"Bearer {HA_TOKEN}", "Content-Type": "application/json"},
+        f"{AANGAN_URL}{path}",
+        data=data,
+        headers={"Content-Type": "application/json"},
         method=method,
     )
     with urllib.request.urlopen(req, timeout=4) as res:
         return json.loads(res.read() or b"null")
 
 
+def not_ready_reason(pf):
+    bits = []
+    if not pf.get("doorsClosed"):
+        names = pf.get("openDoorNames") or []
+        bits.append(", ".join(names) if names else "a door is open")
+    if not pf.get("quietEnough"):
+        bits.append("room too loud" if pf.get("dbLevel") is not None else "sound meter not reporting")
+    if not pf.get("sensorsHealthy"):
+        bits.append("a board is silent")
+    if not pf.get("safetyClear"):
+        bits.append("a safety alert is live")
+    return " · ".join(bits) or "not ready"
+
+
 def ready_payload():
     try:
-        ready = ha(f"/api/states/{READY_SENSOR}")
-        db = ha(f"/api/states/{DB_SENSOR}")
+        pf = aangan("/api/preflight")
+        ready = bool(pf.get("ready"))
+        db = pf.get("dbLevel")
+        if db is not None:
+            try:
+                db = float(db)
+            except (TypeError, ValueError):
+                db = None
         return {
-            "ready": ready["state"] == "on",
-            "reason": "" if ready["state"] == "on" else "studio_ready is off — check Pre-flight in Studio Command",
-            "db": float(db["state"]) if db["state"] not in ("unknown", "unavailable") else None,
+            "ready": ready,
+            "reason": "" if ready else not_ready_reason(pf),
+            "db": db,
             "ts": int(time.time() * 1000),
         }
     except Exception as e:
-        # Fail SAFE for the music, honest for the user: if HA is unreachable we
-        # cannot vouch for the room — report not-ready with the real reason.
-        return {"ready": False, "reason": f"Home Assistant unreachable ({e.__class__.__name__})", "db": None,
-                "ts": int(time.time() * 1000)}
+        return {
+            "ready": False,
+            "reason": f"Aangan LAN unreachable ({e.__class__.__name__}) — is npm run lan running?",
+            "db": None,
+            "ts": int(time.time() * 1000),
+        }
 
 
 def alert(msg):
-    subprocess.run(["osascript", "-e",
-                    f'display notification "{msg}" with title "NSM Record Gate" sound name "Basso"'],
-                   check=False)
+    safe = msg.replace("\\", "\\\\").replace('"', '\\"')
+    subprocess.run(
+        ["osascript", "-e", f'display notification "{safe}" with title "NSM Record Gate" sound name "Basso"'],
+        check=False,
+    )
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -103,10 +125,9 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def serve():
-    if not HA_TOKEN:
-        raise SystemExit(f"Put HA_URL/HA_TOKEN in {CONF}")
-    print(f"record gate on 127.0.0.1:{PORT} → {HA_URL}")
+    print(f"record gate on 127.0.0.1:{PORT} → {AANGAN_URL}")
     was_ready = True
+
     def watch():
         nonlocal was_ready
         while True:
@@ -115,6 +136,7 @@ def serve():
                 alert(f"Studio NOT ready: {p['reason']}")
             was_ready = p["ready"]
             time.sleep(5)
+
     import threading
     threading.Thread(target=watch, daemon=True).start()
     ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
@@ -123,7 +145,7 @@ def serve():
 def train(mode):
     data = json.loads(SAMPLES.read_text()) if SAMPLES.exists() else {"good": [], "noisy": []}
     if mode in ("good", "noisy"):
-        print(f"Sampling {DB_SENSOR} for 60 s as '{mode}' — keep the room in that condition…")
+        print(f"Sampling studio dBA for 60 s as '{mode}' — keep the room in that condition…")
         got = []
         for _ in range(60):
             p = ready_payload()
@@ -144,11 +166,13 @@ def train(mode):
         if noisy:
             floor_noisy = min(noisy)
             if threshold >= floor_noisy:
-                threshold = round((p95_good + floor_noisy) / 2, 1)  # split the gap
-        ha("/api/services/input_number/set_value", "POST",
-           {"entity_id": THRESHOLD_ENTITY, "value": threshold})
-        print(f"trained threshold {threshold} dBA (p95 good {p95_good:.1f}"
-              + (f", quietest noisy {min(noisy):.1f}" if noisy else "") + ") → pushed to HA")
+                threshold = round((p95_good + floor_noisy) / 2, 1)
+        aangan("/api/settings/db-threshold", "POST", {"value": threshold})
+        print(
+            f"trained threshold {threshold} dBA (p95 good {p95_good:.1f}"
+            + (f", quietest noisy {min(noisy):.1f}" if noisy else "")
+            + ") → pushed to Aangan LAN"
+        )
         return
     raise SystemExit("train mode must be: good | noisy | apply")
 

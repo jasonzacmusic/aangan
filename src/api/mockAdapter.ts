@@ -104,7 +104,7 @@ export class MockAdapter implements ApiAdapter {
     air: { online: true, aqi: 62, pm25: 21, tempC: 24.3, humidityPct: 58, purifierOn: false },
   };
   private history: ActivityEvent[] = [
-    { id: "welcome", type: "system", title: "House online", detail: "All five zones checked in", ts: Date.now() - 44 * 60 * 1000, severity: "success" },
+    { id: "welcome", type: "system", title: "House online", detail: "Studio Command is running the simulated house", ts: Date.now() - 44 * 60 * 1000, severity: "success" },
     { id: "doorbell-seen", type: "doorbell", title: "Entrance doorbell", detail: "Snapshot captured · chime delivered", ts: this.doorbell.ts, severity: "info" },
   ];
   private piano: PianoRig = {
@@ -130,7 +130,7 @@ export class MockAdapter implements ApiAdapter {
   private sos: Sos | null = null;
   private air: AirState = {
     rooms: [
-      { id: "studio", name: "Music Room", online: true, pm25: 18, co2: 620, vocIndex: 104, tempC: 24.1, humidityPct: 58 },
+      { id: "studio", name: "Studio", online: true, pm25: 18, co2: 620, vocIndex: 104, tempC: 24.1, humidityPct: 58 },
       { id: "kitchen", name: "Kitchen", online: true, pm25: 24, co2: 540, vocIndex: 118, tempC: 26.2, humidityPct: 61 },
       { id: "bedroom", name: "Bedroom", online: true, pm25: 14, co2: 700, vocIndex: 98, tempC: 24.8, humidityPct: 56 },
     ],
@@ -378,9 +378,9 @@ export class MockAdapter implements ApiAdapter {
   private getPreflightSync(): Preflight {
     const recordingRooms = this.rooms.filter((r) => r.id === "studio" || r.id === "music");
     const openDoors = recordingRooms.filter((r) => r.doorOpen).map((r) => r.id);
-    const dbLevel = this.studioRoom().dbLevel ?? 0;
+    const dbLevel = this.studioRoom().dbLevel ?? null;
     const doorsClosed = openDoors.length === 0;
-    const quietEnough = dbLevel < this.dbThreshold;
+    const quietEnough = dbLevel != null && dbLevel < this.dbThreshold;
     const sensorsHealthy = this.sensorsHealthy;
     const safetyClear = !this.safety.fire && !this.safety.gas && !this.safety.panic && !this.safety.leakKitchen && !this.safety.leakBath && !this.safety.leakGeyser;
     return {

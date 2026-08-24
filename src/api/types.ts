@@ -41,7 +41,8 @@ export interface Preflight {
   openDoors: RoomId[]; // which doors are the problem
   /** Exact physical inputs where available (for example "Studio door · leaf B"). */
   openDoorNames?: string[];
-  dbLevel: number;
+  /** Null when the studio meter did not answer. Never treat a missing meter as 0 dBA. */
+  dbLevel: number | null;
   dbThreshold: number;
 }
 

@@ -12,3 +12,4 @@ pi/house/esphome/secrets.yaml
 
 # LAN server runtime state
 data/
+.env*

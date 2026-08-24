@@ -80,12 +80,15 @@ export default function Settings() {
             <span>35 · studio silence</span>
             <span>70 · traffic loud</span>
           </div>
+          <p className="mt-3 text-xs text-dim">
+            Calibrate with me in this chat — do not guess. First the meter must jump when you speak (real rooms sit about 30–60 dB). Then say “quiet now” while the room is take-quiet, then “noisy now” with the fan or traffic. I set this slider just above the quiet sample.
+          </p>
         </div>
       </section>
 
-      {/* Air thresholds */}
+      {/* Air thresholds — sensors were never ordered; keep the sliders out of the way. */}
       <section className="mt-4 rounded-2xl border border-line bg-surface/80 px-4 py-2 backdrop-blur">
-        <div className="border-b border-line py-3 font-mono text-[10px] uppercase tracking-[0.3em] text-dim">Air &amp; instruments</div>
+        <div className="border-b border-line py-3 font-mono text-[10px] uppercase tracking-[0.3em] text-dim">Air &amp; instruments · not fitted</div>
         <div className="border-b border-line py-3.5">
           <div className="flex items-baseline justify-between">
             <div className="text-sm font-medium">Ask for fresh air above</div>
@@ -153,6 +156,9 @@ export default function Settings() {
           </Row>
           <Row label="Doorbell" hint="Snapshot to the family group on every ring">
             <Toggle label="Doorbell notifications" on={settings.notifyDoorbell} onChange={(v) => updateSettings({ notifyDoorbell: v })} />
+          </Row>
+          <Row label="Studio too loud" hint="Banner when the meter crosses the quiet line. Needs the app open, or installed as a home-screen app with alerts allowed. A 3 a.m. ping with the phone locked is not built yet.">
+            <Toggle label="Noise notifications" on={settings.notifyNoise} onChange={(v) => updateSettings({ notifyNoise: v })} />
           </Row>
           <Row label="State chimes" hint="Each state answers with its own chord">
             <Toggle label="State chimes" on={settings.chimes} onChange={(v) => updateSettings({ chimes: v })} />

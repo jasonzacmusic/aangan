@@ -1,7 +1,8 @@
 # Aangan — project brief and state of the build
 
 **Single source of truth for what this project is, what physically exists, and what is missing.**
-Last verified: **14 August 2026**, against vendor email and the boards themselves — not against buy lists.
+Last verified: **18 August 2026 evening**, against the boards on this Mac mini's LAN and the vendor
+orders — not against buy lists.
 
 > Read this before recommending a purchase, writing a node config, or telling anyone something is
 > ready. Buy lists in `docs/` describe intentions. This file describes reality. If you change
@@ -18,11 +19,17 @@ the house does, what the door signs say, and whether recording is allowed to sta
 Two halves that are often confused:
 
 - **The sensing layer** — six ESP32 boards, one per room, each serving its own live web page over
-  Wi-Fi. **This is real and working.**
-- **The app** (React PWA, `studio-command.vercel.app`) — beautiful, installable, and currently
-  **running on simulated data**. It was built to talk to a Raspberry Pi bridge that was never bought.
+  Wi-Fi. **This is real.** Evening of 18 Aug: board 1 (studio) at `192.168.0.250` served a live
+  SEN0232 of **43.5 dBA**. (Earlier the same day the same endpoint had read 7.1 dBA — the
+  unconnected-ADC signature — so the meter is attached now.) Boards 2–6 were not answering.
+  Board 3 had been up in the afternoon at `.252` and was down by evening.
+- **The app** (React PWA) — beautiful and installable. `studio-command.vercel.app` is still the
+  **demo** (HTTPS cannot read HTTP boards). The live path is the LAN server on this Mac:
+  `npm run lan`, then open `http://<mac-ip>:8126` on any phone on the school Wi-Fi.
 
-Bridging those two is the single biggest piece of unfinished work.
+The combining logic that was missing — doors + dBA + boards alive + safety — now lives in
+`scripts/lib/house.mjs` and is served by `scripts/lan-server.mjs`. A silent board never looks
+ready. A missing sound meter never looks quiet.
 
 ---
 
@@ -45,7 +52,7 @@ because every buy list dutifully skipped what was marked owned.
 | Goal | Status |
 |---|---|
 | Know which door is open, by leaf | **Working** — board 1 confirmed, correct polarity |
-| Live decibel level in the studio | **Working** — 46.6 dBA read on real hardware |
+| Live decibel level in the studio | **Working tonight** — board 1 answered; SEN0232 read **43.5 dBA** (a real room). Readings under 28 dBA are still discarded as the unconnected-ADC lie. |
 | Leak detection at 9 points | Firmware done; one probe's DO wire still being traced |
 | Room climate / instrument humidity guard | Firmware done; **sensors need soldering** (see §7) |
 | Gas trend sensing in the kitchen | Firmware done; needs dividers + 24–48 h burn-in |
@@ -54,19 +61,20 @@ because every buy list dutifully skipped what was marked owned.
 | Gas cylinder weight | Firmware done; someone must build the platform and calibrate |
 | Doorbell button | Firmware done, not wired |
 | Washing-machine-finished | Firmware done, not wired |
+| The app reading real boards | **Built** — `npm run lan` on this Mac. Vercel stays the HTTPS demo |
 
 ### The recording gate — the actual product
-**"Can I record right now?"** = doors shut + room quiet + presence + nodes alive.
-Three of the four inputs exist on board 1 today. **The combining logic does not exist yet** — it
-belongs in the app, and the app cannot see the boards. This is the top priority after wiring.
+**"Can I record right now?"** = studio doors shut + a **real** studio dBA under the threshold +
+**board 1 alive** + safety clear. Teaching doors only count when board 2 is actually on Wi-Fi.
+Bathrooms, kitchen and hall are house sensors — they do not block a studio take while they sit
+on the bench. Combining logic is in the LAN server. A missing or sub-28 dBA meter never looks quiet.
 
 ### Not started, and each has a hidden dependency
 | Goal | Blocked by |
 |---|---|
 | **Phone alerts when nobody has the app open** | Needs an ESP32 to push notifications itself. Designed, not built. **This is the honest safety gap.** |
-| **The app reading real sensors** | HTTPS app cannot read HTTP boards — see §8 |
 | Door displays / tablets | Nothing bought, and a socket problem nobody costed — see §6 |
-| Recording tally light | LED strip + level shifter were on the false "owned" list |
+| Recording tally light | LED strip + level shifter were on the false "owned" list. **Still not bought.** Software Rec states exist; nothing on the wall lights up. |
 | History and trends | An ESP32 has no storage. Needs a hub of some kind. |
 | Air quality — CO₂, dust, VOC | Three app features shipped with **no sensors ever ordered** (₹22,500) |
 | Water tank levels, pump control | Sensors not bought; pump needs a licensed technician |
@@ -84,7 +92,7 @@ function-grouped design that assumed 180 m of two-core cable nobody ever bought.
 |---|---|---|---|---|
 | 1 | Studio | `8c:94:df:69:20:20` | **192.168.0.250** (static) | `room-studio.yaml` |
 | 2 | Music room | `00:70:07:a2:73:98` | **192.168.0.251** (static) | `room-music.yaml` |
-| 3 | Bathrooms A + geyser | `00:70:07:a2:6f:04` | **192.168.0.252** (in yaml — reflash) | `node-3-bath-a.yaml` |
+| 3 | Bathrooms A + geyser | `00:70:07:a2:6f:04` | **192.168.0.252** (static; answered 18 Aug afternoon, silent by evening) | `node-3-bath-a.yaml` |
 | 4 | Bathrooms B + washing machine | `00:70:07:a2:90:dc` | **192.168.0.253** (in yaml — reflash) | `node-4-bath-b.yaml` |
 | 5 | Kitchen | `88:f1:55:30:7f:84` | **192.168.0.254** (in yaml — reflash) | `node-5-kitchen.yaml` |
 | 6 | Hall / entrance | `8c:94:df:69:1e:5c` | **192.168.0.249** (in yaml — reflash) | `node-6-hall.yaml` |
@@ -98,7 +106,9 @@ wiring. Set back to INFO once each room is signed off.
 
 ### Still to do on these nodes
 - **Most sensors are not physically wired yet.**
-- Assign static addresses to boards 3–6 (now in the yaml: `.252`, `.253`, `.254`, `.249`) and reflash.
+- Assign static addresses to boards 4–6 (yaml already has `.253`, `.254`, `.249`) and reflash.
+  Board 3 is done. Until then the LAN poller also tries last-known DHCP leftovers (.157 kitchen,
+  .159 hall, .158/.169/.179 studio, .153 music).
 - **Calibration, which can only happen after wiring:** the dBA threshold that means "too loud",
   the MQ-6 clean-air baseline, the HX711 scale factor, and the LD2410 distance gates.
 
@@ -213,17 +223,16 @@ Everything else on all six boards is push-fit.
 
 ## 9. What comes next, in order
 
-1. **Wire the six rooms.** Boards 1 and 2 are in progress. Everything is push-fit except §7.
-2. **Static addresses on boards 3–6**, so no bookmark ever breaks again.
-3. **Calibrate** — reed direction, dBA threshold, radar gates, cylinder scale. All remote over Wi-Fi.
-4. **Connect the app to the real boards.** The LAN server now lives in this repo: on the studio
-   Mac, `npm run lan`, then open the printed `http://192.168.0.x:8126` on every phone. HTTPS
-   Vercel still cannot see the boards — that is a browser rule, not a missing feature. This is
-   the gate for everything below.
-5. **The recording gate** — one glance before a take, with a named reason when the answer is no.
-6. **Unattended safety alerting** — ESP32 pushing to phones directly, so a 3 a.m. leak wakes someone
-   with no app open. Designed, not built.
-7. **Then, and only then, the displays** — after the socket question in §6 is answered.
+1. **Calibrate the quiet line with Jason in chat.** Meter is a real room tonight (~43.5 dBA).
+   Message “quiet now” then “noisy now”. Default slider is 45 dB — the empty studio is sitting
+   right on it, so it will flicker until we set a proper line.
+2. **Studio door leaf B reads open.** Close that leaf, or wire the reed. Rec stays locked while it is open.
+3. **Plug boards 2–6** when you want those rooms. They no longer block a studio take.
+   Reflash 4–6 to static IPs when you next have USB on them.
+4. **Keep the LAN app running on this Mac.** Phones: `http://<this-mac>:8126`. Vercel stays demo.
+5. **On-Air tally** — buy a WS2812B strip + 5 V PSU + 74AHCT only if you want a physical Rec light.
+   Tablets wait on the door-socket question.
+6. **Unattended safety alerting** — ESP32 pushing to phones with the app closed. Designed, not built.
 
 **Deliberately deferred:** both Raspberry Pis, the DAC Pro and XLR board, the 7" display, the air
 sensors, tank levels, and everything in the technician-only group (panic loop, geyser, pump).

@@ -41,11 +41,12 @@ export default function Preflight({ onSelect }: Props) {
   const studioAir = air?.rooms.find((r) => r.id === "studio") ?? air?.rooms[0];
   const airClean = !studioAir || (studioAir.pm25 < 30 && studioAir.co2 < settings.co2Threshold);
 
-  const studio = rooms.find((r) => r.dbLevel != null) ?? rooms.find((r) => r.id === "studio");
+  const studio = rooms.find((r) => r.id === "studio") ?? rooms.find((r) => r.dbLevel != null);
   const db = studio?.dbLevel ?? preflight.dbLevel;
-  const quiet = db < settings.dbThreshold;
+  const meterLive = db != null;
+  const quiet = preflight.quietEnough;
   const doorsClosed = preflight.doorsClosed;
-  const ready = doorsClosed && quiet && preflight.sensorsHealthy && preflight.safetyClear;
+  const ready = preflight.ready;
 
   const openDoorNames = preflight.openDoorNames?.length
     ? preflight.openDoorNames
@@ -82,13 +83,23 @@ export default function Preflight({ onSelect }: Props) {
         />
         <CheckRow
           ok={quiet}
-          title={quiet ? "Room is quiet" : `Too loud — ${db.toFixed(0)} dB`}
-          detail={quiet ? `Holding under your ${settings.dbThreshold} dB threshold.` : `Needs to drop under ${settings.dbThreshold} dB. Check the fan, AC, or traffic noise.`}
+          title={quiet ? "Room is quiet" : meterLive ? `Too loud — ${db.toFixed(0)} dB` : "Sound meter not reporting"}
+          detail={
+            quiet
+              ? `Holding under your ${preflight.dbThreshold} dB threshold.`
+              : meterLive
+                ? `Needs to drop under ${preflight.dbThreshold} dB. Check the fan, AC, or traffic noise.`
+                : "The studio meter did not answer. A silent meter is never treated as quiet."
+          }
         />
         <CheckRow
           ok={preflight.sensorsHealthy}
-          title={preflight.sensorsHealthy ? "Every sensor is reporting" : "A sensor node is silent"}
-          detail={preflight.sensorsHealthy ? "All zones checked in recently — the verdict can be trusted." : "A zone stopped reporting, so the house cannot vouch for the room. Check the ESP32 nodes."}
+          title={preflight.sensorsHealthy ? "Studio board is reporting" : "Studio board is silent"}
+          detail={
+            preflight.sensorsHealthy
+              ? "Board 1 answered. Bathrooms, kitchen and hall can stay on the bench — they are not part of this take."
+              : "Board 1 (studio) did not answer. Recording stays locked until that board is on Wi-Fi."
+          }
         />
         <CheckRow
           ok={preflight.safetyClear}
@@ -128,10 +139,16 @@ export default function Preflight({ onSelect }: Props) {
         </div>
       )}
 
-      {/* Live meter */}
+      {/* Live meter — recording studio only. The teaching room has no SEN0232. */}
       <div className="mt-4 rounded-2xl border border-line bg-surface/80 p-4 backdrop-blur">
-        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-dim">Music room · live</div>
-        <DbMeter value={db} threshold={settings.dbThreshold} />
+        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-dim">Studio · live</div>
+        {meterLive ? (
+          <DbMeter value={db} threshold={settings.dbThreshold} />
+        ) : (
+          <p className="text-sm text-st-meeting">
+            No live dBA. A reading under 30 dB is treated as unwired — speak next to the SEN0232. If the number never jumps, GPIO34 is not attached.
+          </p>
+        )}
       </div>
 
       {/* The pre-flight can act, not only diagnose. */}

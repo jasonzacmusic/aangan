@@ -6,6 +6,7 @@ import Nav, { Tab } from "./components/Nav";
 import PwaUpdatePrompt from "./components/PwaUpdatePrompt";
 import VoiceButton from "./components/VoiceButton";
 import NudgeBanner from "./components/NudgeBanner";
+import NoiseBanner from "./components/NoiseBanner";
 import Command from "./pages/Command";
 import DisplayPanel from "./pages/DisplayPanel";
 import Displays from "./pages/Displays";
@@ -205,6 +206,7 @@ export default function App() {
       </main>
 
       <NudgeBanner />
+      <NoiseBanner />
       <Nav tab={tab} setTab={setTab} />
       {tab === "command" ? <VoiceButton onCommand={requestState} /> : null}
       <PwaUpdatePrompt />

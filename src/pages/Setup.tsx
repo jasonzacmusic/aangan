@@ -57,7 +57,7 @@ const NODES: NodeGuide[] = [
       { from: "Geyser overflow", to: "GPIO27", color: "gold" },
       { from: "DHT22 data", to: "GPIO32", color: "green" },
     ],
-    test: ["Damp cloth on one comb at a time. Confirm the exact name, then dry it.", "Reflash after setting the static address .252."],
+    test: ["Open http://192.168.0.252 — this board is already on its static address.", "Damp cloth on one comb at a time. Confirm the exact name, then dry it."],
   },
   {
     id: "bath-b",

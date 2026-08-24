@@ -3,30 +3,30 @@ import { useStore } from "../state/store";
 import { DoorIcon } from "./icons";
 
 /**
- * The "close the door" nudge: when any monitored door is open AND the studio
+ * The "close the door" nudge: when a live door is open AND the studio
  * is louder than the recording-quiet threshold, the house asks for the
- * door to be closed. Computed client-side from live rooms data with a little
- * hysteresis so the banner never flickers on dB jitter.
+ * door to be closed. Hysteresis stops the banner flickering on dB jitter.
  */
 export function useDoorNudge() {
   const { rooms, settings } = useStore();
   const wasActive = useRef(false);
-  const music = rooms.find((r) => r.dbLevel != null);
-  const openDoors = rooms.filter((r) => r.doorOpen);
-  const db = music?.dbLevel ?? 0;
+  const studio = rooms.find((r) => r.id === "studio");
+  const openDoors = rooms.filter((r) => r.id !== "bedroom" && r.doorOpen && r.online !== false);
+  const db = studio?.dbLevel;
   const threshold = settings.dbThreshold;
-  const on = db >= threshold;
-  const off = db < threshold - 3;
+  const on = db != null && db >= threshold;
+  const off = db == null || db < threshold - 3;
   const active = openDoors.length > 0 && (wasActive.current ? !off : on);
   wasActive.current = active;
   if (!active) return null;
   const names = openDoors.map((r) => r.name).join(" + ");
-  return { names, db: Math.round(db), count: openDoors.length };
+  return { names, db: db == null ? null : Math.round(db), count: openDoors.length };
 }
 
 export default function NudgeBanner({ variant = "app" }: { variant?: "app" | "panel" }) {
   const nudge = useDoorNudge();
   if (!nudge) return null;
+  const dbLabel = nudge.db == null ? "sound in the room" : `${nudge.db} dB in the studio`;
 
   if (variant === "panel") {
     return (
@@ -34,7 +34,7 @@ export default function NudgeBanner({ variant = "app" }: { variant?: "app" | "pa
         <DoorIcon size={34} className="shrink-0 text-st-meeting" />
         <div className="text-left">
           <div className="font-display text-3xl text-st-meeting">Please close the {nudge.count > 1 ? "doors" : "door"}</div>
-          <div className="mt-1 font-mono text-sm text-paper/80">{nudge.names} open · {nudge.db} dB in the studio</div>
+          <div className="mt-1 font-mono text-sm text-paper/80">{nudge.names} open · {dbLabel}</div>
         </div>
       </div>
     );
@@ -48,7 +48,7 @@ export default function NudgeBanner({ variant = "app" }: { variant?: "app" | "pa
       <DoorIcon size={22} className="shrink-0 text-st-meeting" />
       <div className="flex-1">
         <div className="text-sm font-semibold text-st-meeting">Please close the {nudge.count > 1 ? "doors" : "door"}</div>
-        <div className="font-mono text-[10px] text-dim">{nudge.names} open · {nudge.db} dB with sound in the room</div>
+        <div className="font-mono text-[10px] text-dim">{nudge.names} open · {dbLabel}</div>
       </div>
     </div>
   );

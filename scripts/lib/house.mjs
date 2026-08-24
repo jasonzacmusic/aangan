@@ -12,8 +12,10 @@ export const NODES = [
     sticker: 1,
     name: "Studio",
     host: "192.168.0.250",
+    fallbackHosts: ["192.168.0.179", "192.168.0.169", "192.168.0.158"],
     mac: "8c:94:df:69:20:20",
     critical: true,
+    requiredForRecord: true,
     roomId: "studio",
   },
   {
@@ -21,6 +23,7 @@ export const NODES = [
     sticker: 2,
     name: "Music room",
     host: "192.168.0.251",
+    fallbackHosts: ["192.168.0.153"],
     mac: "00:70:07:a2:73:98",
     critical: true,
     roomId: "music",
@@ -48,6 +51,7 @@ export const NODES = [
     sticker: 5,
     name: "Kitchen",
     host: "192.168.0.254",
+    fallbackHosts: ["192.168.0.157"],
     mac: "88:f1:55:30:7f:84",
     critical: true,
     roomId: "kitchen",
@@ -57,11 +61,19 @@ export const NODES = [
     sticker: 6,
     name: "Hall",
     host: "192.168.0.249",
+    fallbackHosts: ["192.168.0.159"],
     mac: "8c:94:df:69:1e:5c",
     critical: true,
     roomId: "entrance",
   },
 ];
+
+/** Last host that answered for each node, so a DHCP holdover is not re-probed every cycle. */
+const liveHostByNode = new Map();
+
+export function resetHostCache() {
+  liveHostByNode.clear();
+}
 
 const STATE_COLORS = {
   available: "#2FBF71",
@@ -82,6 +94,14 @@ export function parseNumber(payload) {
   if (!payload || payload.state === "nan" || payload.state === "unknown") return null;
   const value = payload.value;
   if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return value;
+}
+
+export const SEN0232_MIN_DBA = 28;
+
+/** The SEN0232's specified floor is 30 dBA. ~7 dBA is an unconnected ADC pin. */
+export function saneStudioDba(value) {
+  if (value == null || !Number.isFinite(value) || value < SEN0232_MIN_DBA) return null;
   return value;
 }
 
@@ -166,7 +186,7 @@ export function computePreflight({
     ready: doorsClosed && quietEnough && sensorsHealthy && safetyClear,
     openDoors: [],
     openDoorNames,
-    dbLevel: dbLevel ?? 0,
+    dbLevel: dbLevel,
     dbThreshold,
   };
 }
@@ -199,7 +219,7 @@ export function buildRooms({ readings, studioState, signColor }) {
       tempC: studio.tempC,
       humidityPct: studio.humidityPct,
       signColor: color,
-      dbLevel: studio.dba ?? undefined,
+      dbLevel: saneStudioDba(studio.dba) ?? undefined,
       online: studio.online,
     },
     {
@@ -286,9 +306,8 @@ export function recordingOpenDoors(readings) {
       ]).names,
     );
   }
-  if (!readings.music.online) {
-    names.push("Teaching doors (board silent)");
-  } else {
+  // Teaching doors only count when that board is actually on the Wi-Fi.
+  if (readings.music.online) {
     names.push(
       ...combineLeaves([
         { name: "Teaching door · leaf A", open: readings.music.doorA },
@@ -299,17 +318,48 @@ export function recordingOpenDoors(readings) {
   return names;
 }
 
+export function nodeHosts(node) {
+  const cached = liveHostByNode.get(node.id);
+  return [...new Set([cached, node.host, ...(node.fallbackHosts ?? [])].filter(Boolean))];
+}
+
+export async function hostAlive(fetchFn, host) {
+  const url = `http://${host}/`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 700);
+  try {
+    const res = await fetchFn(url, { signal: controller.signal, cache: "no-store" });
+    return typeof res?.status === "number";
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function resolveNodeHost(fetchFn, node) {
+  for (const host of nodeHosts(node)) {
+    if (await hostAlive(fetchFn, host)) {
+      liveHostByNode.set(node.id, host);
+      return host;
+    }
+  }
+  liveHostByNode.delete(node.id);
+  return node.host;
+}
+
 export function buildFleet(readings, now = Date.now()) {
   return NODES.map((node) => {
     const reading = readings[node.id];
     const online = !!reading?.online;
+    const host = reading?.host || liveHostByNode.get(node.id) || node.host;
     return {
       id: node.id,
       name: `${node.sticker} · ${node.name}`,
       kind: "esp32",
       online,
       lastSeen: online ? now : reading?.lastSeen ?? 0,
-      detail: online ? `http://${node.host}` : `silent · ${node.host}`,
+      detail: online ? `http://${host}` : `silent · ${host}`,
     };
   });
 }
@@ -317,6 +367,7 @@ export function buildFleet(readings, now = Date.now()) {
 function blankNode() {
   return {
     online: false,
+    host: null,
     lastSeen: 0,
     doorA: null,
     doorB: null,
@@ -360,8 +411,10 @@ async function readEntity(fetchFn, host, domain, name) {
 
 async function probeNode(fetchFn, node) {
   const reading = blankNode();
-  const bin = (name) => readEntity(fetchFn, node.host, "binary_sensor", name);
-  const sen = (name) => readEntity(fetchFn, node.host, "sensor", name);
+  const host = await resolveNodeHost(fetchFn, node);
+  reading.host = host;
+  const bin = (name) => readEntity(fetchFn, host, "binary_sensor", name);
+  const sen = (name) => readEntity(fetchFn, host, "sensor", name);
 
   if (node.id === "studio") {
     const [doorA, doorB, leak, presence, dba, temp, humidity] = await Promise.all([
@@ -378,7 +431,7 @@ async function probeNode(fetchFn, node) {
     reading.doorB = parseOn(doorB);
     reading.leak = parseOn(leak);
     reading.presence = parseOn(presence);
-    reading.dba = parseNumber(dba);
+    reading.dba = saneStudioDba(parseNumber(dba));
     reading.tempC = parseNumber(temp);
     reading.humidityPct = parseNumber(humidity);
   } else if (node.id === "music") {
@@ -478,17 +531,23 @@ export async function pollHouse(fetchFn = fetch, nodes = NODES) {
 export function snapshotFromReadings(readings, { studioState = "available", dbThreshold = 45, now = Date.now() } = {}) {
   const rooms = buildRooms({ readings, studioState });
   const safety = buildSafety(readings);
-  const sensorsHealthy = NODES.filter((node) => node.critical).every((node) => readings[node.id]?.online);
+  const sensorsHealthy = NODES.filter((node) => node.requiredForRecord).every((node) => readings[node.id]?.online);
   const openDoorNames = recordingOpenDoors(readings).filter((name, index, list) => list.indexOf(name) === index);
   const preflight = computePreflight({
     openDoorNames,
-    dbLevel: readings.studio.dba,
+    dbLevel: saneStudioDba(readings.studio.dba),
     dbThreshold,
     sensorsHealthy,
     safety,
   });
   // openDoors is a RoomId[] used by older UI; keep it aligned with recording rooms.
-  preflight.openDoors = rooms.filter((room) => RECORDING_ROOM_IDS.has(room.id) && room.doorOpen).map((room) => room.id);
+  preflight.openDoors = rooms
+    .filter((room) => {
+      if (room.id === "studio") return room.doorOpen;
+      if (room.id === "music") return readings.music?.online && room.doorOpen;
+      return false;
+    })
+    .map((room) => room.id);
   const fleet = buildFleet(readings, now);
   const doorbellPressed = readings.hall.doorbell === true;
   return {

@@ -5,7 +5,7 @@ import { ChevronLeftIcon, ChevronRightIcon, PlayIcon } from "./icons";
 /** The PIANO Pi (Pianoteq stage rig) as a living card on the Home page. */
 export default function PianoRigCard() {
   const { pianoRig, sendPianoCue } = useStore();
-  if (!pianoRig) return null;
+  if (!pianoRig || !pianoRig.online) return null;
   const p = pianoRig;
 
   return (
