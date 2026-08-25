@@ -117,13 +117,11 @@ export class DoorState {
       this.door.strip_at = Date.now();
       const visual = String(body.visual ?? "");
       if (VISUALS.has(visual)) {
-        const current = this.door.visual;
-        const appHeld = current === "delivery" || current === "preflight"
-          || current === "sos" || current === "emergency";
+        // Command owns the picture. The strip may only interrupt for a door
+        // opening or the room going too loud. Posting leftover "ok"/"wait"
+        // used to wipe CLASS / ON AIR a few seconds after the dial moved.
         const urgent = visual === "door" || visual === "loud";
-        // Sensor urgency (door open / too loud) can interrupt a delivery.
-        // A quiet room must not wipe a courier code or a preflight.
-        if (urgent || !appHeld) this.door.visual = visual;
+        if (urgent) this.door.visual = visual;
       }
       if (Object.hasOwn(body, "dba")) {
         if (typeof body.dba === "number" && Number.isFinite(body.dba)) {

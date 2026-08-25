@@ -424,8 +424,13 @@ interval:
                 # see about the door and the room reaches the sign nowhere else
                 # — it arrives on ESP-NOW and dies here otherwise.
                 json: |-
-                  root["visual"] = id(g_sleep) ? std::string("off") : id(door_visual).state;
+                  root["device"] = "strip";
                   root["dba"] = id(g_dba);
+                  // Only interrupt Command for a door opening, a loud room, or sleep.
+                  // Echoing wait/ok/onair was overwriting the dial a few seconds later.
+                  std::string vis = id(g_sleep) ? std::string("off") : id(door_visual).state;
+                  if (vis == "door" || vis == "loud" || vis == "off")
+                    root["visual"] = vis;
                 on_response:
                   then:
                     - lambda: |-

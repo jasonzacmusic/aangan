@@ -100,7 +100,7 @@ export async function pushLedEspState(state: string): Promise<boolean> {
     await req(RELAY, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ visual }),
+      body: JSON.stringify({ device: "app", visual }),
     }, 6000);
   }
   if (ok) lastPushed = key;
