@@ -10,10 +10,9 @@
  *     https page may not read an http device; that is a browser rule and no
  *     code changes it. So this is attempted only on a LAN build.
  *
- *  2. RELAY — the app writes to /api/door and the devices poll it. Slower by a
- *     few seconds, but immune to mixed content, to mesh client isolation, and
- *     to whether the Mac is switched on. This is the one that works from a
- *     phone on mobile data, and it is how the deployed app talks to the door.
+ *  2. RELAY — the app writes to /api/door and the devices poll it. The screen
+ *     polls every 3s and radio-pings the strip so they change together. The
+ *     strip still HTTPS-polls as backup if the screen is off.
  *
  * Everything here is best effort and never throws. The door is an output, not a
  * source of truth — if it is unplugged the app carries on exactly as before.
@@ -167,8 +166,9 @@ export type DoorStatus = {
 };
 
 /**
- * A device counts as present if it has spoken recently. The strip polls every
- * 15s and the screen every 3s, so 45s is comfortably more than a missed turn
+ * A device counts as present if it has spoken recently. The screen polls every
+ * 3s and the strip every 15s (HTTPS backup; Command changes arrive over
+ * ESP-NOW from the screen). 45s is comfortably more than a missed turn
  * without being so long that a genuinely dead device looks alive for minutes.
  *
  * This replaces an earlier check that asked how long ago the STATE changed,

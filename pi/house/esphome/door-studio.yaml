@@ -34,6 +34,7 @@ substitutions:
   # reliably pass client-to-client traffic. Change this one line if the app
   # ever moves to a branded domain.
   relay_url: "https://aangan.nathanielschool.com/api/door"
+  display_mac: "3C:DC:75:F7:66:74"
 
 esphome:
   name: door-studio
@@ -123,6 +124,34 @@ espnow:
   auto_add_peer: true
   peers:
     - "8C:94:DF:69:20:20"
+    - ${display_mac}
+  on_receive:
+    - address: ${display_mac}
+      then:
+        - lambda: |-
+            if (size < 4) return;
+            std::string s(reinterpret_cast<const char *>(data), size);
+            if (s.compare(0, 3, "A1|") != 0) return;
+            s.erase(0, 3);
+            std::string at_s, st, vis, msg;
+            size_t a = s.find('|');
+            if (a == std::string::npos) return;
+            at_s = s.substr(0, a);
+            size_t b = s.find('|', a + 1);
+            if (b == std::string::npos) return;
+            st = s.substr(a + 1, b - a - 1);
+            size_t c = s.find('|', b + 1);
+            if (c == std::string::npos) return;
+            vis = s.substr(b + 1, c - b - 1);
+            msg = s.substr(c + 1);
+            double at = atof(at_s.c_str());
+            if (at > id(g_relay_at)) id(g_relay_at) = at;
+            id(g_now_hold_until) = millis() + 3000;
+            bool changed = false;
+            if (!st.empty() && st != id(g_state)) { id(g_state) = st; changed = true; }
+            if (vis != id(g_relay_visual)) { id(g_relay_visual) = vis; changed = true; }
+            if (msg != id(g_message)) { id(g_message) = msg; changed = true; }
+            if (changed) id(apply_hall).execute();
 
 packet_transport:
   - platform: espnow
@@ -188,6 +217,12 @@ globals:
     type: std::string
     restore_value: no
     initial_value: '""'
+  # After the 7" radio-pings a Command change, ignore in-flight HTTPS
+  # replies for a moment so a slow handshake cannot paint leftover Come In.
+  - id: g_now_hold_until
+    type: uint32_t
+    restore_value: no
+    initial_value: "0"
 
 script:
   - id: apply_hall
@@ -439,6 +474,7 @@ interval:
                         // fine here: only the gap between contacts matters, not
                         // the wall-clock time.
                         id(g_relay_ok_at) = millis();
+                        if (millis() < id(g_now_hold_until)) return;
                         json::parse_json(body, [](JsonObject root) -> bool {
                           // The app-pushed announcement word (delivery/preflight/sos/
                           // emergency) is read unconditionally: it can change without

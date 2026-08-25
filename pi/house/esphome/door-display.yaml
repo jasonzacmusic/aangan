@@ -6,7 +6,9 @@
 # /api/door, which is why the screen and the strip can never disagree.
 #
 # HOW IT IS WIRED: it is not. Plug the USB-C into a 5V supply and that is all.
-# The panel is bonded to the board at the factory.
+# The panel is bonded to the board at the factory. When Command changes, this
+# screen also radio-pings the strip (ESP-NOW) so the light does not wait on
+# its slow HTTPS poll. If the strip is unplugged, this screen still works.
 #
 # THE PIN MAP IS NOT NEGOTIABLE. Every number below is from Waveshare's own
 # documentation for this exact model, cross-checked against a working config.
@@ -20,6 +22,8 @@
 substitutions:
   # Same address the light board collects from.
   relay_url: "https://aangan.nathanielschool.com/api/door"
+  # ledESP / door-studio. Same 2.4 GHz house Wi-Fi, no cable.
+  strip_mac: "68:09:47:9D:B7:C4"
 
 esphome:
   name: door-display
@@ -105,6 +109,11 @@ http_request:
   watchdog_timeout: 30s
   verify_ssl: false   # payload is one public word; a CA bundle costs flash for nothing
 
+espnow:
+  auto_add_peer: true
+  peers:
+    - ${strip_mac}
+
 i2c:
   sda: GPIO8
   scl: GPIO9
@@ -177,6 +186,26 @@ globals:
     type: std::string
     restore_value: no
     initial_value: '""'
+  - id: g_sent_fp
+    type: std::string
+    restore_value: no
+    initial_value: '""'
+
+script:
+  - id: tell_strip
+    mode: restart
+    then:
+      - espnow.send:
+          address: ${strip_mac}
+          wait_for_sent: false
+          continue_on_error: true
+          data: !lambda |-
+            char buf[220];
+            snprintf(buf, sizeof(buf), "A1|%.0f|%s|%s|%s",
+                     id(g_at), id(g_state).c_str(), id(g_visual).c_str(),
+                     id(g_message).c_str());
+            std::string s(buf);
+            return std::vector<uint8_t>(s.begin(), s.end());
 
 font:
   # Fraunces is the app's serif, so the door and the app are visibly one thing.
@@ -437,6 +466,14 @@ interval:
                           if (root["dba"].is<float>()) id(g_dba) = root["dba"].as<float>();
                           return true;
                         });
+                        char fp[240];
+                        snprintf(fp, sizeof(fp), "%.0f|%s|%s|%s",
+                                 id(g_at), id(g_state).c_str(), id(g_visual).c_str(),
+                                 id(g_message).c_str());
+                        if (id(g_sent_fp) != fp) {
+                          id(g_sent_fp) = fp;
+                          id(tell_strip).execute();
+                        }
 
 text_sensor:
   - platform: wifi_info
