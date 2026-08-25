@@ -213,6 +213,11 @@ font:
     id: font_word
     size: 130
     glyphs: "ABCDEFGHIJKLMNOPQRSTUVWXYZ -—"
+  # EMERGENCY at 130 overruns the 800px panel on both sides.
+  - file: "gfonts://Fraunces@700"
+    id: font_word_long
+    size: 86
+    glyphs: "ABCDEFGHIJKLMNOPQRSTUVWXYZ -—"
   - file: "gfonts://Inter@500"
     id: font_sub
     size: 30
@@ -362,7 +367,10 @@ display:
         it.image(400, 6, id(nsm_moon), ImageAlign::TOP_CENTER);
       }
 
-      it.printf(400, 228, id(font_word), c_white, TextAlign::CENTER, "%s", word);
+      if (strcmp(word, "EMERGENCY") == 0)
+        it.printf(400, 228, id(font_word_long), c_white, TextAlign::CENTER, "%s", word);
+      else
+        it.printf(400, 228, id(font_word), c_white, TextAlign::CENTER, "%s", word);
       it.printf(400, 322, id(font_sub), c_dim, TextAlign::CENTER, "%s", sub);
       for (int k = 0; k < 16; k++) {
         int kx = 48 + k * 46;
