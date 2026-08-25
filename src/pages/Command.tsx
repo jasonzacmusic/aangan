@@ -4,6 +4,7 @@ import StateDial from "../components/StateDial";
 import DbMeter from "../components/DbMeter";
 import { timeSince, useStore } from "../state/store";
 import { ArrowRightIcon, ChevronDownIcon, SceneIcon, TuningForkIcon } from "../components/icons";
+import DoorCouple from "../components/DoorCouple";
 import { STUDIO_REST_DBA_AC_ON } from "../door/studioDoorPresets";
 
 interface Props {
@@ -39,6 +40,9 @@ export default function Command({ onSelect, onScene }: Props) {
       <StateDial info={stateInfo} committing={committing} chimes={settings.chimes} onSelect={onSelect} />
 
       <p className="mt-3 text-center text-sm text-paper/70 lg:text-base">{meta.tagline}</p>
+      <p className="mt-1 text-center font-mono text-[10px] uppercase tracking-[0.22em] text-dim">turn the dial · light and screen move as one</p>
+
+      <DoorCouple state={stateInfo.state} />
 
       {studio?.dbLevel != null && (
         <div className="mt-6 w-full rounded-2xl border border-line bg-surface/80 p-4">

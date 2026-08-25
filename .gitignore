@@ -1,11 +1,13 @@
 node_modules
 dist
 .DS_Store
+pi/house/esphome/.esphome/
 *.local
 .vercel
 .playwright-cli/
 output/playwright/
 .wrangler/
+data/
 
 # Never commit real ESPHome secrets (wifi password, OTA + API keys)
 pi/house/esphome/secrets.yaml

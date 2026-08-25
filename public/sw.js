@@ -30,8 +30,7 @@ self.addEventListener("install", (event) => {
           }
         } catch { /* one optional asset must not block install */ }
       }));
-      // Do not activate over a running recording session. The app displays a
-      // refresh prompt and sends SKIP_WAITING when Jason chooses the moment.
+      await self.skipWaiting();
     })()
   );
 });

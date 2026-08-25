@@ -1,0 +1,16 @@
+---
+description: When a build is done — deploy, publish, open the new app, remove old copies
+alwaysApply: true
+---
+
+# Ship, then clean
+
+A task is not done when files are written. Finish the live copy, then remove the old one.
+Jason Zac, 25-Aug-2026: standing rule — commit, push, and deploy every finished change in the same turn. Do not wait to be asked.
+
+1. **Commit and push**, then **deploy** the thing Jason will actually use (Vercel production, firmware on the boards, Mac installer). CLI/GitHub deploy is the agent's job, not his.
+2. **Publish** if it is an NSM product: source tag, installer or live URL, Labs/registry/page must agree. A finished app must not remain only on this Mac. Do not infer Labs *umbrella* approval from local OK — ask before the public Labs page changes.
+3. **Open the new copy** and prove it (launch the app, load the branded URL, confirm the boards). A green build is not proof.
+4. **Remove older copies** of *this* NSM app only: `/Applications`, `~/Applications`, Desktop, plugin folders, leftover installers. Move them to a uniquely named Trash folder. Never empty Trash. Never touch third-party apps. If two same-version copies have different code identities, keep both and say so.
+
+For Aangan door hardware: light and 7" screen stay **independent**. Both join house Wi-Fi and read the same `https://aangan.nathanielschool.com/api/door`. Do not leave a Mac USB script as the product. Do not commit `secrets.yaml`.

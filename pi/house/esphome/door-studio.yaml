@@ -65,8 +65,15 @@ ota:
     password: !secret ota_password
 
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
+  networks:
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_password
+    - ssid: "NSM-IoT"
+      password: !secret wifi_password
+    - ssid: "Nathaniel School 2.4GHz"
+      password: !secret wifi_password
+    - ssid: "Music Room 2.4"
+      password: !secret wifi_password
   power_save_mode: none
   reboot_timeout: 5min
   # DHCP, deliberately. This board had a static IP from the days when the app
@@ -133,6 +140,24 @@ globals:
     restore_value: no
     initial_value: '0'
 
+  # The visual the app pushed through the relay, if any. The strip is the
+  # source of truth for the sensor-driven words (ok/onair/door/loud/wait); the
+  # app is the source for the announcement words (delivery/preflight/sos/
+  # emergency). When this holds one of the announcement words the strip
+  # honours it instead of computing from its own sensors.
+  - id: g_relay_visual
+    type: std::string
+    restore_value: no
+    initial_value: '""'
+
+  # Last instant the relay answered 200. Used only to notice "offline" — the
+  # one state the relay itself can never report, because not being able to
+  # reach it is exactly what offline means.
+  - id: g_relay_ok_at
+    type: double
+    restore_value: no
+    initial_value: '0'
+
   - id: g_state
     type: std::string
     restore_value: no
@@ -155,6 +180,14 @@ globals:
     type: bool
     restore_value: no
     initial_value: "false"
+  - id: g_sleep
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: g_message
+    type: std::string
+    restore_value: no
+    initial_value: '""'
 
 script:
   - id: apply_hall
@@ -162,30 +195,73 @@ script:
     then:
       - lambda: |-
           std::string st = id(g_state);
+          std::string relay_vis = id(g_relay_visual);
+          id(g_sleep) = (relay_vis == "off" || relay_vis == "sleep" || id(g_message) == "__off__");
+          if (id(g_sleep)) {
+            auto puck_off = id(door_puck).turn_off();
+            puck_off.perform();
+            auto led_off = id(door_led).turn_off();
+            led_off.perform();
+            id(door_visual).publish_state("off");
+            id(door_mark).publish_state("SLEEP");
+            return;
+          }
+
           float dba = id(g_dba);
           bool door_open = id(remote_g1).state || id(remote_g2).state || id(g_door_test);
           bool recording = (st == "audio_rec" || st == "video_rec");
           bool too_loud  = (!isnan(dba) && dba >= id(g_warn));
 
-          // Jason's rules, 20 Aug:
-          //   recording          -> solid red
-          //   door open mid-take -> red, FAST flash   (most urgent)
-          //   too loud mid-take  -> red, SLOW pulse
-          //   class              -> amber
+          // The one state the relay can never report: not being able to reach
+          // it is exactly what "offline" means. 45s is three missed 15s polls.
+          bool offline = (millis() - id(g_relay_ok_at)) > 45000;
+
+          // The app drives the announcement words (delivery/preflight/sos/
+          // emergency) through the relay; the strip drives the sensor words
+          // (ok/onair/door/loud/wait) from what it can see. An app-driven
+          // word always wins — a delivery or a preflight is a choice somebody
+          // made, and must not be overwritten by a quiet room or a shut door.
+          bool app_driven = (relay_vis == "delivery" || relay_vis == "preflight"
+                            || relay_vis == "sos" || relay_vis == "emergency");
+
+          // Jason's rules, 20 Aug, extended to the full door vocabulary:
+          //   offline             -> dim grey, slow pulse   (no link to the house)
+          //   delivery            -> blue                  (courier OTP at the door)
+          //   preflight           -> cyan, slow pulse      (silencing the room)
+          //   sos / emergency     -> purple, fast flash   (sos names who)
+          //   recording           -> solid red
+          //   door open mid-take  -> red, FAST flash      (most urgent)
+          //   too loud mid-take   -> red, SLOW pulse
+          //   class / meeting     -> amber
           //   available          -> dim green
-          //   emergency          -> purple, overrides everything
           unsigned long rgb = 0x2FBF71;   // green
           float bright      = 0.22f;      // dim when nothing is happening
           const char *fx    = "None";
           const char *visual = "ok";
-          const char *mark   = "OK";
+          const char *mark   = "COME IN";
 
-          if (st == "emergency") {
+          if (offline) {
+            rgb = 0x5A5A60; bright = 0.5f; fx = "slow_pulse";
+            visual = "offline"; mark = "OFFLINE";
+          } else if (app_driven) {
+            // Compare the std::string, not the c_str() pointer — two
+            // "delivery" literals are not the same address, so pointer
+            // equality would always fall through to emergency purple.
+            if (relay_vis == "delivery") {
+              rgb = 0x2D72E6; bright = 0.9f; mark = "DELIVERY"; visual = "delivery";
+            } else if (relay_vis == "preflight") {
+              rgb = 0x22D3EE; bright = 0.8f; fx = "slow_pulse"; mark = "PREP"; visual = "preflight";
+            } else if (relay_vis == "sos") {
+              rgb = 0x7C3AED; bright = 1.0f; fx = "fast_flash"; mark = "SOS"; visual = "sos";
+            } else {
+              rgb = 0x7C3AED; bright = 1.0f; fx = "fast_flash"; mark = "EMERGENCY"; visual = "emergency";
+            }
+          } else if (st == "emergency") {
             rgb = 0x7C3AED; bright = 1.0f; fx = "fast_flash";
-            visual = "sos";  mark = "SOS";
+            visual = "emergency"; mark = "EMERGENCY";
           } else if (recording) {
             rgb = 0xD93036; bright = 1.0f;
-            visual = "onair"; mark = "ON AIR";
+            visual = "onair"; mark = (st == "video_rec") ? "FILMING" : "ON AIR";
             if (door_open) {            // urgent beats loud
               fx = "fast_flash"; visual = "door"; mark = "DOOR OPEN";
             } else if (too_loud) {
@@ -341,29 +417,51 @@ interval:
             - http_request.post:
                 url: ${relay_url}
                 capture_response: true
-                max_response_buffer_size: 256
+                max_response_buffer_size: 384
                 request_headers:
                   Content-Type: application/json
                 # Reporting and collecting in the same call. What this board can
                 # see about the door and the room reaches the sign nowhere else
                 # — it arrives on ESP-NOW and dies here otherwise.
                 json: |-
-                  root["visual"] = id(door_visual).state;
+                  root["visual"] = id(g_sleep) ? std::string("off") : id(door_visual).state;
                   root["dba"] = id(g_dba);
                 on_response:
                   then:
                     - lambda: |-
                         if (response->status_code != 200) return;
+                        // We heard the relay — so we are not offline. millis() is
+                        // fine here: only the gap between contacts matters, not
+                        // the wall-clock time.
+                        id(g_relay_ok_at) = millis();
                         json::parse_json(body, [](JsonObject root) -> bool {
-                          if (!root["state"].is<const char*>()) return false;
+                          // The app-pushed announcement word (delivery/preflight/sos/
+                          // emergency) is read unconditionally: it can change without
+                          // the studio state changing, so the state stamp guard must
+                          // not gate it.
+                          if (root["message"].is<const char*>()) {
+                            std::string msg = root["message"].as<std::string>();
+                            if (msg != id(g_message)) {
+                              id(g_message) = msg;
+                              id(apply_hall).execute();
+                            }
+                          }
+                          if (root["visual"].is<const char*>()) {
+                            std::string v = root["visual"].as<std::string>();
+                            if (v != id(g_relay_visual)) {
+                              id(g_relay_visual) = v;
+                              id(apply_hall).execute();
+                            }
+                          }
+                          if (!root["state"].is<const char*>()) return true;
                           // Stamp of 0, missing, or not newer than what we
                           // already have means this instance knows less than
                           // we do. Say nothing and wait for a better answer.
                           double at = root["at"].is<double>() ? root["at"].as<double>() : 0.0;
-                          if (at <= id(g_relay_at)) return false;
+                          if (at <= id(g_relay_at)) return true;
                           id(g_relay_at) = at;
                           std::string next = root["state"].as<std::string>();
-                          if (next.empty() || next == id(g_state)) return false;
+                          if (next.empty() || next == id(g_state)) return true;
                           id(g_state) = next;
                           id(apply_hall).execute();
                           return true;

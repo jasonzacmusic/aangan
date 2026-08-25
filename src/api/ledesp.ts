@@ -56,14 +56,32 @@ async function req(url: string, init: RequestInit, ms: number): Promise<Response
  * together, because both read the value this writes.
  * Safe to call on every change; unchanged repeats are dropped.
  */
+const STATE_VISUAL: Record<string, string> = {
+  available: "ok",
+  class: "wait",
+  meeting: "wait",
+  audio_rec: "onair",
+  video_rec: "onair",
+  emergency: "emergency",
+};
+
 export async function pushLedEspState(state: string): Promise<boolean> {
-  if (!state || state === lastPushed) return true;
+  if (!state) return true;
+
+  const visual = STATE_VISUAL[state];
+  const key = visual ? `${state}|${visual}` : state;
+
+  await req(RELAY, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ message: "" }),
+  }, 6000);
 
   const roads = [
     req(RELAY, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ state }),
+      body: JSON.stringify(visual ? { state, visual } : { state }),
     }, 6000),
   ];
 
@@ -75,10 +93,57 @@ export async function pushLedEspState(state: string): Promise<boolean> {
   }
 
   const ok = (await Promise.all(roads)).some((r) => r !== null && r.ok);
-  // Only remember it as sent if something accepted it, so a failed push is
-  // retried on the next change rather than being deduplicated away.
-  if (ok) lastPushed = state;
+  // Live Cloudflare still ignores visual on a state POST, so a leftover SOS
+  // never clears. A second write with no state is the strip-shaped report the
+  // current worker does accept.
+  if (ok && visual) {
+    await req(RELAY, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ visual }),
+    }, 6000);
+  }
+  if (ok) lastPushed = key;
   return ok;
+}
+
+/** Put an announcement on the door without changing studio state. */
+export async function pushDoorVisual(visual: string): Promise<boolean> {
+  lastPushed = null;
+  const res = await req(RELAY, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ device: "app", visual }),
+  }, 6000);
+  const extra = await req(RELAY, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ visual }),
+  }, 6000);
+  return (res !== null && res.ok) || (extra !== null && extra.ok);
+}
+
+/** Screen backlight off, strip off. Wi-Fi stays up so the dial can wake them. */
+export async function pushDoorSleep(): Promise<boolean> {
+  lastPushed = null;
+  const writes = await Promise.all([
+    req(RELAY, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message: "__off__" }),
+    }, 6000),
+    req(RELAY, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ visual: "off" }),
+    }, 6000),
+    req(RELAY, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ device: "app", visual: "off" }),
+    }, 6000),
+  ]);
+  return writes.some((r) => r !== null && r.ok);
 }
 
 /** Put a line of text on the door. Empty clears it. */
@@ -92,12 +157,12 @@ export async function pushDoorMessage(message: string): Promise<boolean> {
 }
 
 export type DoorStatus = {
-  /** Is the relay itself answering? */
   reachable: boolean;
-  /** Each device, by when it last checked in. null = unknown, not faulty. */
   strip: boolean | null;
   screen: boolean | null;
   state: string | null;
+  visual: string | null;
+  message: string | null;
   dba: number | null;
 };
 
@@ -115,7 +180,7 @@ const PRESENT_WITHIN_S = 45;
 export async function doorStatus(): Promise<DoorStatus> {
   const res = await req(RELAY, { cache: "no-store" }, 6000);
   if (!res || !res.ok) {
-    return { reachable: false, strip: null, screen: null, state: null, dba: null };
+    return { reachable: false, strip: null, screen: null, state: null, visual: null, message: null, dba: null };
   }
   try {
     const b = await res.json();
@@ -126,9 +191,11 @@ export async function doorStatus(): Promise<DoorStatus> {
       strip: seen(b?.strip_age_s),
       screen: seen(b?.screen_age_s),
       state: typeof b?.state === "string" ? b.state : null,
+      visual: typeof b?.visual === "string" ? b.visual : null,
+      message: typeof b?.message === "string" ? b.message : null,
       dba: typeof b?.dba === "number" ? b.dba : null,
     };
   } catch {
-    return { reachable: false, strip: null, screen: null, state: null, dba: null };
+    return { reachable: false, strip: null, screen: null, state: null, visual: null, message: null, dba: null };
   }
 }

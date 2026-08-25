@@ -131,8 +131,7 @@ export default function App() {
   const meta = STATE_META[stateInfo.state];
 
   const requestState = (state: StudioState) => {
-    if (state === stateInfo.state) return;
-    if (STATE_META[state].needsConfirm) setPending({ state });
+    if (STATE_META[state].needsConfirm && state !== stateInfo.state) setPending({ state });
     else void setStudioState(state);
   };
 

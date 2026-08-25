@@ -1,0 +1,22 @@
+---
+description: Standing rule — when a change is done, commit, push, and make it live. Jason Zac, 25-Aug-2026.
+alwaysApply: true
+---
+
+# Standing rule: ship every finished change
+
+Jason Zac, 25-Aug-2026. Applies to **every Cursor project**. Supersedes “only commit when asked”.
+
+When you are **done** with a change, make it **live in the same turn**. Do not wait for “commit”, “push”, or “deploy”. Do not leave finished work only on this Mac.
+
+1. **Commit** the finished change. No secrets (`.env`, keys, `secrets.yaml`, Wi-Fi passwords).
+2. **Push** to GitHub. Work on a `cursor/` branch while iterating. When the change is done, merge to `main` once and push `main` (that is what makes Vercel production builds).
+3. **Deploy the copy Jason will use:**
+   - Sites already on Vercel: production deploy, then open the branded `*.nathanielschool.com` URL. Never print a `*.vercel.app` link on a public surface.
+   - Firmware / hardware: flash the boards he will actually use.
+   - Mac apps: install the new build on this Mac. Nathaniel Labs public page/registry still needs him to say **publish this build**.
+4. **Prove it** (load the live URL, launch the app, or confirm the boards). Then Trash older copies of *this* NSM app only. Never empty Trash.
+
+Still never: force-push `main`, overwrite a published version tag, commit secrets, or empty Trash.
+
+Hold only if he says “local only”, “don’t push”, or “don’t publish”.

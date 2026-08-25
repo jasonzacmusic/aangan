@@ -9,7 +9,21 @@ const STATES = new Set([
 // Every word the light board can say. Listing only three of them meant "onair"
 // (door shut again mid-take), "wait" and "sos" were dropped, so the screen kept
 // flashing DOOR OPEN for the rest of the take.
-const VISUALS = new Set(["ok", "loud", "door", "onair", "wait", "sos"]);
+// The full Aangan door vocabulary — the "holy matrimony" set: the light and
+// the screen both speak exactly these words, so they can never disagree.
+//   ok        available, nothing happening
+//   wait      class / meeting
+//   onair     audio_rec / video_rec, room quiet and door shut
+//   door      door open mid-take          (red, fast flash)
+//   loud      too loud mid-take            (red, slow pulse)
+//   sos       family SOS                   (purple, fast flash, names who)
+//   emergency panic / guarded emergency   (purple, fast flash)
+//   delivery  courier OTP hand-off at the door (blue)
+//   preflight  "silence the room" preparing a take   (cyan, slow pulse)
+const VISUALS = new Set([
+  "ok", "loud", "door", "onair", "wait", "sos",
+  "emergency", "delivery", "preflight", "off",
+]);
 const MESSAGE_MAX = 80;
 const STORAGE_KEY = "door";
 
@@ -82,11 +96,35 @@ export class DoorState {
       });
     }
 
+    // The website / app pushing an announcement (delivery, preflight, sos)
+    // without changing the studio state. Must NOT be treated as a strip
+    // check-in — that would mark the light "live" when it is not.
+    if (body && body.device === "app") {
+      if (typeof body.visual === "string" && VISUALS.has(body.visual)) {
+        this.door.visual = body.visual;
+      }
+      await this.persist();
+      return json({
+        ok: true,
+        state: this.door.state,
+        visual: this.door.visual,
+        at: this.door.at,
+      });
+    }
+
     // A strip report can change only observations, never the studio state.
     if (body && body.state === undefined) {
       this.door.strip_at = Date.now();
       const visual = String(body.visual ?? "");
-      if (VISUALS.has(visual)) this.door.visual = visual;
+      if (VISUALS.has(visual)) {
+        const current = this.door.visual;
+        const appHeld = current === "delivery" || current === "preflight"
+          || current === "sos" || current === "emergency";
+        const urgent = visual === "door" || visual === "loud";
+        // Sensor urgency (door open / too loud) can interrupt a delivery.
+        // A quiet room must not wipe a courier code or a preflight.
+        if (urgent || !appHeld) this.door.visual = visual;
+      }
       if (Object.hasOwn(body, "dba")) {
         if (typeof body.dba === "number" && Number.isFinite(body.dba)) {
           this.door.dba = Math.round(body.dba * 10) / 10;
@@ -110,8 +148,29 @@ export class DoorState {
 
     this.door.state = state;
     this.door.at = Date.now();
+    // Turning the dial always resets the picture. A leftover SOS / delivery
+    // visual must not keep CLASS off the boards after Jason has moved on.
+    const fromState = {
+      available: "ok",
+      class: "wait",
+      meeting: "wait",
+      audio_rec: "onair",
+      video_rec: "onair",
+      emergency: "emergency",
+    };
+    if (typeof body.visual === "string" && VISUALS.has(body.visual)) {
+      this.door.visual = body.visual;
+    } else {
+      this.door.visual = fromState[state];
+    }
     await this.persist();
-    return json({ ok: true, state: this.door.state, at: this.door.at, store: "durable-object" });
+    return json({
+      ok: true,
+      state: this.door.state,
+      visual: this.door.visual,
+      at: this.door.at,
+      store: "durable-object",
+    });
   }
 
   read() {

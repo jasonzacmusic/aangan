@@ -57,8 +57,7 @@ export default function LedEspBadge() {
       (s.dba != null ? ` · ${s.dba} dBA at the door` : "");
 
   return (
-    <a
-      href="/door.html"
+    <span
       title={title}
       style={{
         display: "inline-flex",
@@ -69,7 +68,6 @@ export default function LedEspBadge() {
         fontSize: 12,
         fontWeight: 600,
         letterSpacing: ".02em",
-        textDecoration: "none",
         color: "#d8d8de",
         background: "rgba(255,255,255,.06)",
         border: "1px solid rgba(255,255,255,.13)",
@@ -83,6 +81,6 @@ export default function LedEspBadge() {
           <span><Dot state={s.screen} />screen</span>
         </>
       )}
-    </a>
+    </span>
   );
 }

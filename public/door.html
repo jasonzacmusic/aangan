@@ -9,33 +9,34 @@
 <link rel="icon" type="image/png" href="/icons/icon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <style>
-  /* Same restraint as the sign: plain ES5-friendly CSS, because this gets
-     opened on whatever phone is nearest, including old ones. */
   *{margin:0;padding:0;-webkit-box-sizing:border-box;box-sizing:border-box}
   html,body{min-height:100%;background:#0b0b0c;color:#f4f2ef;
     font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,sans-serif;
     -webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
-  body{padding:26px 20px 40px;max-width:560px;margin:0 auto}
+  body{padding:26px 20px 48px;max-width:560px;margin:0 auto}
   #logo{height:34px;width:auto;display:block;margin:0 auto 6px;opacity:.92}
   h1{font-family:Georgia,"Times New Roman",serif;font-weight:normal;
      font-size:26px;text-align:center;letter-spacing:-.01em;margin-bottom:4px}
-  .hint{text-align:center;font-size:13px;opacity:.45;margin-bottom:24px}
+  .hint{text-align:center;font-size:13px;opacity:.45;margin-bottom:22px}
 
-  /* The live strip mirrors the door itself, so you can see what you just did
-     without walking to it. */
-  #now{border-radius:16px;padding:18px 18px 16px;margin-bottom:26px;
+  #now{border-radius:18px;padding:20px 18px 16px;margin-bottom:22px;
        background:#17171a;border:1px solid rgba(255,255,255,.09);
        -webkit-transition:background-color .5s ease;transition:background-color .5s ease}
-  #nowWord{font-family:Georgia,serif;font-size:30px;line-height:1.05}
-  #nowSub{font-size:13px;opacity:.72;margin-top:5px}
-  #nowMeta{font-size:11px;opacity:.42;margin-top:9px;letter-spacing:.09em;
+  #nowWord{font-family:Georgia,serif;font-size:32px;line-height:1.05}
+  #nowSub{font-size:13px;opacity:.72;margin-top:6px}
+  #nowMeta{font-size:11px;opacity:.42;margin-top:10px;letter-spacing:.09em;
            text-transform:uppercase;font-family:"SF Mono",Menlo,monospace}
+  #strip{display:-webkit-flex;display:flex;-webkit-justify-content:space-between;
+         justify-content:space-between;margin-top:16px;padding:0 4px}
+  #strip i{display:block;width:14px;height:14px;border-radius:4px;
+           background:rgba(255,255,255,.18);-webkit-box-flex:0;flex:0 0 14px}
 
   .label{font-size:11px;letter-spacing:.2em;text-transform:uppercase;
          opacity:.42;margin:0 0 10px 2px;font-weight:700}
   .grid{display:-webkit-box;display:-webkit-flex;display:flex;
-        -webkit-flex-wrap:wrap;flex-wrap:wrap;margin:0 -5px 24px}
+        -webkit-flex-wrap:wrap;flex-wrap:wrap;margin:0 -5px 22px}
   .cell{width:50%;padding:5px}
+  .cell.third{width:33.33%}
   button{display:block;width:100%;border:0;border-radius:14px;padding:17px 10px;
     font-size:15px;font-weight:700;letter-spacing:.03em;color:#fff;cursor:pointer;
     font-family:inherit;-webkit-appearance:none;
@@ -66,16 +67,20 @@
 
 <img id="logo" src="/nsm-full-white.png" alt="Nathaniel School of Music">
 <h1>Studio Door</h1>
-<div class="hint">Whatever you set here shows on the door and drives the light.</div>
+<div class="hint">One tap. The light and the screen change together.</div>
 
 <div id="now">
   <div id="nowWord">&mdash;</div>
   <div id="nowSub">reading the door&hellip;</div>
+  <div id="strip" aria-hidden="true"></div>
   <div id="nowMeta"></div>
 </div>
 
 <div class="label">Set the studio</div>
 <div class="grid" id="states"></div>
+
+<div class="label">Announcements</div>
+<div class="grid" id="announce"></div>
 
 <div class="label">Message on the door</div>
 <textarea id="msg" rows="2" maxlength="80" placeholder="e.g. Back at 4 — please wait downstairs"></textarea>
@@ -89,29 +94,38 @@
 <div id="toast"></div>
 
 <script>
-/* Studio door control.
- *
- * Deliberately a plain page and not part of the React app: this link gets sent
- * to whoever is nearest — an intern's phone, an old iPad — and it has to open
- * and work first time on anything. It writes to the same /api/door the light
- * board polls, so pressing a button here moves the actual strip.
- */
 (function () {
   var STATES = [
-    { id:"audio_rec", label:"ON AIR",    key:"recording audio",  bg:"#A5121A" },
-    { id:"video_rec", label:"FILMING",   key:"recording video",  bg:"#A5121A" },
-    { id:"class",     label:"CLASS",     key:"lesson running",   bg:"#A96410" },
-    { id:"meeting",   label:"MEETING",   key:"please wait",      bg:"#A96410" },
-    { id:"available", label:"COME IN",   key:"studio is free",   bg:"#1B5B3C" },
-    { id:"emergency", label:"EMERGENCY", key:"do not enter",     bg:"#5B21B6" }
+    { id:"audio_rec", label:"ON AIR",    key:"recording audio",  bg:"#A5121A", visual:"onair" },
+    { id:"video_rec", label:"FILMING",   key:"recording video",  bg:"#A5121A", visual:"onair" },
+    { id:"class",     label:"CLASS",     key:"lesson running",   bg:"#A96410", visual:"wait" },
+    { id:"meeting",   label:"MEETING",   key:"please wait",      bg:"#A96410", visual:"wait" },
+    { id:"available", label:"COME IN",   key:"studio is free",   bg:"#1B5B3C", visual:"ok" },
+    { id:"emergency", label:"EMERGENCY", key:"do not enter",     bg:"#5B21B6", visual:"emergency" }
   ];
+  var ANNOUNCE = [
+    { id:"delivery",  label:"DELIVERY", key:"courier OTP",     bg:"#1E4FA0" },
+    { id:"preflight", label:"PREP",     key:"silence the room", bg:"#0E7A88" },
+    { id:"sos",       label:"SOS",      key:"family needs help", bg:"#5B21B6" },
+    { id:"ok",        label:"CLEAR",    key:"drop announcement", bg:"#26262b" }
+  ];
+  var LOOK = {
+    ok:         { word:"COME IN",   sub:"The studio is free",           bg:"#1B5B3C" },
+    wait:       { word:"WAIT",      sub:"Lesson or meeting in progress", bg:"#A96410" },
+    onair:      { word:"ON AIR",    sub:"Recording — please do not enter", bg:"#A5121A" },
+    door:       { word:"DOOR OPEN", sub:"Please close it",              bg:"#A5121A" },
+    loud:       { word:"TOO LOUD",  sub:"Close the door",               bg:"#A5121A" },
+    sos:        { word:"SOS",       sub:"A family member needs help",   bg:"#5B21B6" },
+    emergency:  { word:"EMERGENCY", sub:"Do not enter",                 bg:"#5B21B6" },
+    delivery:   { word:"DELIVERY",  sub:"Courier OTP at the door",      bg:"#1E4FA0" },
+    preflight:  { word:"PREP",      sub:"Silencing the room",           bg:"#0E7A88" }
+  };
   var QUICK = ["Back at 4", "In a take — knock please", "Class till 6",
                "Come in, door is open", "Tuning — 10 minutes"];
 
   var el = function (id) { return document.getElementById(id); };
   var current = "";
-  /* Same guard as the sign: never let an instance that has not heard of the
-     note convince us the note was cleared. */
+  var currentVisual = "ok";
   var bestMat = 0, bestMsg = "";
   function note(body) {
     var mat = (typeof body.mat === "number") ? body.mat : 0;
@@ -140,6 +154,18 @@
     x.send(JSON.stringify(payload));
   }
 
+  function paintStrip(bg) {
+    var host = el("strip"), i, d;
+    if (!host.childNodes.length) {
+      for (i = 0; i < 16; i++) host.appendChild(document.createElement("i"));
+    }
+    for (i = 0; i < host.childNodes.length; i++) {
+      d = host.childNodes[i];
+      d.style.background = bg;
+      d.style.boxShadow = "0 0 10px " + bg;
+    }
+  }
+
   function build() {
     var host = el("states"), i;
     for (i = 0; i < STATES.length; i++) {
@@ -150,9 +176,22 @@
         b.style.background = s.bg;
         b.setAttribute("data-id", s.id);
         b.innerHTML = s.label + '<span class="k">' + s.key + "</span>";
-        b.onclick = function () { post({ state: s.id }, s.label + " is on the door"); };
+        b.onclick = function () { post({ state: s.id, visual: s.visual }, s.label + " is on the door"); };
         cell.appendChild(b); host.appendChild(cell);
       })(STATES[i]);
+    }
+    var ah = el("announce");
+    for (i = 0; i < ANNOUNCE.length; i++) {
+      (function (s) {
+        var cell = document.createElement("div");
+        cell.className = "cell";
+        var b = document.createElement("button");
+        b.style.background = s.bg;
+        b.setAttribute("data-visual", s.id);
+        b.innerHTML = s.label + '<span class="k">' + s.key + "</span>";
+        b.onclick = function () { post({ device: "app", visual: s.id }, s.label + " on the door"); };
+        cell.appendChild(b); ah.appendChild(cell);
+      })(ANNOUNCE[i]);
     }
     var q = el("quick");
     for (i = 0; i < QUICK.length; i++) {
@@ -184,19 +223,19 @@
       try { b = JSON.parse(x.responseText); } catch (e) { return; }
       if (!b || typeof b.state !== "string") return;
 
-      var s = null, i;
+      var s = null, i, look;
       for (i = 0; i < STATES.length; i++) if (STATES[i].id === b.state) s = STATES[i];
       if (!s) return;
 
       current = b.state;
-      el("now").style.backgroundColor = s.bg;
-      el("nowWord").innerHTML = s.label;
+      currentVisual = (typeof b.visual === "string" && LOOK[b.visual]) ? b.visual : s.visual;
+      look = LOOK[currentVisual] || s;
+      el("now").style.backgroundColor = look.bg;
+      el("nowWord").innerHTML = look.word;
       var msg = note(b);
-      /* textContent so a note typed on a phone cannot inject markup here. */
-      el("nowSub").textContent = msg ? msg : s.key;
-      /* The strip and door display are independent boards, so report their
-         own check-ins. dBA is optional telemetry from the room sensor board;
-         its absence must not make healthy door hardware look offline. */
+      el("nowSub").textContent = msg ? msg : look.sub;
+      paintStrip(look.bg);
+
       var health = [];
       health.push((typeof b.strip_age_s === "number" && b.strip_age_s <= 45)
         ? "strip live" : "strip waiting");
@@ -208,6 +247,10 @@
       var btns = el("states").getElementsByTagName("button");
       for (i = 0; i < btns.length; i++) {
         btns[i].className = btns[i].getAttribute("data-id") === current ? "on" : "";
+      }
+      var ab = el("announce").getElementsByTagName("button");
+      for (i = 0; i < ab.length; i++) {
+        ab[i].className = ab[i].getAttribute("data-visual") === currentVisual ? "on" : "";
       }
     };
     x.send();

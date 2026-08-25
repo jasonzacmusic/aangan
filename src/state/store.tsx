@@ -3,6 +3,7 @@ import { api, DATA_SOURCE } from "../api/api";
 import {
   ActivityEvent,
   AirState,
+  DEFAULT_DISPLAYS,
   DEFAULT_SCENES,
   Delivery,
   DeliveryInput,
@@ -27,6 +28,7 @@ import {
   UtilityAction,
 } from "../api/types";
 import { DEFAULT_DOOR_WARN_DBA } from "../door/studioDoorPresets";
+import { pushDoorMessage, pushDoorVisual, pushLedEspState } from "../api/ledesp";
 import { idbGet, idbSet } from "./idb";
 import { haptic, playReferenceTone, playStateChime } from "./audio";
 
@@ -206,6 +208,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       api.setDbThreshold(restored.dbThreshold);
       api.setDoorWarnDb?.(restored.doorWarnDb);
 
+      // Never trap the whole app on "tuning in". The studio door talks to
+      // /api/door, which does not need the Pi. Show Command immediately; a
+      // live house snapshot overwrites this the moment it arrives.
+      setStateInfo({ state: "available", setBy: "Aangan", since: Date.now() });
+      setDisplays(DEFAULT_DISPLAYS);
+      setSafety({
+        fire: false, gas: false, panic: false,
+        leakKitchen: false, leakBath: false, leakGeyser: false, perimeter: false,
+      });
+      setPreflight({
+        doorsClosed: true, quietEnough: true, sensorsHealthy: false, safetyClear: true,
+        ready: false, openDoors: [], dbLevel: 0, dbThreshold: restored.dbThreshold,
+      });
+
       let attempt = 0;
       while (!cancelled) {
         setConnectionStatus(attempt === 0 ? "connecting" : "reconnecting");
@@ -321,24 +337,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     async (target: StudioState, action: () => Promise<StudioStateInfo>) => {
       setCommitting(true);
       setLastError(null);
+      // The dial IS the door. Push the couple first, then try the rest of
+      // the house. A sleeping Pi must never leave the light and screen behind.
+      void pushLedEspState(target);
+      setStateInfo({ state: target, setBy: "Jason Zac", since: Date.now() });
+      playStateChime(target, settingsRef.current.chimes);
+      haptic(target === "emergency" ? [60, 40, 60] : [12, 30, 24]);
       try {
         const info = await action();
         setStateInfo(info);
         setConnected(true);
         setConnectionStatus("online");
-        playStateChime(target, settingsRef.current.chimes);
-        haptic(target === "emergency" ? [60, 40, 60] : [12, 30, 24]);
         if (target === "available" && prepRef.current?.active) {
           const restored = await api.restorePreflight();
           setPreflightPrep(restored);
           prepRef.current = restored;
         }
-        const nextPreflight = await api.getPreflight();
-        setPreflight(nextPreflight);
+        try {
+          setPreflight(await api.getPreflight());
+        } catch {
+          /* door already moved */
+        }
       } catch {
         setConnected(false);
         setConnectionStatus("offline");
-        setLastError(DATA_SOURCE === "live" ? "Pi unreachable — command not sent. Reconnecting…" : "That command did not complete. Please try once more.");
       } finally {
         finishCommit();
       }
@@ -366,6 +388,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const triggerSos = useCallback(
     (who: string, message: string) =>
       commitState("emergency", async () => {
+        void pushDoorVisual("sos");
         const next = await api.triggerSos(who, message);
         setSos(next);
         return api.getState();
@@ -417,6 +440,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       startedAt: Date.now(),
     }));
     try {
+      void pushDoorVisual("preflight");
       const prep = await api.preparePreflight();
       prepRef.current = prep;
       setPreflightPrep(prep);
@@ -429,6 +453,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const restoreStudio = useCallback(async () => {
     try {
+      void pushDoorVisual("ok");
       const prep = await api.restorePreflight();
       prepRef.current = prep;
       setPreflightPrep(prep);
@@ -489,6 +514,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const postDelivery = useCallback(async (input: DeliveryInput) => {
     try {
+      void pushDoorVisual("delivery");
+      void pushDoorMessage(`${input.courier} · ${input.otp}`);
       setDeliveryState(await api.setDelivery(input));
     } catch {
       setLastError("The door display did not accept the delivery hand-off.");
@@ -497,6 +524,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const clearDelivery = useCallback(async () => {
     try {
+      void pushDoorVisual("ok");
+      void pushDoorMessage("");
       await api.clearDelivery();
       setDeliveryState(null);
     } catch {
