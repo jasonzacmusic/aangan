@@ -122,6 +122,9 @@ export class LiveAdapter implements ApiAdapter {
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private sseRetryTimer: ReturnType<typeof setTimeout> | null = null;
   private connectionState: ConnectionState | null = null;
+  private pollInFlight = false;
+  private pollEpoch = 0;
+  private pollCount = 0;
 
   constructor(baseUrl: string) {
     this.base = baseUrl.replace(/\/$/, "");
@@ -277,6 +280,12 @@ export class LiveAdapter implements ApiAdapter {
   }
 
   private async pollOnce() {
+    // One poll at a time, and a poll that started before SSE (re)opened must
+    // never land its stale snapshot on top of fresher stream data.
+    if (this.pollInFlight) return;
+    this.pollInFlight = true;
+    const epoch = this.pollEpoch;
+    const tick = this.pollCount++;
     try {
       const [state, rooms, safety, preflight] = await Promise.all([
         this.getState(),
@@ -284,6 +293,9 @@ export class LiveAdapter implements ApiAdapter {
         this.getSafety(),
         this.getPreflight(),
       ]);
+      // Doorbell always; full history only every 10th tick (~30 s) — it is 40
+      // events per response and SSE normally carries it item by item.
+      const wantHistory = tick % 10 === 0;
       const optional = await Promise.allSettled([
         this.getPreflightPrep(),
         this.getUtilities(),
@@ -293,11 +305,14 @@ export class LiveAdapter implements ApiAdapter {
         this.getSos(),
         this.getFleet(),
         this.getAir(),
+        this.getDoorbell(),
+        wantHistory ? this.getHistory() : Promise.reject(new Error("skipped")),
       ]);
+      if (epoch !== this.pollEpoch) return;
       this.emit({ type: "state", state });
       this.emit({ type: "rooms", rooms });
       this.emit({ type: "safety", safety });
-      const [prep, utilities, piano, delivery, displays, sos, fleet, air] = optional;
+      const [prep, utilities, piano, delivery, displays, sos, fleet, air, doorbell, history] = optional;
       if (prep.status === "fulfilled") this.emit({ type: "preflight", preflight, prep: prep.value });
       if (utilities.status === "fulfilled") this.emit({ type: "utilities", utilities: utilities.value });
       if (piano.status === "fulfilled") this.emit({ type: "piano", piano: piano.value });
@@ -306,9 +321,15 @@ export class LiveAdapter implements ApiAdapter {
       if (sos.status === "fulfilled") this.emit({ type: "sos", sos: sos.value });
       if (fleet.status === "fulfilled") this.emit({ type: "fleet", fleet: fleet.value });
       if (air.status === "fulfilled") this.emit({ type: "air", air: air.value });
+      if (doorbell.status === "fulfilled") this.emit({ type: "doorbell", doorbell: doorbell.value });
+      if (history.status === "fulfilled") {
+        for (const event of history.value) this.emit({ type: "history", event });
+      }
       this.setConnection("online");
     } catch {
-      this.setConnection("offline");
+      if (epoch === this.pollEpoch) this.setConnection("offline");
+    } finally {
+      this.pollInFlight = false;
     }
   }
 
@@ -364,6 +385,7 @@ export class LiveAdapter implements ApiAdapter {
         }
       });
       es.onopen = () => {
+        this.pollEpoch += 1; // any in-flight poll snapshot is now stale
         this.stopPolling();
         this.setConnection("online");
       };
@@ -398,13 +420,15 @@ export class LiveAdapter implements ApiAdapter {
 
   setDbThreshold(v: number) {
     void this.post<{ ok: true }>("/api/settings/db-threshold", { value: v }).catch(() => {
-      this.setConnection("reconnecting");
+      // A healthy SSE stream means the connection is fine; one failed settings
+      // write must not latch the whole app into "reconnecting".
+      if (!this.es) this.setConnection("reconnecting");
     });
   }
 
   setDoorWarnDb(v: number) {
     void this.post<{ ok: true }>("/api/settings/door-warn-db", { value: v }).catch(() => {
-      this.setConnection("reconnecting");
+      if (!this.es) this.setConnection("reconnecting");
     });
   }
 

@@ -37,6 +37,7 @@ export const ledespEnabled =
 const RELAY = "/api/door";
 
 let lastPushed: string | null = null;
+let lastPushedAt = 0;
 
 async function req(url: string, init: RequestInit, ms: number): Promise<Response | null> {
   const ctrl = new AbortController();
@@ -70,11 +71,14 @@ export async function pushLedEspState(state: string): Promise<boolean> {
   const visual = STATE_VISUAL[state];
   const key = visual ? `${state}|${visual}` : state;
 
-  await req(RELAY, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ message: "" }),
-  }, 6000);
+  // The promised dedup, for real this time: the store's optimistic push and
+  // the adapter's push both fire on one dial turn — the second within a few
+  // seconds is pure duplicate traffic against the door relay.
+  if (lastPushed === key && Date.now() - lastPushedAt < 10_000) return true;
+
+  // NOTE deliberately not cleared here: a state change must never wipe a
+  // delivery OTP or door note off the screen (INVENTORY §door). Notes are
+  // cleared only by pushDoorMessage("").
 
   const roads = [
     req(RELAY, {
@@ -102,7 +106,10 @@ export async function pushLedEspState(state: string): Promise<boolean> {
       body: JSON.stringify({ device: "app", visual }),
     }, 6000);
   }
-  if (ok) lastPushed = key;
+  if (ok) {
+    lastPushed = key;
+    lastPushedAt = Date.now();
+  }
   return ok;
 }
 
@@ -176,6 +183,64 @@ export type DoorStatus = {
  * had nothing new to be told.
  */
 const PRESENT_WITHIN_S = 45;
+
+/**
+ * One shared door poll for the whole app. DoorCouple and LedEspBadge used to
+ * poll /api/door separately (2.5 s + 6 s ≈ 34 requests/min per open client,
+ * 24/7) — real money against the Cloudflare and Vercel free tiers. Everything
+ * now shares a single 5-second poll that pauses while the tab is hidden.
+ */
+type DoorListener = (s: DoorStatus) => void;
+const doorListeners = new Set<DoorListener>();
+let doorTimer: ReturnType<typeof setInterval> | null = null;
+let doorLast: DoorStatus | null = null;
+let doorInFlight = false;
+
+async function doorTick() {
+  if (doorInFlight) return;
+  doorInFlight = true;
+  try {
+    const next = await doorStatus();
+    doorLast = next;
+    doorListeners.forEach((cb) => cb(next));
+  } finally {
+    doorInFlight = false;
+  }
+}
+
+function onVisible() {
+  if (document.visibilityState === "visible") void doorTick();
+}
+
+function startDoorPolling() {
+  if (doorTimer) return;
+  doorTimer = setInterval(() => {
+    if (typeof document === "undefined" || document.visibilityState === "visible") void doorTick();
+  }, 5000);
+  if (typeof document !== "undefined") document.addEventListener("visibilitychange", onVisible);
+  void doorTick();
+}
+
+function stopDoorPolling() {
+  if (doorTimer) clearInterval(doorTimer);
+  doorTimer = null;
+  if (typeof document !== "undefined") document.removeEventListener("visibilitychange", onVisible);
+}
+
+export function subscribeDoorStatus(cb: DoorListener): () => void {
+  doorListeners.add(cb);
+  if (doorLast) cb(doorLast);
+  startDoorPolling();
+  return () => {
+    doorListeners.delete(cb);
+    if (doorListeners.size === 0) stopDoorPolling();
+  };
+}
+
+/** Ask for a fresh door read soon (after a push or a dial turn). */
+export function refreshDoorStatus() {
+  void doorTick();
+}
 
 export async function doorStatus(): Promise<DoorStatus> {
   const res = await req(RELAY, { cache: "no-store" }, 6000);

@@ -102,7 +102,13 @@ def status_payload():
     }
 
 
+REPLAY_MIN_GAP_S = 10.0
+_last_replay = 0.0
+
+
 class Handler(BaseHTTPRequestHandler):
+    timeout = 60
+
     def log_message(self, *a):
         pass
 
@@ -122,9 +128,14 @@ class Handler(BaseHTTPRequestHandler):
         self._json({"error": "not found"}, 404)
 
     def do_POST(self):
+        global _last_replay
         if self.path != "/cue":
             return self._json({"error": "not found"}, 404)
+        # Cap the body: this port is open on the LAN and rfile.read of an
+        # attacker-chosen length would buffer it all in RAM.
         length = int(self.headers.get("Content-Length") or 0)
+        if length > 4096:
+            return self._json({"error": "body too large"}, 400)
         try:
             cue = json.loads(self.rfile.read(length) or b"{}").get("cue", "")
         except json.JSONDecodeError:
@@ -139,11 +150,16 @@ class Handler(BaseHTTPRequestHandler):
             except Exception:
                 pass
         elif cue == "replay_last":
-            # fire-and-forget: aplaymidi streams the newest take into Pianoteq
-            try:
-                subprocess.Popen(["python3", "/usr/local/bin/midi_blackbox.py", "--replay-last"])
-            except OSError:
-                pass
+            # fire-and-forget: aplaymidi streams the newest take into Pianoteq.
+            # Rate-limited so cue spam cannot stack concurrent playbacks into
+            # the instrument.
+            now = time.time()
+            if now - _last_replay >= REPLAY_MIN_GAP_S:
+                _last_replay = now
+                try:
+                    subprocess.Popen(["python3", "/usr/local/bin/midi_blackbox.py", "--replay-last"])
+                except OSError:
+                    pass
         self._json(status_payload())
 
 

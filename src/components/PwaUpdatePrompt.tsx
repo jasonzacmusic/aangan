@@ -1,9 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useStore } from "../state/store";
 
-/** Keeps an installed wall panel current without surprise reloads mid-session. */
-export default function PwaUpdatePrompt() {
+/**
+ * Keeps an installed panel or phone current without surprise reloads.
+ *
+ * Phones show the "New Studio Command ready" card and wait for a tap.
+ * Wall panels (`auto`) have nobody to tap, so they apply a waiting update
+ * themselves — but only while the studio is NOT recording and no
+ * emergency/SOS is active. A deploy never yanks a panel mid-take.
+ */
+export default function PwaUpdatePrompt({ auto = false }: { auto?: boolean }) {
+  const { stateInfo, sos } = useStore();
   const [waiting, setWaiting] = useState<ServiceWorker | null>(null);
   const reloading = useRef(false);
+  // On the very first install there is no old worker to replace; claiming the
+  // page then must not trigger the update reload (it shows as a visible flash).
+  const hadController = useRef<boolean>(
+    typeof navigator !== "undefined" && "serviceWorker" in navigator ? !!navigator.serviceWorker.controller : false
+  );
 
   useEffect(() => {
     if (!import.meta.env.PROD || !("serviceWorker" in navigator)) return;
@@ -13,7 +27,7 @@ export default function PwaUpdatePrompt() {
     let updateFoundHandler: (() => void) | null = null;
 
     const checkForUpdate = () => {
-      if (document.visibilityState === "visible") void registration?.update();
+      if (document.visibilityState === "visible") void registration?.update().catch(() => {});
     };
 
     const register = async () => {
@@ -29,7 +43,7 @@ export default function PwaUpdatePrompt() {
           });
         };
         registered.addEventListener("updatefound", updateFoundHandler);
-        interval = setInterval(() => void registered.update(), 15 * 60 * 1000);
+        interval = setInterval(() => void registered.update().catch(() => {}), 15 * 60 * 1000);
         document.addEventListener("visibilitychange", checkForUpdate);
       } catch {
         // The app remains usable online even if the browser blocks service workers.
@@ -37,6 +51,10 @@ export default function PwaUpdatePrompt() {
     };
 
     const reloadOnClaim = () => {
+      if (!hadController.current) {
+        hadController.current = true;
+        return;
+      }
       if (reloading.current) return;
       reloading.current = true;
       window.location.reload();
@@ -52,7 +70,18 @@ export default function PwaUpdatePrompt() {
     };
   }, []);
 
-  if (!waiting) return null;
+  const state = stateInfo?.state;
+  const safeToAutoApply =
+    state !== "audio_rec" && state !== "video_rec" && state !== "emergency" && !sos?.active;
+
+  useEffect(() => {
+    if (!auto || !waiting || !safeToAutoApply) return;
+    // Small settle delay so a state change that just started wins the race.
+    const timer = setTimeout(() => waiting.postMessage({ type: "SKIP_WAITING" }), 5000);
+    return () => clearTimeout(timer);
+  }, [auto, waiting, safeToAutoApply]);
+
+  if (!waiting || auto) return null;
   return (
     <div className="rise-in fixed inset-x-4 bottom-24 z-[45] mx-auto max-w-md rounded-2xl border border-gold/45 bg-surface/95 p-4 shadow-2xl backdrop-blur-xl lg:bottom-6" role="status">
       <div className="font-mono text-[9px] uppercase tracking-[0.25em] text-gold">New Studio Command ready</div>

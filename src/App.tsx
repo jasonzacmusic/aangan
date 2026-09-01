@@ -83,6 +83,13 @@ export default function App() {
           <SosPage />
         </div>
         <PwaUpdatePrompt />
+        {lastError && (
+          <div className="rise-in fixed inset-x-4 bottom-6 z-[60] mx-auto flex max-w-md items-start gap-3 rounded-2xl border border-st-meeting/40 bg-surface/95 p-4 shadow-2xl backdrop-blur" role="alert">
+            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-st-meeting" />
+            <span className="flex-1 text-sm text-paper">{lastError}</span>
+            <button onClick={clearError} className="text-xs text-dim" aria-label="Dismiss message">Close</button>
+          </div>
+        )}
       </div>
     );
   }
@@ -96,6 +103,7 @@ export default function App() {
         <div className="relative z-10">
           <GuestPage />
         </div>
+        <PwaUpdatePrompt auto />
       </div>
     );
   }
@@ -109,6 +117,7 @@ export default function App() {
         <div className="relative z-10">
           <DisplayPanel id={panelId} />
         </div>
+        <PwaUpdatePrompt auto />
       </div>
     );
   }

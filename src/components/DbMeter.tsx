@@ -20,15 +20,25 @@ export default function DbMeter({ value, threshold, compact }: Props) {
   const target = useRef(value);
   target.current = value;
 
+  // Chase the live value, then STOP. An asymptotic chase that never lands
+  // would re-render at 60 fps forever — real heat on a 24/7 wall panel.
   useEffect(() => {
-    let raf: number;
+    let raf = 0;
     const loop = () => {
-      setDisplay((d) => d + (target.current - d) * 0.12);
-      raf = requestAnimationFrame(loop);
+      let settled = false;
+      setDisplay((d) => {
+        const next = d + (target.current - d) * 0.12;
+        if (Math.abs(target.current - next) < 0.05) {
+          settled = true;
+          return target.current;
+        }
+        return next;
+      });
+      raf = settled ? 0 : requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [value]);
 
   const frac = Math.max(0, Math.min(1, (display - MIN_DB) / (MAX_DB - MIN_DB)));
   const lit = Math.round(frac * SEGMENTS);

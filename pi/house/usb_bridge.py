@@ -65,9 +65,19 @@ PRESET = {
 }
 
 
+_loud_timer: threading.Timer | None = None
+
+
 def latch_loud() -> None:
+    # One re-armed timer, not one per loud line — sustained loudness was
+    # spawning tens of concurrent timer threads.
+    global _loud_timer
     state["loud_until"] = time.time() + DOOR_WARN_HOLD_S
-    threading.Timer(DOOR_WARN_HOLD_S + 0.15, _loud_expired).start()
+    if _loud_timer is not None:
+        _loud_timer.cancel()
+    _loud_timer = threading.Timer(DOOR_WARN_HOLD_S + 0.15, _loud_expired)
+    _loud_timer.daemon = True
+    _loud_timer.start()
 
 
 def _loud_expired() -> None:
@@ -379,11 +389,32 @@ def publish_live() -> None:
 
 
 def board1_reader() -> None:
-    ser = open_serial(BOARD1)
+    # This thread is the house's only sensor input. It must survive the board
+    # being absent at launch AND a mid-run USB unplug/glitch — either used to
+    # kill it permanently, freezing doors/sound/leak until a process restart.
+    ser: serial.Serial | None = None
     buf = ""
     last_rooms = 0.0
     while True:
-        chunk = ser.read(4096)
+        if ser is None or not ser.is_open:
+            try:
+                ser = open_serial(BOARD1)
+                buf = ""
+                add_history("USB bridge", "Board 1 serial connected", "success")
+            except Exception:
+                time.sleep(5)
+                continue
+        try:
+            chunk = ser.read(4096)
+        except Exception:
+            try:
+                ser.close()
+            except Exception:
+                pass
+            ser = None
+            add_history("USB bridge", "Board 1 serial lost — retrying", "warning")
+            time.sleep(2)
+            continue
         if not chunk:
             continue
         buf += chunk.decode("utf-8", "replace")
@@ -439,6 +470,10 @@ def set_studio_state(name: str, set_by: str) -> None:
 
 
 class Handler(BaseHTTPRequestHandler):
+    # An idle or half-dead connection frees its thread after this instead of
+    # holding it for the life of the process.
+    timeout = 75
+
     def log_message(self, fmt: str, *args: Any) -> None:
         return
 
@@ -520,6 +555,18 @@ class Handler(BaseHTTPRequestHandler):
         self._json(404, {"error": path})
 
     def do_POST(self) -> None:  # noqa: N802
+        try:
+            self._do_post()
+        except (BrokenPipeError, ConnectionResetError):
+            return
+        except (ValueError, KeyError, TypeError) as exc:
+            # Malformed JSON or an unknown state must be a 400, not a
+            # connection reset with a stderr traceback.
+            self._json(400, {"error": str(exc) or exc.__class__.__name__})
+        except Exception as exc:
+            self._json(500, {"error": exc.__class__.__name__})
+
+    def _do_post(self) -> None:
         path = urlparse(self.path).path
         body = self._read_json()
         if path == "/api/state":
@@ -612,15 +659,27 @@ class Handler(BaseHTTPRequestHandler):
         try:
             for name, payload in hello:
                 self._sse_write(name, payload)
+            last_beat = time.monotonic()
             while True:
                 time.sleep(0.05)
                 batch: list[tuple[str, Any]] = []
                 with sse_lock:
+                    # emit() drops a backed-up queue; without this check the
+                    # orphaned loop spun at 20 Hz forever with no way to
+                    # notice the client was gone.
+                    if q not in sse_queues:
+                        break
                     if q:
                         batch, q[:] = q[:], []
                 for name, payload in batch:
                     self._sse_write(name, payload)
-        except BrokenPipeError:
+                if time.monotonic() - last_beat > 15:
+                    # Keepalive doubles as dead-client detection: writing to a
+                    # closed socket raises and ends this thread.
+                    self.wfile.write(b": keepalive\n\n")
+                    self.wfile.flush()
+                    last_beat = time.monotonic()
+        except (BrokenPipeError, ConnectionResetError, OSError):
             pass
         finally:
             with sse_lock:
@@ -633,11 +692,42 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.flush()
 
 
+def device_resync() -> None:
+    """Every 30 s: retry a failed ledESP push (forced every 5 min so a rebooted
+    bulb re-learns the state) and reopen the door ESP32 serial if it dropped —
+    an unplug/replug used to need a full process restart."""
+    global board2
+    beat = 0
+    while True:
+        time.sleep(30)
+        beat += 1
+        try:
+            push_ledesp(force=(beat % 10 == 0))
+        except Exception:
+            pass
+        if board2 is None or not board2.is_open or not state["board2_ok"]:
+            try:
+                if board2 is not None:
+                    try:
+                        board2.close()
+                    except Exception:
+                        pass
+                board2 = open_serial(BOARD2)
+                with lock:
+                    state["board2_ok"] = True
+                add_history("USB bridge", "Door ESP32 USB reconnected", "success")
+                time.sleep(1.2)
+                push_door(force=True)
+            except Exception:
+                pass
+
+
 def main() -> None:
     global board2
     print(f"Board 1 {BOARD1}", flush=True)
     print(f"Door    {BOARD2}", flush=True)
     threading.Thread(target=board1_reader, daemon=True).start()
+    threading.Thread(target=device_resync, daemon=True).start()
     try:
         board2 = open_serial(BOARD2)
         state["board2_ok"] = True

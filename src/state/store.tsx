@@ -140,7 +140,12 @@ async function showSafetyNotification(safety: Safety) {
   const body = safetySummary(safety);
   if (!body || typeof Notification === "undefined" || Notification.permission !== "granted") return;
   try {
-    const registration = await navigator.serviceWorker?.ready;
+    // serviceWorker.ready never settles when no worker will ever activate
+    // (dev builds, blocked registration) — a safety alert cannot wait on that.
+    const registration = await Promise.race([
+      navigator.serviceWorker?.ready ?? Promise.resolve(null),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+    ]);
     if (registration) await registration.showNotification("Studio Command safety alert", { body, icon: "/icons/icon-192.png", tag: "studio-safety", requireInteraction: true });
     else new Notification("Studio Command safety alert", { body, icon: "/icons/icon-192.png", tag: "studio-safety" });
   } catch {
@@ -175,11 +180,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
   const settingsRef = useRef(settings);
   const prepRef = useRef(preflightPrep);
+  const stateInfoRef = useRef(stateInfo);
   const safetyRef = useRef<Safety | null>(null);
   const commitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sceneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dbThresholdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const doorWarnTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   settingsRef.current = settings;
   prepRef.current = preflightPrep;
+  stateInfoRef.current = stateInfo;
 
   useEffect(() => {
     let cancelled = false;
@@ -305,7 +314,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           if (cancelled) return;
           attempt += 1;
           setConnected(false);
-          setConnectionStatus(attempt === 1 ? "offline" : "reconnecting");
+          setConnectionStatus(attempt < 3 ? "reconnecting" : "offline");
           setLastError(DATA_SOURCE === "live" ? "Pi unreachable — Studio Command is reconnecting." : "The simulated house is restarting.");
           await pause(Math.min(30_000, 1000 * 2 ** Math.min(attempt - 1, 5)));
         }
@@ -324,6 +333,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     () => () => {
       if (commitTimer.current) clearTimeout(commitTimer.current);
       if (sceneTimer.current) clearTimeout(sceneTimer.current);
+      if (dbThresholdTimer.current) clearTimeout(dbThresholdTimer.current);
+      if (doorWarnTimer.current) clearTimeout(doorWarnTimer.current);
     },
     []
   );
@@ -340,7 +351,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       // The dial IS the door. Push the couple first, then try the rest of
       // the house. A sleeping Pi must never leave the light and screen behind.
       void pushLedEspState(target);
-      setStateInfo({ state: target, setBy: "Jason Zac", since: Date.now() });
+      const previous = stateInfoRef.current;
+      setStateInfo({ state: target, setBy: "This device", since: Date.now() });
       playStateChime(target, settingsRef.current.chimes);
       haptic(target === "emergency" ? [60, 40, 60] : [12, 30, 24]);
       try {
@@ -359,8 +371,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           /* door already moved */
         }
       } catch {
+        // The house did NOT change. Pretending it did is worst during an
+        // emergency stand-down: the siren stops on this phone while every
+        // other device stays in emergency. Roll back and say so.
+        setStateInfo(previous);
         setConnected(false);
         setConnectionStatus("offline");
+        setLastError(
+          previous?.state === "emergency"
+            ? "The house did not confirm the stand-down — it is still in emergency. Try again."
+            : "The house did not confirm that change — the state was not switched."
+        );
       } finally {
         finishCommit();
       }
@@ -410,15 +431,23 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const next = { ...previous, ...patch };
       settingsRef.current = next;
       void idbSet("settings", next);
-      if (patch.dbThreshold != null) {
-        api.setDbThreshold(patch.dbThreshold);
-        void api.getPreflight().then(setPreflight).catch(() => {});
-      }
-      if (patch.doorWarnDb != null) {
-        api.setDoorWarnDb?.(patch.doorWarnDb);
-      }
       return next;
     });
+    // A slider drag emits dozens of steps — debounce so only the resting
+    // value hits the network (one POST instead of one per pixel).
+    if (patch.dbThreshold != null) {
+      if (dbThresholdTimer.current) clearTimeout(dbThresholdTimer.current);
+      dbThresholdTimer.current = setTimeout(() => {
+        api.setDbThreshold(settingsRef.current.dbThreshold);
+        void api.getPreflight().then(setPreflight).catch(() => {});
+      }, 400);
+    }
+    if (patch.doorWarnDb != null) {
+      if (doorWarnTimer.current) clearTimeout(doorWarnTimer.current);
+      doorWarnTimer.current = setTimeout(() => {
+        api.setDoorWarnDb?.(settingsRef.current.doorWarnDb);
+      }, 400);
+    }
   }, []);
 
   const refreshDoorbell = useCallback(async () => {

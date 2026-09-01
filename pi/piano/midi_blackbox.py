@@ -23,6 +23,7 @@ import signal
 import struct
 import subprocess
 import sys
+import threading
 import time
 from datetime import datetime
 from pathlib import Path
@@ -123,13 +124,28 @@ def capture_loop():
         port, client = found
         print(f"blackbox: capturing from {client} ({port})", flush=True)
         proc = subprocess.Popen(["aseqdump", "-p", port], stdout=subprocess.PIPE, text=True)
+
+        def port_watchdog():
+            # aseqdump keeps running silently after its subscribed port
+            # disappears, so a replugged keyboard was never re-attached.
+            # When the port goes away, end aseqdump so the outer loop rescans.
+            while proc.poll() is None:
+                time.sleep(10)
+                current = find_keyboard_port()
+                if not current or current[0] != port:
+                    proc.terminate()
+                    return
+
+        threading.Thread(target=port_watchdog, daemon=True).start()
         events, note_count = [], 0
-        take_start_mono = take_start_wall = last_event_mono = None
+        take_start_mono = take_start_wall = last_note_mono = None
         try:
             for line in proc.stdout:
                 now = time.monotonic()
-                # split the take on long silence
-                if last_event_mono and now - last_event_mono >= SILENCE_SPLIT_S and events:
+                # Split the take on long silence — measured from the last NOTE,
+                # not the last event: a jittery pedal or mod wheel emitting CCs
+                # forever must not keep one endless take growing in RAM.
+                if last_note_mono and now - last_note_mono >= SILENCE_SPLIT_S and events:
                     flush_take(events, note_count, take_start_mono, take_start_wall)
                     events, note_count, take_start_mono = [], 0, None
                     save_state(False, 0)
@@ -144,12 +160,22 @@ def capture_loop():
                     status = 0x90 | (ch & 0x0F)
                     if d2 > 0:
                         note_count += 1
+                        last_note_mono = now
                 elif kind == "Note off":
                     status = 0x80 | (ch & 0x0F)
+                    last_note_mono = now
                 else:  # Control change — keeps the sustain pedal (CC64) honest
                     status = 0xB0 | (ch & 0x0F)
                 events.append((ms, status, d1 & 0x7F, d2 & 0x7F))
-                last_event_mono = now
+                if note_count == 0 and len(events) > 10_000:
+                    # Hours of controller chatter with not one note is not
+                    # music — drop it rather than hold it in memory.
+                    events, take_start_mono = [], None
+                if len(events) > 500_000:
+                    # Marathon safety valve: flush and continue in a new take.
+                    flush_take(events, note_count, take_start_mono, take_start_wall)
+                    events, note_count, take_start_mono = [], 0, None
+                    save_state(False, 0)
                 if len(events) % 32 == 1:
                     save_state(True, note_count)
         finally:

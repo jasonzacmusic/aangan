@@ -114,7 +114,13 @@ export class DoorState {
 
     // A strip report can change only observations, never the studio state.
     if (body && body.state === undefined) {
-      this.door.strip_at = Date.now();
+      // Only a real strip check-in counts as strip liveness: the board says
+      // device:"strip" (current firmware) or carries a dBA reading (legacy).
+      // Any other device-less write marking the light "alive" is how a dead
+      // strip kept looking healthy in the app.
+      if (body.device === "strip" || Object.hasOwn(body, "dba")) {
+        this.door.strip_at = Date.now();
+      }
       const visual = String(body.visual ?? "");
       if (VISUALS.has(visual)) {
         // Command owns the picture. The strip may only interrupt for a door

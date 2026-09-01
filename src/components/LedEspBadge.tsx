@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { doorStatus, type DoorStatus } from "../api/ledesp";
+import { subscribeDoorStatus, type DoorStatus } from "../api/ledesp";
 
 /**
  * Honest status for the two devices at the studio door.
@@ -36,19 +36,7 @@ function Dot({ state }: { state: boolean | null }) {
 export default function LedEspBadge() {
   const [s, setS] = useState<DoorStatus | null>(null);
 
-  useEffect(() => {
-    let alive = true;
-    const check = async () => {
-      const next = await doorStatus();
-      if (alive) setS(next);
-    };
-    void check();
-    const t = setInterval(check, 6000);
-    return () => {
-      alive = false;
-      clearInterval(t);
-    };
-  }, []);
+  useEffect(() => subscribeDoorStatus(setS), []);
 
   const word = (v: boolean | null) => (v === null ? "unknown" : v ? "live" : "not answering");
   const title = !s?.reachable

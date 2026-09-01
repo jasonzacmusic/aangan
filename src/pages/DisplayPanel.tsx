@@ -25,12 +25,16 @@ const DOOR_WORDING: Record<StudioState, { big: string; small: string }> = {
 };
 
 function useClock() {
-  const [now, setNow] = useState(() => new Date());
+  // Everything a panel shows from the clock is minute-resolution (HH:MM,
+  // date, delivery minutes). Holding the epoch minute means React skips the
+  // re-render on 59 of every 60 ticks — a kiosk was repainting its whole
+  // tree (door sign, room grid, QR) every second for no visible change.
+  const [minute, setMinute] = useState(() => Math.floor(Date.now() / 60000));
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 1000);
+    const t = setInterval(() => setMinute(Math.floor(Date.now() / 60000)), 1000);
     return () => clearInterval(t);
   }, []);
-  return now;
+  return new Date(minute * 60000);
 }
 
 function PanelChrome({ children, accent, pulse }: { children: React.ReactNode; accent: string; pulse?: boolean }) {

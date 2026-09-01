@@ -322,6 +322,10 @@ def broadcast(event: str, payload: Any) -> None:
     with COND:
         for queue in SUBSCRIBERS:
             queue.append(frame)
+            # A stalled client's queue must not grow without bound while its
+            # socket times out; it will resync from REST on reconnect anyway.
+            if len(queue) > 200:
+                del queue[: len(queue) - 200]
         COND.notify_all()
 
 
@@ -503,12 +507,16 @@ def expire_time_limited_state() -> None:
             STORE.save()
             broadcast("delivery", None)
         if PURGE_UNTIL and PURGE_UNTIL <= now:
-            PURGE_UNTIL = None
+            # Restore the fans FIRST, clear the flag only on success. Clearing
+            # first meant one unreachable-HA moment left purifiers at 100%
+            # forever with the UI showing the purge as over; now the poller
+            # retries every cycle until the fans actually come down.
             try:
                 states = current_states(True)
                 for config in ENTITY["purifiers"].values():
                     if available(states, config["entity"]):
                         call_service("fan", "set_percentage", {"entity_id": config["entity"], "percentage": 50})
+                PURGE_UNTIL = None
             except Exception:
                 pass
 
@@ -535,9 +543,17 @@ def poller() -> None:
                     last[key] = value
             expire_time_limited_state()
         except Exception as error:
+            # Nothing in this handler may raise: this thread IS the bridge's
+            # heartbeat, and a failed history write (full/read-only SD card)
+            # once killed it silently — frozen SSE forever, REST still up.
             if last.get("bridge_error") != error.__class__.__name__:
-                STORE.add_history("system", "Home Assistant unavailable", error.__class__.__name__, "warning")
                 last["bridge_error"] = error.__class__.__name__
+                try:
+                    STORE.add_history("system", "Home Assistant unavailable", error.__class__.__name__, "warning")
+                except Exception:
+                    pass
+        else:
+            last.pop("bridge_error", None)
         time.sleep(2)
 
 
@@ -547,6 +563,10 @@ def clean_text(value: Any, limit: int) -> str:
 
 class Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
+    # Socket timeout for every connection: a client that connects and sends
+    # nothing (or stops reading its SSE stream) releases its thread in about a
+    # minute instead of holding it for the TCP retransmission eternity.
+    timeout = 75
 
     def log_message(self, format_: str, *args: Any) -> None:
         if os.environ.get("HTTP_LOG", "false").lower() == "true":
@@ -609,7 +629,14 @@ class Handler(BaseHTTPRequestHandler):
         try:
             states = None if path in {"/api/piano", "/api/delivery", "/api/displays", "/api/sos", "/api/history", "/api/stream", "/api/health", "/api/doorbell.jpg"} else current_states()
             if path == "/api/health":
-                return self.send_json({"ok": True, "homeAssistant": bool(current_states()), "commissioning": ALLOW_COMMISSIONING, "version": "1.2.0"})
+                # Health must answer 200 even while Home Assistant restarts —
+                # a watchdog probing this would otherwise bounce a healthy
+                # bridge during every HA restart.
+                try:
+                    ha_up = bool(current_states())
+                except Exception:
+                    ha_up = False
+                return self.send_json({"ok": True, "homeAssistant": ha_up, "commissioning": ALLOW_COMMISSIONING, "version": "1.3.0"})
             if path == "/api/state":
                 return self.send_json(state_info(states))
             if path == "/api/rooms":
@@ -797,15 +824,21 @@ class Handler(BaseHTTPRequestHandler):
                 with LOCK:
                     STORE.sos = {"active": True, "who": who, "message": message, "since": int(time.time() * 1000)}
                     STORE.save()
-                call_service("input_select", "select_option", {"entity_id": ENTITY["state"], "option": "emergency"})
-                call_service("input_text", "set_value", {"entity_id": ENTITY["set_by"], "value": f"SOS · {who}"})
-                try:
-                    call_service("notify", "all_family_critical", {"title": f"SOS · {who}", "message": message or f"{who} needs help now"})
-                except urllib.error.HTTPError:
-                    STORE.add_history("safety", "SOS notification group missing", "Configure notify.all_family_critical", "warning")
-                STORE.add_history("safety", f"SOS · {who}", message or "Help requested", "critical")
+                # Every phone and panel must see the SOS immediately, even if
+                # Home Assistant is mid-restart. The latch is the point; the
+                # escalation below is best-effort and logged when it fails.
                 broadcast("sos", STORE.sos)
-                broadcast("state", state_info(current_states(True)))
+                try:
+                    call_service("input_select", "select_option", {"entity_id": ENTITY["state"], "option": "emergency"})
+                    call_service("input_text", "set_value", {"entity_id": ENTITY["set_by"], "value": f"SOS · {who}"})
+                    try:
+                        call_service("notify", "all_family_critical", {"title": f"SOS · {who}", "message": message or f"{who} needs help now"})
+                    except urllib.error.HTTPError:
+                        STORE.add_history("safety", "SOS notification group missing", "Configure notify.all_family_critical", "warning")
+                    broadcast("state", state_info(current_states(True)))
+                except (urllib.error.URLError, TimeoutError, OSError) as error:
+                    STORE.add_history("safety", "SOS raised · Home Assistant unreachable", f"House not switched to emergency ({error.__class__.__name__})", "critical")
+                STORE.add_history("safety", f"SOS · {who}", message or "Help requested", "critical")
                 return self.send_json(STORE.sos)
             if path == "/api/sos/clear":
                 with LOCK:
@@ -840,7 +873,13 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(STORE.displays)
             if path == "/api/displays/add":
                 with LOCK:
-                    STORE.displays.append({"id": f"panel-{int(time.time())}", "name": clean_text(body.get("name"), 60) or "New display", "content": "door", "message": ""})
+                    if len(STORE.displays) >= 16:
+                        return self.send_error_json(400, "display limit reached (16)")
+                    existing = {item["id"] for item in STORE.displays}
+                    new_id = f"panel-{int(time.time() * 1000)}"
+                    while new_id in existing:
+                        new_id += "x"
+                    STORE.displays.append({"id": new_id, "name": clean_text(body.get("name"), 60) or "New display", "content": "door", "message": ""})
                     STORE.save()
                 broadcast("displays", STORE.displays)
                 return self.send_json(STORE.displays)
@@ -897,7 +936,10 @@ class Handler(BaseHTTPRequestHandler):
         content_type = mimetypes.guess_type(target.name)[0] or "application/octet-stream"
         self.send_response(200)
         self.send_header("Content-Type", content_type)
-        self.send_header("Cache-Control", "no-cache" if target.name == "index.html" else "public, max-age=31536000, immutable" if "/assets/" in target.as_posix() else "public, max-age=3600")
+        # Any HTML page, the service worker, and the manifest must revalidate —
+        # an hour-stale door.html on a wall panel lags every deploy.
+        fresh_always = target.suffix == ".html" or target.name in {"sw.js", "manifest.webmanifest"}
+        self.send_header("Cache-Control", "no-cache" if fresh_always else "public, max-age=31536000, immutable" if "/assets/" in target.as_posix() else "public, max-age=3600")
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
         self.wfile.write(payload)

@@ -72,7 +72,13 @@ export default function VoiceButton({ onCommand }: Props) {
     rec.start();
   };
 
-  useEffect(() => () => recRef.current?.stop?.(), []);
+  useEffect(
+    () => () => {
+      recRef.current?.stop?.();
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    },
+    []
+  );
 
   return (
     <>

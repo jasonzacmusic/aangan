@@ -54,11 +54,18 @@ export default function AirCard() {
   const { air, stateInfo, setPurifierMode, startAirPurge, stopAirPurge } = useStore();
   const [, tickNow] = useState(0);
 
-  // The purge countdown needs its own second hand.
+  // The purge countdown needs its own second hand — but only while a purge is
+  // actually running. A stale past timestamp must not tick a panel forever.
   useEffect(() => {
-    if (!air?.purgeUntil) return;
-    const t = setInterval(() => tickNow((n) => n + 1), 1000);
-    return () => clearInterval(t);
+    if (!air?.purgeUntil || air.purgeUntil <= Date.now()) return;
+    const t = setInterval(() => {
+      tickNow((n) => n + 1);
+    }, 1000);
+    const stop = setTimeout(() => clearInterval(t), Math.max(0, air.purgeUntil - Date.now()) + 1500);
+    return () => {
+      clearInterval(t);
+      clearTimeout(stop);
+    };
   }, [air?.purgeUntil]);
 
   if (!air) return null;

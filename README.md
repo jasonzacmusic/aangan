@@ -181,8 +181,8 @@ Send an initial `safety`, `utilities`, and `preflight` frame as soon as a client
 ## PWA behavior
 
 - The current HTML shell and its hashed JS/CSS are cached together under a build-specific cache.
-- An update installs beside the running version and shows **“New Studio Command ready — Tap to refresh.”** It never reloads a panel during a take.
-- The user-confirmed refresh sends `SKIP_WAITING`; the new worker claims the page and reloads once.
+- An update installs beside the running version. Phones show **“New Studio Command ready — Tap to refresh.”** Wall panels and the guest page apply the update by themselves — but only while the studio is not recording and no emergency/SOS is active. Nothing ever reloads a panel during a take.
+- The refresh (user tap, or a panel's safe-state auto-apply) sends `SKIP_WAITING`; the new worker claims the page and reloads once.
 - The last complete shell continues to load offline. Old hashed assets are kept until the new worker activates, preventing the stale-shell blank-screen failure.
 - The browser theme color follows the active studio state. Reduced-motion users get a calm, nearly static version of the background, meters, and pulses.
 

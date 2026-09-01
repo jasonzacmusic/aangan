@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { STATE_META, type StudioState } from "../api/types";
-import { doorStatus, pushDoorSleep, pushDoorVisual, pushLedEspState } from "../api/ledesp";
+import { pushDoorSleep, pushDoorVisual, pushLedEspState, refreshDoorStatus, subscribeDoorStatus } from "../api/ledesp";
 
 const LOOK: Record<string, { word: string; sub: string; color: string }> = {
   available: { word: "COME IN", sub: "The studio is free", color: "#2FBF71" },
@@ -30,10 +30,8 @@ export default function DoorCouple({ state }: { state: StudioState }) {
   const [visual, setVisual] = useState<string | null>(null);
 
   useEffect(() => {
-    let alive = true;
-    const tick = async () => {
-      const next = await doorStatus();
-      if (!alive || !next.reachable) return;
+    const unsub = subscribeDoorStatus((next) => {
+      if (!next.reachable) return;
       const vis =
         next.message === "__off__" || next.visual === "off" || next.visual === "sleep"
           ? "off"
@@ -41,13 +39,14 @@ export default function DoorCouple({ state }: { state: StudioState }) {
             ? next.visual
             : next.state;
       if (vis) setVisual(vis);
-    };
-    void tick();
-    const t = setInterval(tick, 2500);
-    return () => {
-      alive = false;
-      clearInterval(t);
-    };
+    });
+    return unsub;
+  }, []);
+
+  // A dial turn should reflect on the couple promptly — one extra read, not a
+  // faster poll.
+  useEffect(() => {
+    refreshDoorStatus();
   }, [state]);
 
   const key = visual && LOOK[visual] ? visual : state;

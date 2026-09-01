@@ -1,5 +1,5 @@
 /* Studio Command — versioned offline shell with user-controlled updates. */
-const BUILD_ID = "msqcl9k5";
+const BUILD_ID = "mtiiagou";
 const SHELL = `studio-command-shell-${BUILD_ID}`;
 const RUNTIME = `studio-command-runtime-${BUILD_ID}`;
 const OFFLINE_SHELL = "/__studio-command-offline-shell__";
@@ -30,8 +30,9 @@ self.addEventListener("install", (event) => {
           }
         } catch { /* one optional asset must not block install */ }
       }));
-      // Do not activate over a running recording session. The app displays a
-      // refresh prompt and sends SKIP_WAITING when Jason chooses the moment.
+      // No skipWaiting here: the new worker waits until the page decides it is
+      // safe (user tap, or a panel outside a take). A deploy must never yank a
+      // wall panel mid-recording.
     })()
   );
 });
@@ -56,13 +57,17 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/api/")) return;
 
   if (event.request.mode === "navigate") {
+    // The SPA shell lives under one key; other pages (door.html, sign.html…)
+    // cache under their own URL so an offline "/" never serves the wrong page.
+    const isAppShell = url.pathname === "/" || url.pathname === "/index.html";
+    const shellKey = isAppShell ? OFFLINE_SHELL : event.request;
     event.respondWith(
       fetch(event.request)
         .then(async (response) => {
-          if (response.ok) await (await caches.open(SHELL)).put(OFFLINE_SHELL, response.clone());
+          if (response.status === 200) await (await caches.open(SHELL)).put(shellKey, response.clone());
           return response;
         })
-        .catch(async () => (await caches.match(OFFLINE_SHELL)) || Response.error())
+        .catch(async () => (await caches.match(shellKey)) || (await caches.match(OFFLINE_SHELL)) || Response.error())
     );
     return;
   }
@@ -72,10 +77,15 @@ self.addEventListener("fetch", (event) => {
     caches.match(event.request).then((cached) => {
       const fresh = fetch(event.request)
         .then(async (response) => {
-          if (response.ok) await (await caches.open(RUNTIME)).put(event.request, response.clone());
+          // Only full 200s are cacheable — cache.put throws on 206 partials.
+          if (response.status === 200) {
+            try {
+              await (await caches.open(RUNTIME)).put(event.request, response.clone());
+            } catch { /* a full cache must never fail the live response */ }
+          }
           return response;
         })
-        .catch(() => cached);
+        .catch(() => cached ?? Response.error());
       return cached || fresh;
     })
   );
