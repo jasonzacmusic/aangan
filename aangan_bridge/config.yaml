@@ -1,6 +1,6 @@
 name: Aangan Bridge
 description: Live Aangan control app and Home Assistant API bridge
-version: "1.3.0"
+version: "1.4.0"
 slug: aangan_bridge
 url: https://github.com/jasonzacmusic/aangan
 startup: application

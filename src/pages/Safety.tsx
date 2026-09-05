@@ -20,7 +20,7 @@ function SafetyTile({ label, alert, reporting, okText, alertText }: { label: str
 }
 
 export default function Safety() {
-  const { safety, sos, doorbell, stateInfo, preflight, triggerPanic, refreshDoorbell, dataSource, triggerSafetyDemo, clearSos } = useStore();
+  const { safety, sos, doorbell, stateInfo, preflight, triggerPanic, refreshDoorbell, dataSource, triggerSafetyDemo, clearSos, setStudioState } = useStore();
   const [demoActive, setDemoActive] = useState(false);
   const demoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const demoIndex = useRef(0);
@@ -130,29 +130,35 @@ export default function Safety() {
         <p className="mb-4 text-xs text-dim">
           One page, one hold — anyone in the family can raise the whole house from their phone. Open it once on Amma's and everyone's phone and add it to the home screen.
         </p>
-        <div className="flex gap-2">
-          <a
-            href="#/sos"
-            className="flex-1 rounded-xl border border-st-emergency/50 bg-st-emergency/10 px-4 py-3 text-center text-sm font-semibold text-st-emergency transition-all active:scale-[0.99]"
-          >
-            Open the SOS page
-          </a>
-          {sos?.active && (
-            <button
-              onClick={() => void clearSos()}
-              className="rounded-xl border border-st-available/50 bg-st-available/10 px-4 py-3 text-sm font-semibold text-st-available"
-            >
-              Mark safe
-            </button>
-          )}
-        </div>
+        <a
+          href="#/sos"
+          className="block rounded-xl border border-st-emergency/50 bg-st-emergency/10 px-4 py-3 text-center text-sm font-semibold text-st-emergency transition-all active:scale-[0.99]"
+        >
+          Open the SOS page
+        </a>
+        {sos?.active && (
+          <div className="mt-3">
+            <HoldButton
+              big
+              label="Hold — I'm OK, stand the house down"
+              color="#2fbf71"
+              durationMs={1600}
+              onComplete={() => {
+                void (async () => {
+                  const ok = await setStudioState("available");
+                  if (ok !== false) await clearSos();
+                })();
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Guarded emergency */}
       <div className="mt-6 rounded-3xl border border-st-emergency/40 bg-st-emergency/5 p-5">
         <div className="mb-1 font-display text-lg text-st-emergency">Emergency</div>
         <p className="mb-4 text-xs text-dim">
-          Rings every family phone, flashes all room signs violet, and sends the doorbell snapshot. Hold to trigger — releasing early cancels.
+          Rings every family phone and flashes all room signs violet. Hold to trigger — releasing early cancels.
         </p>
         <HoldButton big label="Hold for Emergency" color="#7c3aed" durationMs={1600} onComplete={triggerPanic} />
       </div>

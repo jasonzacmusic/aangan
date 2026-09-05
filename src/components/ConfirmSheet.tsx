@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { DATA_SOURCE } from "../api/api";
 import { STATE_META, StudioState } from "../api/types";
 import HoldButton from "./HoldButton";
+import { useStore } from "../state/store";
 
 /** Bottom sheet asking to arm a high-stakes state (Rec / Emergency). */
 interface Props {
@@ -10,7 +12,15 @@ interface Props {
 }
 
 export default function ConfirmSheet({ state, onConfirm, onCancel }: Props) {
+  const { settings } = useStore();
   const m = STATE_META[state];
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel]);
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center lg:items-center" role="dialog" aria-modal>
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onCancel} />
@@ -22,8 +32,12 @@ export default function ConfirmSheet({ state, onConfirm, onCancel }: Props) {
         </div>
         <p className="mt-2 text-sm text-dim">
           {m.tagline} Every room sign turns{" "}
-          <span style={{ color: m.color }}>{state === "emergency" ? "flashing violet" : "this color"}</span> and the family
-          is notified.
+          <span style={{ color: m.color }}>{state === "emergency" ? "flashing violet" : "this color"}</span>
+          {settings.notifyStateChanges
+            ? DATA_SOURCE === "live"
+              ? " and the family is notified."
+              : " on this phone."
+            : "."}
         </p>
         <div className="mt-6 space-y-3">
           <HoldButton big label={`Hold to arm ${m.label}`} color={m.color} durationMs={state === "emergency" ? 1600 : 1100} onComplete={onConfirm} />

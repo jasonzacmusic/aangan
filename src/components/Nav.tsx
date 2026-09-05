@@ -150,7 +150,7 @@ export default function Nav({ tab, setTab }: Props) {
         <div className="mt-auto font-mono text-[9px] leading-relaxed text-dim/70">
           Nathaniel School of Music
           <br />
-          Bangalore · studio.local
+          Bangalore · aangan.nathanielschool.com
         </div>
       </nav>
     </>

@@ -104,6 +104,13 @@ class PayloadTests(unittest.TestCase):
         self.assertIn("online", bridge.utilities_payload(self.states)["water"])
         self.assertEqual(bridge.air_payload(self.states)["rooms"][0]["co2"], 612)
 
+    def test_missing_mic_is_not_silence(self):
+        del self.states["sensor.studio_sound_level"]
+        result = bridge.preflight_payload(self.states)
+        self.assertIsNone(result["dbLevel"])
+        music = next(room for room in bridge.rooms_payload(self.states) if room["id"] == "music")
+        self.assertIsNone(music["dbLevel"])
+
     def test_exact_open_door_name(self):
         self.states["binary_sensor.studio_door_leaf_b"]["state"] = "on"
         result = bridge.preflight_payload(self.states)
@@ -198,6 +205,15 @@ class HttpContractTests(unittest.TestCase):
             for path, payload in actions:
                 with self.subTest(path=path):
                     self.post_json(base, path, payload)
+
+    def test_sos_latches_when_home_assistant_is_down(self):
+        with mock.patch.object(bridge, "current_states", side_effect=TimeoutError("ha down")):
+            with mock.patch.object(bridge, "call_service", side_effect=TimeoutError("ha down")):
+                with running_bridge() as base:
+                    payload = self.post_json(base, "/api/sos", {"who": "Amma", "message": "Help"})
+                    self.assertTrue(payload["active"])
+                    self.assertEqual(payload["who"], "Amma")
+                    self.assertEqual(self.get_json(base, "/api/sos")["who"], "Amma")
 
     def test_invalid_actions_are_rejected(self):
         actions = [

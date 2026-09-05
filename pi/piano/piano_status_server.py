@@ -98,12 +98,15 @@ def status_payload():
         "bufferFrames": 192,
         "latencyMs": 4,
         "lastSeen": int(time.time() * 1000),
+        "tally": bool(STATE["tally"]),
         "blackbox": read_blackbox(),
     }
 
 
 REPLAY_MIN_GAP_S = 10.0
+PRESET_MIN_GAP_S = 2.0
 _last_replay = 0.0
+_last_preset = 0.0
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -128,7 +131,7 @@ class Handler(BaseHTTPRequestHandler):
         self._json({"error": "not found"}, 404)
 
     def do_POST(self):
-        global _last_replay
+        global _last_replay, _last_preset
         if self.path != "/cue":
             return self._json({"error": "not found"}, 404)
         # Cap the body: this port is open on the LAN and rfile.read of an
@@ -145,11 +148,19 @@ class Handler(BaseHTTPRequestHandler):
         elif cue == "recording_stopped":
             STATE["tally"] = False
         elif cue in ("next_preset", "prev_preset"):
+            if STATE["tally"]:
+                return self._json({**status_payload(), "error": "tally on"}, 409)
+            now = time.time()
+            if now - _last_preset < PRESET_MIN_GAP_S:
+                return self._json(status_payload())
+            _last_preset = now
             try:
                 rpc("nextPreset" if cue == "next_preset" else "prevPreset")
             except Exception:
                 pass
         elif cue == "replay_last":
+            if STATE["tally"]:
+                return self._json({**status_payload(), "error": "tally on"}, 409)
             # fire-and-forget: aplaymidi streams the newest take into Pianoteq.
             # Rate-limited so cue spam cannot stack concurrent playbacks into
             # the instrument.

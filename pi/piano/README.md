@@ -64,7 +64,7 @@ does). If this server dies, the piano keeps playing — it is decoupled by desig
 Endpoints:
 - `GET /health` → `{"ok": true}`
 - `GET /status` → the `PianoRig` JSON shape from `src/api/types.ts`
-- `POST /cue {"cue": "recording_started" | "recording_stopped" | "next_preset" | "prev_preset"}`
+- `POST /cue {"cue": "recording_started" | "recording_stopped" | "next_preset" | "prev_preset" | "replay_last"}` — preset and replay return 409 while tally is on so a take cannot glitch.
 
 ## Real-time notes (verified)
 

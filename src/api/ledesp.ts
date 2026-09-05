@@ -65,7 +65,7 @@ const STATE_VISUAL: Record<string, string> = {
   emergency: "emergency",
 };
 
-export async function pushLedEspState(state: string): Promise<boolean> {
+export async function pushLedEspState(state: string, opts?: { force?: boolean }): Promise<boolean> {
   if (!state) return true;
 
   const visual = STATE_VISUAL[state];
@@ -74,7 +74,7 @@ export async function pushLedEspState(state: string): Promise<boolean> {
   // The promised dedup, for real this time: the store's optimistic push and
   // the adapter's push both fire on one dial turn — the second within a few
   // seconds is pure duplicate traffic against the door relay.
-  if (lastPushed === key && Date.now() - lastPushedAt < 10_000) return true;
+  if (!opts?.force && lastPushed === key && Date.now() - lastPushedAt < 10_000) return true;
 
   // NOTE deliberately not cleared here: a state change must never wipe a
   // delivery OTP or door note off the screen (INVENTORY §door). Notes are
@@ -132,12 +132,9 @@ export async function pushDoorVisual(visual: string): Promise<boolean> {
 /** Screen backlight off, strip off. Wi-Fi stays up so the dial can wake them. */
 export async function pushDoorSleep(): Promise<boolean> {
   lastPushed = null;
+  // Sleep is a visual, not a note. Storing "__off__" in the message field
+  // meant the dial could not wake the boards without wiping a delivery OTP.
   const writes = await Promise.all([
-    req(RELAY, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ message: "__off__" }),
-    }, 6000),
     req(RELAY, {
       method: "POST",
       headers: { "content-type": "application/json" },

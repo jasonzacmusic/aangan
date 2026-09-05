@@ -8,7 +8,7 @@ import { useStore, timeSince } from "../state/store";
  * inside and how to behave, live.
  */
 const GUEST_WORDING: Record<StudioState, { head: string; body: string; wait: boolean }> = {
-  available: { head: "Come on in", body: "The house is open — ring once and someone will welcome you.", wait: false },
+  available: { head: "Come in", body: "The studio is free — ring once and someone will welcome you.", wait: false },
   class: { head: "A lesson is in progress", body: "Please enter softly, or wait here — a student is playing right now.", wait: true },
   meeting: { head: "On a call", body: "Knock gently and wait — someone will be with you shortly.", wait: true },
   audio_rec: { head: "Recording in progress", body: "Absolute silence please — do not ring the bell. We know you're here; someone will come out between takes.", wait: true },

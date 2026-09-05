@@ -42,7 +42,7 @@ DOOR_WARN_HOLD_S = 8.0
 
 STATE_COLORS = {
     "available": "#2FBF71",
-    "class": "#3B82F6",
+    "class": "#F5A623",
     "meeting": "#F5A623",
     "audio_rec": "#E5484D",
     "video_rec": "#D93036",
@@ -112,7 +112,6 @@ def door_preset() -> dict[str, Any]:
         p["tickers"] = tickers
     elif st == "class":
         p = dict(PRESET["wait"])
-        p["color"] = "#3B82F6"
     elif st == "meeting":
         p = dict(PRESET["wait"])
         p["tickers"] = ["On a call. Knock, then wait", "Don't walk in mid-sentence"]
@@ -138,7 +137,7 @@ state: dict[str, Any] = {
     "leak": None,
     "board1_seen": 0.0,
     "board2_ok": False,
-    "db_threshold": 45.0,
+    "db_threshold": 40.0,
     "door_warn_db": DEFAULT_DOOR_WARN_DBA,
     "loud_until": 0.0,
     "history": [],
@@ -205,11 +204,10 @@ def rooms_payload() -> list[dict[str, Any]]:
         "doorOpen": door_open,
         "presence": False,
         "tempC": None,
+        "dbLevel": state["sound"],
         "signColor": color,
         "signVisual": visual,
     }
-    if state["sound"] is not None:
-        studio["dbLevel"] = state["sound"]
     others = [
         {"id": "entrance", "name": "Entrance", "doorOpen": False, "presence": False, "tempC": None, "signColor": color},
         {"id": "bedroom", "name": "Bedroom", "doorOpen": False, "presence": False, "tempC": None, "signColor": color},
@@ -243,8 +241,8 @@ def preflight_payload() -> dict[str, Any]:
     if g2 is None:
         names.append("Studio door · G2 (waiting for magnet)")
     doors_closed = g1 == "SHUT" and g2 == "SHUT"
-    db = float(state["sound"] if state["sound"] is not None else 0)
-    quiet = state["sound"] is not None and db < float(state["db_threshold"])
+    db = float(state["sound"]) if state["sound"] is not None else None
+    quiet = db is not None and db < float(state["db_threshold"])
     healthy = (time.time() - float(state["board1_seen"])) < 3 if state["board1_seen"] else False
     leak_ok = state["leak"] != "WET"
     ready = doors_closed and quiet and healthy and leak_ok
@@ -586,7 +584,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/settings/db-threshold":
             with lock:
-                state["db_threshold"] = float(body.get("value", 45))
+                state["db_threshold"] = float(body.get("value", 40))
             publish_live()
             self._json(200, {"ok": True})
             return

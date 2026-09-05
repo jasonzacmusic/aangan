@@ -59,6 +59,7 @@ import { pushLedEspState } from "./ledesp";
  *   POST /api/piano/cue { cue }     -> PianoRig
  *   Cues: recording_started | recording_stopped | next_preset | prev_preset
  *   | replay_last (plays the newest MIDI black-box take back through Pianoteq).
+ *   Preset and replay return 409 while tally is on so a take cannot glitch.
  *   PianoRig.blackbox carries the black-box summary — the piano Pi's status
  *   server includes it in /status; the wrapper passes it through untouched.
  *   The wrapper forwards cues to the piano Pi's status server over HTTP and
@@ -125,6 +126,7 @@ export class LiveAdapter implements ApiAdapter {
   private pollInFlight = false;
   private pollEpoch = 0;
   private pollCount = 0;
+  private lastPrep: PreflightPrep = { active: false, status: "idle", mutedDoorbell: false, acOff: false, fanOff: false };
 
   constructor(baseUrl: string) {
     this.base = baseUrl.replace(/\/$/, "");
@@ -313,7 +315,8 @@ export class LiveAdapter implements ApiAdapter {
       this.emit({ type: "rooms", rooms });
       this.emit({ type: "safety", safety });
       const [prep, utilities, piano, delivery, displays, sos, fleet, air, doorbell, history] = optional;
-      if (prep.status === "fulfilled") this.emit({ type: "preflight", preflight, prep: prep.value });
+      if (prep.status === "fulfilled") this.lastPrep = prep.value;
+      this.emit({ type: "preflight", preflight, prep: this.lastPrep });
       if (utilities.status === "fulfilled") this.emit({ type: "utilities", utilities: utilities.value });
       if (piano.status === "fulfilled") this.emit({ type: "piano", piano: piano.value });
       if (delivery.status === "fulfilled") this.emit({ type: "delivery", delivery: delivery.value });

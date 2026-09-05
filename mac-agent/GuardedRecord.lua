@@ -28,7 +28,7 @@ local body = http_get("http://127.0.0.1:8952/ready")
 
 if body == nil then
   local ok = reaper.ShowMessageBox(
-    "The NSM record gate agent is not running, so the house cannot vouch for the room.\n\nRecord anyway?",
+    "The NSM record gate agent is not running, so the house cannot vouch for the room.\n\nThis only guards the Guarded Record action — the native Record key still rolls.\n\nRecord anyway?",
     "Guarded Record", 4) -- yes/no
   if ok ~= 6 then return end
 elseif json_field(body, "ready") ~= true then

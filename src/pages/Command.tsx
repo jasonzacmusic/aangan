@@ -10,6 +10,8 @@ import { STUDIO_REST_DBA_AC_ON } from "../door/studioDoorPresets";
 interface Props {
   onSelect: (state: StudioState) => void;
   onScene: (scene: SceneDef) => void;
+  onOpenDisplays: () => void;
+  onOpenReady: () => void;
 }
 
 const SEVERITY_COLOR = {
@@ -19,8 +21,8 @@ const SEVERITY_COLOR = {
   critical: "#e5484d",
 };
 
-export default function Command({ onSelect, onScene }: Props) {
-  const { stateInfo, settings, committing, history, sceneRunning, playTone, rooms } = useStore();
+export default function Command({ onSelect, onScene, onOpenDisplays, onOpenReady }: Props) {
+  const { stateInfo, settings, committing, history, sceneRunning, playTone, rooms, preflight } = useStore();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [tonePlaying, setTonePlaying] = useState(false);
   if (!stateInfo) return null;
@@ -42,7 +44,29 @@ export default function Command({ onSelect, onScene }: Props) {
       <p className="mt-3 text-center text-sm text-paper/70 lg:text-base">{meta.tagline}</p>
       <p className="mt-1 text-center font-mono text-[10px] uppercase tracking-[0.22em] text-dim">turn the dial · light and screen move as one</p>
 
-      <DoorCouple state={stateInfo.state} />
+      <DoorCouple state={stateInfo.state} onOpenDisplays={onOpenDisplays} />
+
+      {preflight && !preflight.ready && (stateInfo.state === "available" || stateInfo.state === "class" || stateInfo.state === "meeting") && (
+        <button
+          type="button"
+          onClick={() => onOpenReady()}
+          className="mt-4 w-full rounded-2xl border border-st-meeting/40 bg-st-meeting/10 px-4 py-3 text-left"
+        >
+          <span className="block font-mono text-[10px] uppercase tracking-[0.28em] text-st-meeting">Not ready to record</span>
+          <span className="mt-1 block text-sm text-paper/80">
+            {!preflight.doorsClosed
+              ? "A studio door is open."
+              : !preflight.quietEnough
+                ? preflight.dbLevel == null
+                  ? "The studio mic is not reporting."
+                  : `Room is ${preflight.dbLevel.toFixed(0)} dBA — over the take line.`
+                : !preflight.sensorsHealthy
+                  ? "A sensor node has gone quiet."
+                  : "A safety alert is live."}{" "}
+            Open Ready for the full verdict.
+          </span>
+        </button>
+      )}
 
       {studio?.dbLevel != null && (
         <div className="mt-6 w-full rounded-2xl border border-line bg-surface/80 p-4">

@@ -310,7 +310,7 @@ display:
       const bool recording = (st == "audio_rec" || st == "video_rec");
       const bool emergency = (st == "emergency");
       const std::string vis = id(g_visual);
-      const bool asleep = vis == "off" || vis == "sleep" || id(g_message) == "__off__";
+      const bool asleep = vis == "off" || vis == "sleep";
       if (asleep) {
         auto back_off = id(backlight).turn_off();
         back_off.perform();
@@ -325,23 +325,29 @@ display:
       const char *sub  = "The studio is free";
       int fx = 0; // 0 still, 1 fast flash, 2 slow pulse
 
-      if (vis == "delivery")        { r = 30; g = 80; b = 170; word = "DELIVERY";
-                                      sub = "Courier OTP at the door"; }
-      else if (vis == "preflight")  { r = 20; g = 140; b = 160; word = "PREP";
-                                      sub = "Silencing the room"; fx = 2; }
-      else if (vis == "sos")        { r = 91; g = 33; b = 182; word = "SOS";
-                                      sub = "A family member needs help"; fx = 1; }
+      if (vis == "sos" || emergency) {
+        r = 91; g = 33; b = 182;
+        word = (vis == "sos") ? "SOS" : "EMERGENCY";
+        sub  = (vis == "sos") ? "A family member needs help" : "Do not enter";
+        fx = 1;
+      }
+      else if (!id(g_message).empty() && id(g_message) != "__off__" && vis == "delivery") {
+        r = 30; g = 80; b = 170; word = "DELIVERY";
+        sub = "Courier OTP at the door";
+      }
       else if (recording)           { r = 165; g = 18;  b = 26;
                                       word = (st == "video_rec") ? "FILMING" : "ON AIR";
                                       sub  = "Recording — please do not enter"; }
+      else if (vis == "delivery")   { r = 30; g = 80; b = 170; word = "DELIVERY";
+                                      sub = "Courier OTP at the door"; }
+      else if (vis == "preflight")  { r = 20; g = 140; b = 160; word = "PREP";
+                                      sub = "Silencing the room"; fx = 2; }
       else if (st == "class")       { r = 169; g = 100; b = 16; word = "CLASS";
                                       sub = "Lesson in progress"; }
       else if (st == "meeting")     { r = 169; g = 100; b = 16; word = "MEETING";
                                       sub = "Please wait"; }
-      else if (emergency)           { r = 91;  g = 33;  b = 182; word = "EMERGENCY";
-                                      sub = "Do not enter"; fx = 1; }
 
-      if (recording || emergency || vis == "sos") {
+      if (recording) {
         if (vis == "door")      { fx = 1; word = "DOOR OPEN";
                                   sub = "Please close it"; }
         else if (vis == "loud") { fx = 2; word = "TOO LOUD";

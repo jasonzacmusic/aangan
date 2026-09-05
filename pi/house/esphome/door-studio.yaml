@@ -231,7 +231,7 @@ script:
       - lambda: |-
           std::string st = id(g_state);
           std::string relay_vis = id(g_relay_visual);
-          id(g_sleep) = (relay_vis == "off" || relay_vis == "sleep" || id(g_message) == "__off__");
+          id(g_sleep) = (relay_vis == "off" || relay_vis == "sleep");
           if (id(g_sleep)) {
             auto puck_off = id(door_puck).turn_off();
             puck_off.perform();

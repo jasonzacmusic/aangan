@@ -91,7 +91,7 @@ export function resolveStudioDoorPreset(input: {
     if ((visualOverride === "dnd" || visualOverride === "onair") && doorOpen) {
       p.tickers = ["The studio door is open — shut it", ...p.tickers];
     }
-    if (visualOverride === "wait" && state === "class") p.color = "#3B82F6";
+    if (visualOverride === "wait" && state === "class") p.color = "#F5A623";
     if (visualOverride === "wait" && state === "meeting") p.tickers = MEETING_TICKERS;
     return p;
   }
@@ -107,7 +107,7 @@ export function resolveStudioDoorPreset(input: {
     return p;
   }
   if (state === "class") {
-    return { ...STUDIO_DOOR_PRESETS.wait, color: "#3B82F6" };
+    return { ...STUDIO_DOOR_PRESETS.wait, color: "#F5A623" };
   }
   if (state === "meeting") {
     return { ...STUDIO_DOOR_PRESETS.wait, color: "#F5A623", tickers: MEETING_TICKERS };

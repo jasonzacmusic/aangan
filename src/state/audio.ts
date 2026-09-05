@@ -8,6 +8,8 @@ import type { StudioState } from "../api/types";
  * shouldn't beep; it should resolve.
  */
 let ctx: AudioContext | null = null;
+let chimeStop: (() => void) | null = null;
+let toneStop: (() => void) | null = null;
 
 function ac(): AudioContext | null {
   try {
@@ -33,6 +35,7 @@ export function playStateChime(state: StudioState, enabled: boolean) {
   if (!enabled) return;
   const a = ac();
   if (!a) return;
+  chimeStop?.();
   const now = a.currentTime;
   const master = a.createGain();
   master.gain.setValueAtTime(0.0001, now);
@@ -40,6 +43,7 @@ export function playStateChime(state: StudioState, enabled: boolean) {
   master.gain.exponentialRampToValueAtTime(0.0001, now + (state === "emergency" ? 0.5 : 1.4));
   master.connect(a.destination);
 
+  const oscillators: OscillatorNode[] = [];
   CHORDS[state].forEach((f, i) => {
     const osc = a.createOscillator();
     const g = a.createGain();
@@ -50,6 +54,7 @@ export function playStateChime(state: StudioState, enabled: boolean) {
     const start = now + i * (state === "emergency" ? 0 : 0.035); // soft roll, like an arpeggio
     osc.start(start);
     osc.stop(now + 1.6);
+    oscillators.push(osc);
   });
 
   if (state === "emergency") {
@@ -66,8 +71,28 @@ export function playStateChime(state: StudioState, enabled: boolean) {
       o.connect(g2);
       o.start(now + 0.3);
       o.stop(now + 0.75);
+      oscillators.push(o);
     });
   }
+
+  chimeStop = () => {
+    const t = a.currentTime;
+    try {
+      master.gain.cancelScheduledValues(t);
+      master.gain.setValueAtTime(Math.max(0.0001, master.gain.value), t);
+      master.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+    } catch {
+      /* already stopped */
+    }
+    oscillators.forEach((osc) => {
+      try {
+        osc.stop(t + 0.05);
+      } catch {
+        /* already stopped */
+      }
+    });
+    chimeStop = null;
+  };
 }
 
 /** Rotary detent tick — a tiny woodblock as the dial crosses a state. */
@@ -100,6 +125,7 @@ export function haptic(pattern: number | number[] = 8) {
 export function playReferenceTone(hz = 440, seconds = 1.8) {
   const a = ac();
   if (!a) return;
+  toneStop?.();
   const now = a.currentTime;
   const osc = a.createOscillator();
   const overtone = a.createOscillator();
@@ -121,6 +147,24 @@ export function playReferenceTone(hz = 440, seconds = 1.8) {
   overtone.start(now);
   osc.stop(now + seconds + 0.05);
   overtone.stop(now + seconds + 0.05);
+  toneStop = () => {
+    const t = a.currentTime;
+    try {
+      master.gain.cancelScheduledValues(t);
+      master.gain.setValueAtTime(Math.max(0.0001, master.gain.value), t);
+      master.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+    } catch {
+      /* already stopped */
+    }
+    [osc, overtone].forEach((node) => {
+      try {
+        node.stop(t + 0.05);
+      } catch {
+        /* already stopped */
+      }
+    });
+    toneStop = null;
+  };
 }
 
 /**
@@ -141,7 +185,7 @@ export function startEmergencySiren(enabled: boolean): () => void {
   first = setTimeout(() => {
     pulse();
     interval = setInterval(pulse, 2800);
-  }, 1200);
+  }, 1700);
 
   return () => {
     stopped = true;

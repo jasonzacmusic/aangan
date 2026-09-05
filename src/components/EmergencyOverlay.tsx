@@ -20,7 +20,7 @@ export default function EmergencyOverlay({ onStandDown, cause }: { onStandDown: 
         <div className="font-mono text-xs uppercase tracking-[0.4em] text-st-emergency">Emergency active</div>
         <h1 className="font-display mt-2 text-5xl text-paper">All family phones are ringing</h1>
         <p className="mt-3 max-w-sm text-sm text-dim">
-          {cause ? `${cause}. ` : ""}Every room sign is flashing violet. Location and doorbell snapshot have been sent to the family.
+          {cause ? `${cause}. ` : ""}Every room sign is flashing violet. Stand down only when everyone is actually safe.
         </p>
         <div className="mt-10 w-full max-w-xs">
           <HoldButton big label="Hold to stand down" color="#e6c36a" durationMs={2000} onComplete={onStandDown} />

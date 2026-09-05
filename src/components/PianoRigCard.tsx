@@ -28,15 +28,17 @@ export default function PianoRigCard() {
             <div className="flex shrink-0 gap-2">
               <button
                 onClick={() => void sendPianoCue("prev_preset")}
+                disabled={!!p.tally}
                 aria-label="Previous piano preset"
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-dim transition-all hover:border-gold/30 hover:text-paper active:scale-95"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-dim transition-all hover:border-gold/30 hover:text-paper active:scale-95 disabled:opacity-40"
               >
                 <ChevronLeftIcon size={18} />
               </button>
               <button
                 onClick={() => void sendPianoCue("next_preset")}
+                disabled={!!p.tally}
                 aria-label="Next piano preset"
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-gold/40 bg-gold/10 text-gold transition-all hover:bg-gold/20 active:scale-95"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-gold/40 bg-gold/10 text-gold transition-all hover:bg-gold/20 active:scale-95 disabled:opacity-40"
               >
                 <ChevronRightIcon size={18} />
               </button>
@@ -74,7 +76,7 @@ export default function PianoRigCard() {
                     : "listening · nothing captured yet"}
               </div>
             </div>
-            {p.online && p.blackbox.lastTakeAt && !p.blackbox.recording && (
+            {p.online && p.blackbox.lastTakeAt && !p.blackbox.recording && !p.tally && (
               <button
                 onClick={() => void sendPianoCue("replay_last")}
                 className="flex shrink-0 items-center gap-1.5 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-gold transition-all hover:bg-gold/20 active:scale-95"
@@ -87,7 +89,8 @@ export default function PianoRigCard() {
         )}
 
         <p className="mt-3 font-mono text-[9px] leading-relaxed text-dim/80">
-          {p.sampleRate / 1000} kHz · balanced XLR to the console · cues are one-way and can never glitch the audio
+          {p.sampleRate / 1000} kHz · balanced XLR to the console
+          {p.tally ? " · tally on — preset and replay locked until Rec is off" : " · preset changes cut the instrument, so they lock during a take"}
         </p>
       </div>
     </section>

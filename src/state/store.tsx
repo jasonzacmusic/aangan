@@ -22,13 +22,14 @@ import {
   SafetyAlertKind,
   SceneDef,
   Sos,
+  STATE_META,
   StudioState,
   StudioStateInfo,
   Utilities,
   UtilityAction,
 } from "../api/types";
 import { DEFAULT_DOOR_WARN_DBA } from "../door/studioDoorPresets";
-import { pushDoorMessage, pushDoorVisual, pushLedEspState } from "../api/ledesp";
+import { doorStatus, pushDoorMessage, pushDoorVisual, pushLedEspState } from "../api/ledesp";
 import { idbGet, idbSet } from "./idb";
 import { haptic, playReferenceTone, playStateChime } from "./audio";
 
@@ -52,7 +53,7 @@ export interface Settings {
 }
 
 const DEFAULT_SETTINGS: Settings = {
-  dbThreshold: 45,
+  dbThreshold: 40,
   doorWarnDb: DEFAULT_DOOR_WARN_DBA,
   chimes: true,
   emergencySiren: true,
@@ -92,10 +93,10 @@ interface Store {
   sceneRunning: string | null;
   lastError: string | null;
   notificationPermission: NotificationPermission | "unsupported";
-  setStudioState: (s: StudioState) => Promise<void>;
+  setStudioState: (s: StudioState) => Promise<boolean>;
   runScene: (scene: SceneDef) => Promise<void>;
-  triggerPanic: () => Promise<void>;
-  triggerSos: (who: string, message: string) => Promise<void>;
+  triggerPanic: () => Promise<boolean>;
+  triggerSos: (who: string, message: string) => Promise<boolean>;
   clearSos: () => Promise<void>;
   updateSettings: (patch: Partial<Settings>) => void;
   refreshDoorbell: () => Promise<void>;
@@ -182,6 +183,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const prepRef = useRef(preflightPrep);
   const stateInfoRef = useRef(stateInfo);
   const safetyRef = useRef<Safety | null>(null);
+  const committingRef = useRef(false);
   const commitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sceneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dbThresholdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -212,23 +214,36 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const saved = await idbGet<Settings>("settings");
       if (cancelled) return;
       const restored = saved ? { ...DEFAULT_SETTINGS, ...saved, scenes: saved.scenes?.length ? saved.scenes : DEFAULT_SCENES } : DEFAULT_SETTINGS;
+      restored.dbThreshold = Math.min(41, Math.max(35, restored.dbThreshold));
       setSettings(restored);
       settingsRef.current = restored;
-      api.setDbThreshold(restored.dbThreshold);
-      api.setDoorWarnDb?.(restored.doorWarnDb);
+      // Mock house only: keep the local take line. Never POST to Home
+      // Assistant on boot — that overwrote the Mac-trained threshold.
+      if (DATA_SOURCE === "mock") api.setDbThreshold(restored.dbThreshold);
 
       // Never trap the whole app on "tuning in". The studio door talks to
-      // /api/door, which does not need the Pi. Show Command immediately; a
-      // live house snapshot overwrites this the moment it arrives.
-      setStateInfo({ state: "available", setBy: "Aangan", since: Date.now() });
+      // /api/door, which does not need the Pi. Prefer the live hall state,
+      // then the last known state — never invent Available over an SOS.
+      const savedState = await idbGet<StudioStateInfo>("last-studio-state");
+      let initial: StudioStateInfo | null =
+        savedState && savedState.state in STATE_META && Number.isFinite(savedState.since) ? savedState : null;
+      try {
+        const door = await doorStatus();
+        if (door.reachable && door.state && door.state in STATE_META) {
+          initial = { state: door.state as StudioState, setBy: "Studio door", since: Date.now() };
+        }
+      } catch {
+        /* door relay is optional at boot */
+      }
+      setStateInfo(initial ?? { state: "available", setBy: "Aangan", since: Date.now() });
       setDisplays(DEFAULT_DISPLAYS);
       setSafety({
         fire: false, gas: false, panic: false,
         leakKitchen: false, leakBath: false, leakGeyser: false, perimeter: false,
       });
       setPreflight({
-        doorsClosed: true, quietEnough: true, sensorsHealthy: false, safetyClear: true,
-        ready: false, openDoors: [], dbLevel: 0, dbThreshold: restored.dbThreshold,
+        doorsClosed: true, quietEnough: false, sensorsHealthy: false, safetyClear: true,
+        ready: false, openDoors: [], dbLevel: null, dbThreshold: restored.dbThreshold,
       });
 
       let attempt = 0;
@@ -283,7 +298,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
           unsub = api.subscribe((ev) => {
             if (cancelled) return;
-            if (ev.type === "state") setStateInfo(ev.state);
+            if (ev.type === "state") {
+              if (committingRef.current) return;
+              setStateInfo(ev.state);
+              void idbSet("last-studio-state", ev.state);
+            }
             if (ev.type === "rooms") {
               setRooms(ev.rooms);
               const nextMusic = ev.rooms.find((room) => room.id === "music");
@@ -341,23 +360,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const finishCommit = useCallback(() => {
     if (commitTimer.current) clearTimeout(commitTimer.current);
-    commitTimer.current = setTimeout(() => setCommitting(false), 900);
+    commitTimer.current = setTimeout(() => {
+      committingRef.current = false;
+      setCommitting(false);
+    }, 900);
   }, []);
 
   const commitState = useCallback(
     async (target: StudioState, action: () => Promise<StudioStateInfo>) => {
+      committingRef.current = true;
       setCommitting(true);
       setLastError(null);
       // The dial IS the door. Push the couple first, then try the rest of
       // the house. A sleeping Pi must never leave the light and screen behind.
-      void pushLedEspState(target);
+      void pushLedEspState(target, { force: true });
       const previous = stateInfoRef.current;
-      setStateInfo({ state: target, setBy: "This device", since: Date.now() });
+      const nextInfo = { state: target, setBy: "This device", since: Date.now() };
+      setStateInfo(nextInfo);
+      void idbSet("last-studio-state", nextInfo);
       playStateChime(target, settingsRef.current.chimes);
       haptic(target === "emergency" ? [60, 40, 60] : [12, 30, 24]);
       try {
         const info = await action();
         setStateInfo(info);
+        void idbSet("last-studio-state", info);
         setConnected(true);
         setConnectionStatus("online");
         if (target === "available" && prepRef.current?.active) {
@@ -375,6 +401,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         // emergency stand-down: the siren stops on this phone while every
         // other device stays in emergency. Roll back and say so.
         setStateInfo(previous);
+        if (previous) {
+          void idbSet("last-studio-state", previous);
+          void pushLedEspState(previous.state, { force: true });
+        }
         setConnected(false);
         setConnectionStatus("offline");
         setLastError(
@@ -382,9 +412,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             ? "The house did not confirm the stand-down — it is still in emergency. Try again."
             : "The house did not confirm that change — the state was not switched."
         );
+        return false;
       } finally {
         finishCommit();
       }
+      return true;
     },
     [finishCommit]
   );
@@ -421,6 +453,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try {
       await api.clearSos();
       setSos(null);
+      const current = stateInfoRef.current?.state && stateInfoRef.current.state !== "emergency"
+        ? stateInfoRef.current.state
+        : "available";
+      void pushLedEspState(current, { force: true });
     } catch {
       setLastError("Could not mark the SOS as safe — try once more.");
     }
@@ -526,18 +562,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const playTone = useCallback(async (hz = 440) => {
     playReferenceTone(hz);
-    try {
-      await api.playTone(hz);
-    } catch {
-      setLastError("The app played A440 here, but the Pi speaker did not answer.");
-    }
+    // Room speaker is optional; the phone is the reference the musician hears.
+    void api.playTone(hz).catch(() => {});
   }, []);
 
   const sendPianoCue = useCallback(async (cue: PianoCue) => {
     try {
       setPianoRig(await api.pianoCue(cue));
     } catch {
-      setLastError("The piano rig did not answer that cue.");
+      setLastError(
+        cue === "next_preset" || cue === "prev_preset" || cue === "replay_last"
+          ? "Piano cues are locked while a take is rolling — wait until Rec is off."
+          : "The piano rig did not answer that cue."
+      );
     }
   }, []);
 

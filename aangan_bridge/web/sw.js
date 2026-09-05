@@ -1,5 +1,5 @@
 /* Studio Command — versioned offline shell with user-controlled updates. */
-const BUILD_ID = "mtiiagou";
+const BUILD_ID = "mtomk9o0";
 const SHELL = `studio-command-shell-${BUILD_ID}`;
 const RUNTIME = `studio-command-runtime-${BUILD_ID}`;
 const OFFLINE_SHELL = "/__studio-command-offline-shell__";

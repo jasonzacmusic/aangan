@@ -251,6 +251,16 @@ def as_int(value: Any, default: int = 0) -> int:
     return int(round(as_float(value, float(default))))
 
 
+def sensor_float(states: dict[str, dict[str, Any]], entity_id: str | None) -> float | None:
+    if not available(states, entity_id):
+        return None
+    raw = entity_state(states, entity_id)
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return None
+
+
 def epoch_ms(value: Any, default: int = 0) -> int:
     if isinstance(value, (int, float)):
         return int(value if value > 10_000_000_000 else value * 1000)
@@ -342,7 +352,7 @@ def state_info(states: dict[str, dict[str, Any]]) -> dict[str, Any]:
 
 
 def rooms_payload(states: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
-    colors = {"available": "#2FBF71", "class": "#3B82F6", "meeting": "#F5A623", "audio_rec": "#E5484D", "video_rec": "#D93036", "emergency": "#7C3AED"}
+    colors = {"available": "#2FBF71", "class": "#F5A623", "meeting": "#F5A623", "audio_rec": "#E5484D", "video_rec": "#D93036", "emergency": "#7C3AED"}
     sign = colors.get(state_info(states)["state"], "#2FBF71")
     rooms = []
     for room_id, config in ENTITY["rooms"].items():
@@ -356,7 +366,7 @@ def rooms_payload(states: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
             "signColor": sign,
         }
         if room_id == "music":
-            room["dbLevel"] = as_float(entity_state(states, ENTITY["db"]), 0)
+            room["dbLevel"] = sensor_float(states, ENTITY["db"])
         rooms.append(room)
     return rooms
 
@@ -372,8 +382,8 @@ def preflight_payload(states: dict[str, dict[str, Any]]) -> dict[str, Any]:
         "ready": is_on(states, ENTITY["ready"]),
         "openDoors": open_rooms,
         "openDoorNames": [name for name, _ in open_inputs],
-        "dbLevel": as_float(entity_state(states, ENTITY["db"]), 0),
-        "dbThreshold": as_float(entity_state(states, ENTITY["db_threshold"]), 45),
+        "dbLevel": sensor_float(states, ENTITY["db"]),
+        "dbThreshold": as_float(entity_state(states, ENTITY["db_threshold"]), 40),
     }
 
 
@@ -390,7 +400,7 @@ def piano_payload() -> dict[str, Any]:
         with urllib.request.urlopen(f"{PIANO_URL}/status", timeout=2) as response:
             return json.loads(response.read())
     except (OSError, urllib.error.URLError, json.JSONDecodeError):
-        return {"online": False, "preset": "—", "cpuPct": 0, "tempC": 0, "audioDevice": "Piano Pi unavailable", "sampleRate": 48000, "bufferFrames": 192, "latencyMs": 4, "lastSeen": 0}
+        return {"online": False, "preset": "—", "cpuPct": 0, "tempC": 0, "audioDevice": "Piano Pi unavailable", "sampleRate": 48000, "bufferFrames": 192, "latencyMs": 4, "lastSeen": 0, "tally": False}
 
 
 def utilities_payload(states: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -627,7 +637,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         path = urllib.parse.urlsplit(self.path).path
         try:
-            states = None if path in {"/api/piano", "/api/delivery", "/api/displays", "/api/sos", "/api/history", "/api/stream", "/api/health", "/api/doorbell.jpg"} else current_states()
+            states = None if path in {"/api/piano", "/api/delivery", "/api/displays", "/api/sos", "/api/history", "/api/stream", "/api/health", "/api/doorbell.jpg", "/api/preflight/status"} else current_states()
             if path == "/api/health":
                 # Health must answer 200 even while Home Assistant restarts —
                 # a watchdog probing this would otherwise bounce a healthy
@@ -636,7 +646,7 @@ class Handler(BaseHTTPRequestHandler):
                     ha_up = bool(current_states())
                 except Exception:
                     ha_up = False
-                return self.send_json({"ok": True, "homeAssistant": ha_up, "commissioning": ALLOW_COMMISSIONING, "version": "1.3.0"})
+                return self.send_json({"ok": True, "homeAssistant": ha_up, "commissioning": ALLOW_COMMISSIONING, "version": "1.4.0"})
             if path == "/api/state":
                 return self.send_json(state_info(states))
             if path == "/api/rooms":
@@ -689,7 +699,18 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_error_json(403, "origin not allowed")
         try:
             body = self.read_body()
-            states = current_states()
+            skip_ha = path in {
+                "/api/sos",
+                "/api/sos/clear",
+                "/api/tone",
+                "/api/piano/cue",
+                "/api/delivery",
+                "/api/delivery/clear",
+                "/api/displays/update",
+                "/api/displays/add",
+                "/api/displays/remove",
+            }
+            states = {} if skip_ha else current_states()
             if path == "/api/state":
                 target = body.get("state")
                 if target not in VALID_STATES:
@@ -717,7 +738,7 @@ class Handler(BaseHTTPRequestHandler):
                 broadcast("state", state_info(current_states(True)))
                 return self.send_json({"ok": True})
             if path == "/api/settings/db-threshold":
-                value = max(30.0, min(90.0, as_float(body.get("value"), 45)))
+                value = max(30.0, min(90.0, as_float(body.get("value"), 40)))
                 call_service("input_number", "set_value", {"entity_id": ENTITY["db_threshold"], "value": value})
                 return self.send_json({"ok": True})
             if path == "/api/preflight/prepare":
@@ -784,6 +805,10 @@ class Handler(BaseHTTPRequestHandler):
                 try:
                     with urllib.request.urlopen(request, timeout=3) as response:
                         piano = json.loads(response.read())
+                except urllib.error.HTTPError as error:
+                    if error.code == 409:
+                        return self.send_error_json(409, "piano cues locked during a take")
+                    piano = piano_payload()
                 except Exception:
                     piano = piano_payload()
                 broadcast("piano", piano)

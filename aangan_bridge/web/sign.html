@@ -50,8 +50,12 @@
   #logo { height:7.2vmin; max-height:74px; width:auto; opacity:.9; margin-bottom:4vmin; }
   #word {
     font-family:Georgia,"Times New Roman",serif;
-    font-size:20vmin; line-height:.92; font-weight:normal;
+    font-size:14vmin; line-height:.92; font-weight:normal;
     letter-spacing:-.015em; text-shadow:0 .4vmin 3vmin rgba(0,0,0,.45);
+    max-width:92%;
+  }
+  @media (min-aspect-ratio: 4/3) {
+    #word { font-size:18vmin; }
   }
   #sub { font-size:3vmin; opacity:.8; margin-top:3.4vmin; font-weight:500; letter-spacing:.005em; }
   /* A written note is the one thing on this door somebody chose to say, so it
@@ -113,12 +117,17 @@
  */
 (function () {
   var LOOK = {
-    audio_rec: { bg:"#A5121A", word:"ON AIR",    sub:"Recording — please do not enter", foot:"Studio" },
-    video_rec: { bg:"#A5121A", word:"ON AIR",    sub:"Filming — please do not enter",   foot:"Studio" },
+    audio_rec: { bg:"#8E1A22", word:"ON AIR",    sub:"Recording — please do not enter", foot:"Studio" },
+    video_rec: { bg:"#A5121A", word:"FILMING",   sub:"Cameras hot — please do not enter", foot:"Studio" },
     class:     { bg:"#A96410", word:"CLASS",     sub:"Lesson in progress",                   foot:"Studio" },
     meeting:   { bg:"#A96410", word:"MEETING",   sub:"Please wait",                          foot:"Studio" },
     emergency: { bg:"#5B21B6", word:"EMERGENCY", sub:"Do not enter",                         foot:"Studio" },
-    available: { bg:"#123F2A", word:"COME IN",   sub:"The studio is free",                   foot:"Studio" }
+    available: { bg:"#123F2A", word:"COME IN",   sub:"The studio is free",                   foot:"Studio" },
+    sos:       { bg:"#5B21B6", word:"SOS",       sub:"A family member needs help",            foot:"Studio" },
+    delivery:  { bg:"#1E3A8A", word:"DELIVERY",  sub:"Leave it at the door",                 foot:"Studio" },
+    preflight: { bg:"#0E4A52", word:"PREP",      sub:"Silencing the room",                   foot:"Studio" },
+    door:      { bg:"#A5121A", word:"DOOR OPEN", sub:"Please close it",                      foot:"Studio" },
+    loud:      { bg:"#A96410", word:"TOO LOUD",  sub:"Close the door",                       foot:"Studio" }
   };
 
   var el = function (id) { return document.getElementById(id); };
@@ -142,29 +151,54 @@
 
     var look = LOOK[state] || LOOK.available;
     var recording = (state === "audio_rec" || state === "video_rec");
-    var fx = "", sub = look.sub;
+    var fx = "";
+    var sub = look.sub;
+    var word = look.word;
+    var bg = look.bg;
+    var noteText = note || "";
 
-    /* Urgency order matters and must match the strip: a door swinging open
-       during a take beats the room merely being loud. Someone is about to
-       walk into shot; that is the more expensive problem. */
-    if (recording || state === "emergency") {
+    if (visual === "off" || visual === "sleep") {
+      bg = "#0b0b0c"; word = ""; sub = ""; fx = ""; noteText = "";
+    } else if (visual === "sos" || state === "emergency") {
+      look = visual === "sos" ? LOOK.sos : LOOK.emergency;
+      bg = look.bg; word = look.word; sub = look.sub; fx = "flash";
+    } else if (noteText && (visual === "delivery" || noteText.indexOf("·") >= 0)) {
+      look = LOOK.delivery;
+      bg = look.bg;
+      var parts = noteText.split("·");
+      var code = (parts.length > 1 ? parts[1] : parts[0]).replace(/^\s+|\s+$/g, "");
+      word = code || look.word;
+      sub = (parts[0] || "Delivery").replace(/^\s+|\s+$/g, "") + " — leave it at the door";
+      noteText = "";
+    } else if (recording && visual === "door") {
+      look = LOOK.door; bg = look.bg; word = look.word; sub = look.sub; fx = "flash";
+    } else if (recording && visual === "loud") {
+      look = LOOK.loud; bg = look.bg; word = look.word; sub = look.sub; fx = "breathe";
+    } else if (recording) {
+      look = LOOK[state] || LOOK.audio_rec;
+      bg = look.bg; word = look.word; sub = look.sub;
+    } else if (visual === "preflight") {
+      look = LOOK.preflight; bg = look.bg; word = look.word; sub = look.sub; fx = "breathe";
+    } else if (visual === "delivery") {
+      look = LOOK.delivery; bg = look.bg; word = look.word; sub = look.sub;
+    } else if (recording || state === "emergency") {
       if (visual === "door")      { fx = "flash";   sub = "DOOR OPEN — please close it"; }
       else if (visual === "loud") { fx = "breathe"; sub = "Too loud for a take"; }
       else if (state === "emergency") { fx = "flash"; }
     }
 
-    var key = state + "|" + visual + "|" + fx;
+    var key = state + "|" + visual + "|" + fx + "|" + word;
     if (key !== lastKey) {
-      document.body.style.backgroundColor = look.bg;
-      el("word").innerHTML = look.word;
+      document.body.style.backgroundColor = bg;
+      el("word").innerHTML = word;
       el("stage").className = fx;
-      el("foot").innerHTML = look.foot;
+      el("foot").innerHTML = look.foot || "Studio";
       lastKey = key;
     }
     el("sub").innerHTML = sub;
     /* textContent, not innerHTML: this string is typed by a person on a phone
        and must never be able to put markup on the door. */
-    el("note").textContent = note || "";
+    el("note").textContent = noteText;
     el("dba").innerHTML = (dba && dba !== "--") ? dba + " dBA" : "";
   }
 

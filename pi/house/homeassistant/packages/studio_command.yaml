@@ -54,7 +54,7 @@ template:
         delay_on: "00:00:20"
         state: >
           {% set db = states('sensor.studio_sound_level') | float(999) %}
-          {% set thr = states('input_number.studio_db_threshold') | float(45) %}
+          {% set thr = states('input_number.studio_db_threshold') | float(40) %}
           {% if this.state == 'on' %}
             {{ db < thr + 1 }}
           {% else %}
@@ -88,7 +88,9 @@ template:
              and is_state('binary_sensor.teaching_sink_leak', 'off')
              and is_state('binary_sensor.house_sink_leak', 'off')
              and is_state('binary_sensor.floor_drain_leak', 'off')
-             and is_state('binary_sensor.kitchen_sink_leak', 'off') }}
+             and is_state('binary_sensor.kitchen_sink_leak', 'off')
+             and states('binary_sensor.main_door_vibration') in ['unknown', 'unavailable', '', 'off']
+             and states('binary_sensor.balcony_vibration') in ['unknown', 'unavailable', '', 'off'] }}
 
       - name: house_fire_any
         unique_id: house_fire_any
@@ -225,7 +227,7 @@ automation:
       - variables:
           colors:
             available: [47, 191, 113]
-            class: [59, 130, 246]
+            class: [245, 166, 35]
             meeting: [245, 166, 35]
             audio_rec: [229, 72, 77]
             video_rec: [217, 48, 54]
@@ -245,11 +247,13 @@ automation:
       - action: rest_command.piano_cue_recording
 
   - id: rec_done_piano
-    alias: "Back to available → piano at ease"
+    alias: "Leaving Rec → piano at ease"
     trigger:
       - platform: state
         entity_id: input_select.studio_state
-        to: available
+        from:
+          - audio_rec
+          - video_rec
     action:
       - action: rest_command.piano_cue_stopped
 

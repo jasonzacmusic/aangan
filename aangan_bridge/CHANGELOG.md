@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0
+
+- Family SOS latches even when Home Assistant is down; piano cues lock during a take; a dead mic is not treated as silence.
+- Door sleep is a visual, not a note, so the dial can wake the boards without wiping a delivery OTP.
+- Default take line sits at 40 dBA, under AC rest, so Ready cannot go green with the compressor on.
+
 ## 1.2.0
 
 - Adds the visual Install & test hub, five-button phone navigation, and self-hosted offline fonts.

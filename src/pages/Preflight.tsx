@@ -43,9 +43,11 @@ export default function Preflight({ onSelect }: Props) {
 
   const music = rooms.find((r) => r.id === "music");
   const db = music?.dbLevel ?? preflight.dbLevel;
-  const quiet = db < settings.dbThreshold;
+  const takeLine = preflight.dbThreshold ?? settings.dbThreshold;
+  const micLive = db != null;
+  const quiet = preflight.quietEnough;
   const doorsClosed = preflight.doorsClosed;
-  const ready = doorsClosed && quiet && preflight.sensorsHealthy && preflight.safetyClear;
+  const ready = preflight.ready;
 
   const openDoorNames = preflight.openDoorNames?.length
     ? preflight.openDoorNames
@@ -82,8 +84,14 @@ export default function Preflight({ onSelect }: Props) {
         />
         <CheckRow
           ok={quiet}
-          title={quiet ? "Room is quiet" : `Too loud — ${db.toFixed(0)} dB`}
-          detail={quiet ? `Holding under your ${settings.dbThreshold} dB threshold.` : `Needs to drop under ${settings.dbThreshold} dB. Check the fan, AC, or traffic noise.`}
+          title={!micLive ? "Mic is not reporting" : quiet ? "Room is quiet" : `Too loud — ${db!.toFixed(0)} dBA`}
+          detail={
+            !micLive
+              ? "No live reading from the studio mic — that is not silence. Check the SEN0232 node."
+              : quiet
+                ? `Holding under your ${takeLine} dBA take line.`
+                : `Needs to drop under ${takeLine} dBA. Check the fan, AC, or traffic noise.`
+          }
         />
         <CheckRow
           ok={preflight.sensorsHealthy}
@@ -131,7 +139,7 @@ export default function Preflight({ onSelect }: Props) {
       {/* Live meter */}
       <div className="mt-4 rounded-2xl border border-line bg-surface/80 p-4 backdrop-blur">
         <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-dim">Music room · live</div>
-        <DbMeter value={db} threshold={settings.dbThreshold} />
+        <DbMeter value={db} threshold={takeLine} />
       </div>
 
       {/* The pre-flight can act, not only diagnose. */}
@@ -143,7 +151,9 @@ export default function Preflight({ onSelect }: Props) {
               {preflightPrep?.status === "preparing" ? "Silencing the room…" : preflightPrep?.status === "restoring" ? "Restoring studio devices…" : preflightPrep?.active ? "Room silence is armed" : "Let the house fix the noise"}
             </div>
             <p className="mt-1 text-xs text-dim">
-              {preflightPrep?.active ? "Doorbell is muted; AC and fan stay off until you return to Available." : "Mutes the doorbell, cuts the AC and fan, then waits for the live meter to prove the drop."}
+              {preflightPrep?.active
+                ? "Doorbell is muted; AC and fan stay off until you return to Available. Ready to record still waits for the 20 s quiet hold."
+                : "Mutes the doorbell and switches off AC and fan. The live meter and 20 s quiet hold still have to agree before Ready."}
             </p>
           </div>
           <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${preflightPrep?.active ? "bg-st-available" : preflightPrep?.status === "preparing" ? "pulse-dot bg-gold" : "bg-dim"}`} />

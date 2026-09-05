@@ -1,39 +1,40 @@
 import { useEffect, useState } from "react";
 import { STATE_META, type StudioState } from "../api/types";
-import { pushDoorSleep, pushDoorVisual, pushLedEspState, refreshDoorStatus, subscribeDoorStatus } from "../api/ledesp";
+import { pushDoorSleep, pushLedEspState, refreshDoorStatus, subscribeDoorStatus } from "../api/ledesp";
+import { useStore } from "../state/store";
 
 const LOOK: Record<string, { word: string; sub: string; color: string }> = {
-  available: { word: "COME IN", sub: "The studio is free", color: "#2FBF71" },
-  class: { word: "CLASS", sub: "Lesson in progress", color: "#F5A623" },
-  meeting: { word: "MEETING", sub: "Please wait", color: "#F5A623" },
-  audio_rec: { word: "ON AIR", sub: "Recording — please do not enter", color: "#D93036" },
-  video_rec: { word: "FILMING", sub: "Recording — please do not enter", color: "#D93036" },
-  emergency: { word: "EMERGENCY", sub: "Do not enter", color: "#7C3AED" },
+  available: { word: "COME IN", sub: "The studio is free", color: STATE_META.available.color },
+  class: { word: "CLASS", sub: "Lesson in progress", color: STATE_META.class.color },
+  meeting: { word: "MEETING", sub: "Please wait", color: STATE_META.meeting.color },
+  audio_rec: { word: "ON AIR", sub: "Recording — please do not enter", color: STATE_META.audio_rec.color },
+  video_rec: { word: "FILMING", sub: "Cameras hot — please do not enter", color: STATE_META.video_rec.color },
+  emergency: { word: "EMERGENCY", sub: "Do not enter", color: STATE_META.emergency.color },
   delivery: { word: "DELIVERY", sub: "Courier OTP at the door", color: "#2D72E6" },
   preflight: { word: "PREP", sub: "Silencing the room", color: "#0E7A88" },
-  sos: { word: "SOS", sub: "A family member needs help", color: "#7C3AED" },
+  sos: { word: "SOS", sub: "Opens the family SOS page", color: "#7C3AED" },
   off: { word: "SLEEP", sub: "Door is dark · turn the dial to wake", color: "#3a3a42" },
 };
-
-const ANNOUNCE = [
-  { id: "delivery", label: "Delivery" },
-  { id: "preflight", label: "Prep" },
-  { id: "sos", label: "SOS" },
-  { id: "ok", label: "Clear" },
-];
 
 /**
  * The couple: one sign, one light, same colour. Lives under the Command dial
  * so this page IS the door — nobody leaves to another link.
  */
-export default function DoorCouple({ state }: { state: StudioState }) {
+export default function DoorCouple({
+  state,
+  onOpenDisplays,
+}: {
+  state: StudioState;
+  onOpenDisplays: () => void;
+}) {
+  const { prepareStudio } = useStore();
   const [visual, setVisual] = useState<string | null>(null);
 
   useEffect(() => {
     const unsub = subscribeDoorStatus((next) => {
       if (!next.reachable) return;
       const vis =
-        next.message === "__off__" || next.visual === "off" || next.visual === "sleep"
+        next.visual === "off" || next.visual === "sleep"
           ? "off"
           : next.visual && LOOK[next.visual] && !["ok", "wait", "onair"].includes(next.visual)
             ? next.visual
@@ -92,16 +93,31 @@ export default function DoorCouple({ state }: { state: StudioState }) {
       </p>
 
       <div className="mt-3 grid grid-cols-4 gap-2">
-        {ANNOUNCE.map((a) => {
+        {[
+          { id: "delivery", label: "OTP", action: () => onOpenDisplays() },
+          {
+            id: "preflight",
+            label: "Prep",
+            action: () => {
+              void prepareStudio();
+              setVisual("preflight");
+            },
+          },
+          { id: "sos", label: "SOS", action: () => { window.location.hash = "#/sos"; } },
+          {
+            id: "ok",
+            label: "Clear",
+            action: () => {
+              void pushLedEspState(state, { force: true });
+              setVisual(state);
+            },
+          },
+        ].map((a) => {
           const color = LOOK[a.id]?.color ?? "#26262b";
           return (
             <button
               key={a.id}
-              onClick={() => {
-                if (a.id === "ok") void pushLedEspState(state);
-                else void pushDoorVisual(a.id);
-                setVisual(a.id === "ok" ? state : a.id);
-              }}
+              onClick={a.action}
               className="rounded-xl px-2 py-2.5 text-sm font-semibold text-white transition-transform active:scale-[0.98]"
               style={{ background: color }}
             >

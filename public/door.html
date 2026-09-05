@@ -189,7 +189,10 @@
         b.style.background = s.bg;
         b.setAttribute("data-visual", s.id);
         b.innerHTML = s.label + '<span class="k">' + s.key + "</span>";
-        b.onclick = function () { post({ device: "app", visual: s.id }, s.label + " on the door"); };
+        b.onclick = function () {
+          if (s.id === "sos") { window.location.hash = "#/sos"; return; }
+          post({ device: "app", visual: s.id }, s.label + " on the door");
+        };
         cell.appendChild(b); ah.appendChild(cell);
       })(ANNOUNCE[i]);
     }

@@ -93,7 +93,10 @@ export default function HoldButton({ label, color = "#c9a84c", durationMs = 1200
         begin();
       }}
       onPointerUp={stop}
-      onPointerLeave={stop}
+      onPointerLeave={(event) => {
+        if (event.currentTarget.hasPointerCapture?.(event.pointerId)) return;
+        stop();
+      }}
       onPointerCancel={stop}
       onKeyDown={(event) => {
         if ((event.key === " " || event.key === "Enter") && !event.repeat) {

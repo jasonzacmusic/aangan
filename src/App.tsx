@@ -56,9 +56,11 @@ export default function App() {
     setStudioState,
     clearSos,
     runScene,
+    preflight,
   } = useStore();
   const [tab, setTab] = useState<Tab>("command");
   const [pending, setPending] = useState<PendingCommand | null>(null);
+  const [blockedRec, setBlockedRec] = useState<StudioState | null>(null);
   const route = useRoute();
   const panelId = route.kind === "panel" ? route.id : null;
 
@@ -70,9 +72,10 @@ export default function App() {
   }, [stateInfo?.state]);
 
   useEffect(() => {
-    if (stateInfo?.state !== "emergency" || panelId) return;
+    if (panelId) return;
+    if (stateInfo?.state !== "emergency" && !sos?.active) return;
     return startEmergencySiren(settings.emergencySiren);
-  }, [stateInfo?.state, settings.emergencySiren, panelId]);
+  }, [stateInfo?.state, sos?.active, settings.emergencySiren, panelId]);
 
   // The family SOS page — a home-screen bookmark on every family phone.
   if (route.kind === "sos") {
@@ -139,18 +142,34 @@ export default function App() {
 
   const meta = STATE_META[stateInfo.state];
 
+  const recBlocked = (state: StudioState) =>
+    (state === "audio_rec" || state === "video_rec") && !!preflight && !preflight.ready && state !== stateInfo.state;
+
   const requestState = (state: StudioState) => {
+    if (recBlocked(state)) {
+      setBlockedRec(state);
+      return;
+    }
     if (STATE_META[state].needsConfirm && state !== stateInfo.state) setPending({ state });
     else void setStudioState(state);
   };
 
   const requestScene = (scene: SceneDef) => {
+    if (recBlocked(scene.state)) {
+      setBlockedRec(scene.state);
+      return;
+    }
     if (STATE_META[scene.state].needsConfirm) setPending({ state: scene.state, scene });
     else void runScene(scene);
   };
 
   const confirmPending = () => {
     if (!pending) return;
+    if (recBlocked(pending.state)) {
+      setBlockedRec(pending.state);
+      setPending(null);
+      return;
+    }
     if (pending.scene) void runScene(pending.scene);
     else void setStudioState(pending.state);
     setPending(null);
@@ -203,7 +222,14 @@ export default function App() {
       </div>
 
       <main className="relative z-10 pb-32 pt-2 lg:pl-56 lg:pb-28 lg:pt-16">
-        {tab === "command" && <Command onSelect={requestState} onScene={requestScene} />}
+        {tab === "command" && (
+          <Command
+            onSelect={requestState}
+            onScene={requestScene}
+            onOpenDisplays={() => setTab("displays")}
+            onOpenReady={() => setTab("preflight")}
+          />
+        )}
         {tab === "home" && <Home />}
         {tab === "preflight" && <Preflight onSelect={requestState} />}
         {tab === "displays" && <Displays />}
@@ -232,13 +258,41 @@ export default function App() {
         </div>
       )}
 
+      {blockedRec && (
+        <div className="fixed inset-0 z-40 flex items-end justify-center lg:items-center" role="dialog" aria-modal>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setBlockedRec(null)} />
+          <div className="rise-in relative z-10 w-full max-w-md rounded-t-3xl border border-line bg-surface p-6 pb-10 safe-bottom lg:rounded-3xl lg:pb-6">
+            <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-st-meeting">Room not ready</div>
+            <h2 className="font-display mt-2 text-3xl text-paper">Cannot arm {STATE_META[blockedRec].label}</h2>
+            <p className="mt-2 text-sm text-dim">
+              Pre-flight is still red. The hall would go ON AIR while the room is not quiet, a door is open, or a sensor is down.
+            </p>
+            <div className="mt-6 space-y-3">
+              <button
+                className="h-12 w-full rounded-2xl border border-gold/40 bg-gold/10 text-sm font-semibold text-gold"
+                onClick={() => {
+                  setBlockedRec(null);
+                  setTab("preflight");
+                }}
+              >
+                Open Ready
+              </button>
+              <button className="h-12 w-full rounded-2xl border border-line text-sm text-dim" onClick={() => setBlockedRec(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {pending && <ConfirmSheet state={pending.state} onConfirm={confirmPending} onCancel={() => setPending(null)} />}
-      {stateInfo.state === "emergency" && (
+      {(stateInfo.state === "emergency" || sos?.active) && (
         <EmergencyOverlay
           cause={emergencyCause}
           onStandDown={() => {
-            void clearSos();
-            void setStudioState("available");
+            void (async () => {
+              const ok = await setStudioState("available");
+              if (ok !== false) await clearSos();
+            })();
           }}
         />
       )}

@@ -10,27 +10,29 @@ const MAX_DB = 90;
 const SEGMENTS = 26;
 
 interface Props {
-  value: number;
+  value: number | null;
   threshold: number;
   compact?: boolean;
 }
 
 export default function DbMeter({ value, threshold, compact }: Props) {
-  const [display, setDisplay] = useState(value);
-  const target = useRef(value);
-  target.current = value;
+  const [display, setDisplay] = useState(value ?? threshold);
+  const target = useRef(value ?? threshold);
+  if (value != null) target.current = value;
 
   // Chase the live value, then STOP. An asymptotic chase that never lands
   // would re-render at 60 fps forever — real heat on a 24/7 wall panel.
   useEffect(() => {
+    if (value == null) return;
     let raf = 0;
     const loop = () => {
       let settled = false;
       setDisplay((d) => {
-        const next = d + (target.current - d) * 0.12;
-        if (Math.abs(target.current - next) < 0.05) {
+        const goal = target.current;
+        const next = d + (goal - d) * 0.12;
+        if (Math.abs(goal - next) < 0.05) {
           settled = true;
-          return target.current;
+          return goal;
         }
         return next;
       });
@@ -39,6 +41,19 @@ export default function DbMeter({ value, threshold, compact }: Props) {
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
   }, [value]);
+
+  if (value == null) {
+    return (
+      <div className="w-full">
+        <div className="flex items-end gap-[3px]" style={{ height: compact ? 26 : 44 }}>
+          {Array.from({ length: SEGMENTS }).map((_, i) => (
+            <div key={i} className="flex-1 rounded-[2px]" style={{ height: `${(0.45 + (i / SEGMENTS) * 0.55) * 100}%`, background: "#22222b", opacity: 0.7 }} />
+          ))}
+        </div>
+        <div className="mt-1.5 font-mono text-[10px] text-st-meeting">Mic not reporting · not silence</div>
+      </div>
+    );
+  }
 
   const frac = Math.max(0, Math.min(1, (display - MIN_DB) / (MAX_DB - MIN_DB)));
   const lit = Math.round(frac * SEGMENTS);
@@ -76,9 +91,9 @@ export default function DbMeter({ value, threshold, compact }: Props) {
           <span className={over ? "text-st-audio font-medium" : "text-paper"} style={{ fontSize: compact ? 12 : 15 }}>
             {display.toFixed(0)}
           </span>{" "}
-          dB
+          dBA
         </span>
-        <span className={over ? "text-st-audio" : ""}>{over ? "over threshold" : `quiet under ${threshold} dB`}</span>
+        <span className={over ? "text-st-audio" : ""}>{over ? "over threshold" : `quiet under ${threshold} dBA`}</span>
       </div>
     </div>
   );

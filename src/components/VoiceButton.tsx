@@ -13,12 +13,12 @@ interface Props {
 
 function parseCommand(text: string): StudioState | null {
   const t = text.toLowerCase();
-  if (/(emergency|panic|help)/.test(t)) return "emergency";
-  if (/video|youtube|shoot|camera|film/.test(t)) return "video_rec";
-  if (/(audio.*(rec|record))|((rec|record).*audio)|recording|record/.test(t)) return "audio_rec";
-  if (/class|lesson|teach/.test(t)) return "class";
-  if (/meeting|call|zoom/.test(t)) return "meeting";
-  if (/available|free|open|wind down|done|finish/.test(t)) return "available";
+  if (/\b(emergency|panic|studio sos)\b/.test(t)) return "emergency";
+  if (/\b(video rec|video recording|youtube|filming|cameras? hot)\b/.test(t)) return "video_rec";
+  if (/\b(audio rec|audio recording|tape is rolling|start (audio )?record)\b/.test(t)) return "audio_rec";
+  if (/\b(class mode|start class|lesson|teach)\b/.test(t) || /\bclass\b/.test(t)) return "class";
+  if (/\b(meeting|on a call|zoom)\b/.test(t)) return "meeting";
+  if (/\b(available|wind down|studio (is )?free|open the house)\b/.test(t)) return "available";
   return null;
 }
 

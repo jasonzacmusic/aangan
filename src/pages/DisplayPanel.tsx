@@ -16,12 +16,12 @@ import { AlertIcon } from "../components/icons";
  */
 
 const DOOR_WORDING: Record<StudioState, { big: string; small: string }> = {
-  available: { big: "COME ON IN", small: "The house is open — ring once and enter" },
-  class: { big: "LESSON IN PROGRESS", small: "Enter softly · a student is playing" },
-  meeting: { big: "ON A CALL", small: "Knock gently and wait" },
-  audio_rec: { big: "RECORDING — PLEASE WAIT", small: "Absolute silence · do not ring the bell" },
-  video_rec: { big: "ON AIR — DO NOT ENTER", small: "Cameras are rolling · please wait outside" },
-  emergency: { big: "EMERGENCY", small: "Please call the family before entering" },
+  available: { big: "COME IN", small: "The studio is free — ring once and enter" },
+  class: { big: "CLASS", small: "Lesson in progress · enter softly" },
+  meeting: { big: "MEETING", small: "Please wait · knock before entering" },
+  audio_rec: { big: "ON AIR", small: "Recording — please do not enter" },
+  video_rec: { big: "FILMING", small: "Cameras hot — please do not enter" },
+  emergency: { big: "EMERGENCY", small: "Do not enter" },
 };
 
 function useClock() {

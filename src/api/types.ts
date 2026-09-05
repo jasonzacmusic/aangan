@@ -25,7 +25,7 @@ export interface Room {
   signColor: string; // hex the WS2812B sign is showing
   /** Married G2 plate id from the live bridge, when the USB bench is driving the door. */
   signVisual?: "ok" | "wait" | "loud" | "dnd" | "onair" | "sos";
-  dbLevel?: number; // music room only
+  dbLevel?: number | null; // music room only; null = mic not reporting
 }
 
 export interface Preflight {
@@ -40,7 +40,8 @@ export interface Preflight {
   openDoors: RoomId[]; // which doors are the problem
   /** Exact physical inputs where available (for example "Studio door · leaf B"). */
   openDoorNames?: string[];
-  dbLevel: number;
+  /** Null when the studio mic has not reported — never treat that as silence. */
+  dbLevel: number | null;
   dbThreshold: number;
 }
 
@@ -205,6 +206,8 @@ export interface PianoRig {
   bufferFrames: number;
   latencyMs: number;
   lastSeen: number; // epoch ms
+  /** Rec tally on the piano Pi. Cue-only; not a hardware lamp until one is wired. */
+  tally?: boolean;
   blackbox?: BlackboxInfo;
 }
 
@@ -309,7 +312,7 @@ export interface ApiAdapter {
   restorePreflight(): Promise<PreflightPrep>;
   runUtilityAction(action: UtilityAction): Promise<Utilities>;
   playTone(hz: number): Promise<void>;
-  /** The Pianoteq rig (PIANO Pi). Cues are one-way and never touch its audio thread. */
+  /** The Pianoteq rig (PIANO Pi). Preset/replay cues are locked while a take is tallied. */
   getPianoRig(): Promise<PianoRig>;
   pianoCue(cue: PianoCue): Promise<PianoRig>;
   /** Fleet health — every machine in the school, one glance. */
@@ -371,7 +374,7 @@ export const STATE_META: Record<StudioState, StateMeta> = {
     color: "#2FBF71",
     rgb: "47 191 113",
     needsConfirm: false,
-    tagline: "The house is open. Come on in.",
+    tagline: "The studio is free. Come in.",
     houseAction: "Light and screen green · come in",
   },
   class: {
@@ -395,8 +398,8 @@ export const STATE_META: Record<StudioState, StateMeta> = {
   audio_rec: {
     label: "Audio Rec",
     short: "AUDIO",
-    color: "#D93036",
-    rgb: "217 48 54",
+    color: "#E5484D",
+    rgb: "229 72 77",
     needsConfirm: true,
     tagline: "Tape is rolling. Absolute silence.",
     houseAction: "Light and screen red · on air",

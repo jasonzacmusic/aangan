@@ -62,31 +62,31 @@ export default function Settings() {
         <div className="py-3.5">
           <div className="flex items-baseline justify-between">
             <div className="text-sm font-medium">Recording quiet threshold</div>
-            <div className="font-mono text-lg text-gold">{settings.dbThreshold} dB</div>
+            <div className="font-mono text-lg text-gold">{settings.dbThreshold} dBA</div>
           </div>
           <div className="mt-1 text-xs text-dim">
-            Pre-flight / Record. The room rests at 42 dBA with the AC on — this line is for a take, not the hall sign.
+            Pre-flight / Record. Must sit below AC rest (42 dBA) so a take cannot go green with the compressor on. The Mac record-gate trains this from real takes — do not guess.
           </div>
           <input
             type="range"
             min={35}
-            max={70}
+            max={41}
             step={1}
             value={settings.dbThreshold}
             onChange={(e) => updateSettings({ dbThreshold: Number(e.target.value) })}
             className="mt-4 w-full accent-[#c9a84c]"
-            aria-label="Recording quiet threshold in decibels"
-            aria-valuetext={`${settings.dbThreshold} decibels`}
+            aria-label="Recording quiet threshold in A-weighted decibels"
+            aria-valuetext={`${settings.dbThreshold} A-weighted decibels`}
           />
           <div className="flex justify-between font-mono text-[9px] text-dim">
             <span>35 · studio silence</span>
-            <span>70 · traffic loud</span>
+            <span>41 · just under AC rest</span>
           </div>
         </div>
         <div className="border-t border-line py-3.5">
           <div className="flex items-baseline justify-between">
             <div className="text-sm font-medium">Hall warning (G2 bulb + sign)</div>
-            <div className="font-mono text-lg text-gold">{settings.doorWarnDb} dB</div>
+            <div className="font-mono text-lg text-gold">{settings.doorWarnDb} dBA</div>
           </div>
           <div className="mt-1 text-xs text-dim">
             Below this, the outside puck stays green and the plate says OK. At or above, both go WAIT together. Default is 52 — ten above the AC rest so the compressor cannot trip it.
@@ -99,8 +99,8 @@ export default function Settings() {
             value={settings.doorWarnDb}
             onChange={(e) => updateSettings({ doorWarnDb: Number(e.target.value) })}
             className="mt-4 w-full accent-[#c9a84c]"
-            aria-label="Hall warning threshold in decibels"
-            aria-valuetext={`${settings.doorWarnDb} decibels`}
+            aria-label="Hall warning threshold in A-weighted decibels"
+            aria-valuetext={`${settings.doorWarnDb} A-weighted decibels`}
           />
           <div className="flex justify-between font-mono text-[9px] text-dim">
             <span>42 · AC rest</span>

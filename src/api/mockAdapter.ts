@@ -117,6 +117,7 @@ export class MockAdapter implements ApiAdapter {
     bufferFrames: 192,
     latencyMs: 4,
     lastSeen: Date.now(),
+    tally: false,
     blackbox: {
       recording: false,
       takesToday: 3,
@@ -155,7 +156,7 @@ export class MockAdapter implements ApiAdapter {
   private displays: DisplayConfig[] = DEFAULT_DISPLAYS.map((d) => ({ ...d }));
   private sensorsHealthy = true;
   private healthReset: ReturnType<typeof setTimeout> | null = null;
-  private dbThreshold = 45;
+  private dbThreshold = 40;
   private listeners = new Set<(ev: StreamEvent) => void>();
   private timer: ReturnType<typeof setInterval> | null = null;
   private safetyReset: ReturnType<typeof setTimeout> | null = null;
@@ -348,8 +349,21 @@ export class MockAdapter implements ApiAdapter {
   private async hydrateState() {
     if (!this.hydration) {
       this.hydration = (async () => {
+        try {
+          const res = await fetch("/api/door", { cache: "no-store" });
+          if (res.ok) {
+            const body = await res.json();
+            if (body?.state && body.state in STATE_META) {
+              this.state = { state: body.state, setBy: "Studio door", since: Number(body.at) || Date.now() };
+            }
+          }
+        } catch {
+          /* public door relay is optional in local demo */
+        }
         const saved = await idbGet<StudioStateInfo>(MOCK_STATE_KEY);
-        if (saved && saved.state in STATE_META && Number.isFinite(saved.since)) this.state = saved;
+        if (this.state.setBy !== "Studio door" && saved && saved.state in STATE_META && Number.isFinite(saved.since)) {
+          this.state = saved;
+        }
         const color = STATE_META[this.state.state].color;
         this.rooms.forEach((room) => (room.signColor = color));
         const displays = await idbGet<DisplayConfig[]>(MOCK_DISPLAYS_KEY);
@@ -373,11 +387,11 @@ export class MockAdapter implements ApiAdapter {
 
   private getPreflightSync(): Preflight {
     const openDoors = this.rooms.filter((r) => r.doorOpen).map((r) => r.id);
-    const dbLevel = this.rooms.find((r) => r.id === "music")!.dbLevel ?? 0;
+    const dbLevel = this.rooms.find((r) => r.id === "music")!.dbLevel ?? null;
     const doorsClosed = openDoors.length === 0;
-    const quietEnough = dbLevel < this.dbThreshold;
+    const quietEnough = dbLevel != null && dbLevel < this.dbThreshold;
     const sensorsHealthy = this.sensorsHealthy;
-    const safetyClear = !this.safety.fire && !this.safety.gas && !this.safety.panic && !this.safety.leakKitchen && !this.safety.leakBath && !this.safety.leakGeyser;
+    const safetyClear = !this.safety.fire && !this.safety.gas && !this.safety.panic && !this.safety.leakKitchen && !this.safety.leakBath && !this.safety.leakGeyser && !this.safety.perimeter;
     return {
       doorsClosed,
       quietEnough,
@@ -572,22 +586,24 @@ export class MockAdapter implements ApiAdapter {
 
   private async setStateFrom(state: StudioState, setBy: string) {
     await this.hydrateState();
+    const previous = this.state.state;
     this.state = { state, setBy, since: Date.now() };
     await idbSet(MOCK_STATE_KEY, this.state);
     const color = STATE_META[state].color;
     this.rooms.forEach((room) => (room.signColor = color));
     // The door light is a real Wi-Fi board, not part of the simulator.
     // Simulated house, real lamp — so the strip can be proved on its own.
-    void pushLedEspState(state);
+    void pushLedEspState(state, { force: true });
     this.emit({ type: "state", state: { ...this.state } });
     this.emit({ type: "rooms", rooms: this.rooms.map((room) => ({ ...room })) });
     this.broadcast({ kind: "state", payload: { ...this.state } });
     this.addHistory({ type: "state", title: `Studio → ${STATE_META[state].label}`, detail: `${setBy} conducted the house`, severity: state === "emergency" ? "critical" : "info" });
-    if (state === "audio_rec" || state === "video_rec") {
+    const rec = state === "audio_rec" || state === "video_rec";
+    const wasRec = previous === "audio_rec" || previous === "video_rec";
+    if (rec) {
       void this.pianoCue("recording_started");
       this.hushPurifiers(true);
-    }
-    if (state === "available") {
+    } else if (wasRec) {
       void this.pianoCue("recording_stopped");
       this.hushPurifiers(false);
     }
@@ -700,6 +716,9 @@ export class MockAdapter implements ApiAdapter {
   }
 
   async pianoCue(cue: PianoCue) {
+    if ((cue === "next_preset" || cue === "prev_preset" || cue === "replay_last") && this.piano.tally) {
+      throw new Error("tally on");
+    }
     if (cue === "next_preset" || cue === "prev_preset") {
       this.pianoPresetIx = (this.pianoPresetIx + (cue === "next_preset" ? 1 : PIANO_PRESETS.length - 1)) % PIANO_PRESETS.length;
       this.piano.preset = PIANO_PRESETS[this.pianoPresetIx];
@@ -715,10 +734,11 @@ export class MockAdapter implements ApiAdapter {
         severity: "info",
       });
     } else {
+      this.piano.tally = cue === "recording_started";
       this.addHistory({
         type: "system",
         title: cue === "recording_started" ? "Piano rig cued · recording" : "Piano rig cued · at ease",
-        detail: cue === "recording_started" ? "The rig shows a red tally on its screen" : "Rig tally cleared",
+        detail: cue === "recording_started" ? "Tally on — preset and replay locked until Rec is off" : "Rig tally cleared",
         severity: "info",
       });
     }

@@ -212,7 +212,7 @@ export default function StateDial({ info, committing, chimes, onSelect }: Props)
           style={{
             transform: `rotate(${needleAngle}deg)`,
             transformOrigin: `${C}px ${C}px`,
-            transition: dragging ? "transform 0.18s cubic-bezier(0.34,1.56,0.64,1)" : "transform 0.4s cubic-bezier(0.34,1.56,0.64,1)",
+            transition: dragging ? "transform 0.18s cubic-bezier(0.16,1,0.3,1)" : "transform 0.4s cubic-bezier(0.16,1,0.3,1)",
           }}
         >
           <path

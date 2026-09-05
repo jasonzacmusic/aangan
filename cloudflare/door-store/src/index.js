@@ -26,6 +26,14 @@ const VISUALS = new Set([
 ]);
 const MESSAGE_MAX = 80;
 const STORAGE_KEY = "door";
+const FROM_STATE = {
+  available: "ok",
+  class: "wait",
+  meeting: "wait",
+  audio_rec: "onair",
+  video_rec: "onair",
+  emergency: "emergency",
+};
 
 function initialDoor() {
   return {
@@ -122,12 +130,20 @@ export class DoorState {
         this.door.strip_at = Date.now();
       }
       const visual = String(body.visual ?? "");
+      const hadUrgent = this.door.visual === "door" || this.door.visual === "loud";
       if (VISUALS.has(visual)) {
         // Command owns the picture. The strip may only interrupt for a door
         // opening or the room going too loud. Posting leftover "ok"/"wait"
         // used to wipe CLASS / ON AIR a few seconds after the dial moved.
         const urgent = visual === "door" || visual === "loud";
         if (urgent) this.door.visual = visual;
+        else if (hadUrgent && (visual === "onair" || visual === "ok" || visual === "wait")) {
+          this.door.visual = visual;
+        }
+      } else if (body.device === "strip" && hadUrgent) {
+        // Door shut / room quiet: the strip omits visual. Restore Command's word
+        // so the 7″ does not keep flashing DOOR OPEN for the rest of the take.
+        this.door.visual = FROM_STATE[this.door.state] || "ok";
       }
       if (Object.hasOwn(body, "dba")) {
         if (typeof body.dba === "number" && Number.isFinite(body.dba)) {
@@ -154,18 +170,16 @@ export class DoorState {
     this.door.at = Date.now();
     // Turning the dial always resets the picture. A leftover SOS / delivery
     // visual must not keep CLASS off the boards after Jason has moved on.
-    const fromState = {
-      available: "ok",
-      class: "wait",
-      meeting: "wait",
-      audio_rec: "onair",
-      video_rec: "onair",
-      emergency: "emergency",
-    };
+    // Sleep was stored as the note "__off__"; a state change must wake the
+    // boards without wiping a real delivery OTP.
+    if (this.door.message === "__off__") {
+      this.door.message = "";
+      this.door.mat = Date.now();
+    }
     if (typeof body.visual === "string" && VISUALS.has(body.visual)) {
       this.door.visual = body.visual;
     } else {
-      this.door.visual = fromState[state];
+      this.door.visual = FROM_STATE[state];
     }
     await this.persist();
     return json({
@@ -179,15 +193,17 @@ export class DoorState {
 
   read() {
     const now = Date.now();
+    const stripAge = this.door.strip_at ? Math.round((now - this.door.strip_at) / 1000) : null;
+    const screenAge = this.door.screen_at ? Math.round((now - this.door.screen_at) / 1000) : null;
     return json({
       state: this.door.state,
       at: this.door.at,
       visual: this.door.visual,
-      dba: this.door.dba,
+      dba: stripAge != null && stripAge < 90 ? this.door.dba : null,
       message: this.door.message,
       mat: this.door.mat,
-      strip_age_s: this.door.strip_at ? Math.round((now - this.door.strip_at) / 1000) : null,
-      screen_age_s: this.door.screen_at ? Math.round((now - this.door.screen_at) / 1000) : null,
+      strip_age_s: stripAge,
+      screen_age_s: screenAge,
     });
   }
 }

@@ -12,7 +12,7 @@ import { timeSince } from "../state/store";
  * shows who needs help.
  */
 export default function SosPage() {
-  const { sos, stateInfo, triggerSos, clearSos, setStudioState } = useStore();
+  const { sos, triggerSos, clearSos, setStudioState } = useStore();
   const [who, setWho] = useState(SOS_PEOPLE[0]);
   const [message, setMessage] = useState(SOS_MESSAGES[0]);
   const [raising, setRaising] = useState(false);
@@ -25,8 +25,8 @@ export default function SosPage() {
   };
 
   const standDown = async () => {
-    await clearSos();
-    if (stateInfo?.state === "emergency") await setStudioState("available");
+    const ok = await setStudioState("available");
+    if (ok !== false) await clearSos();
   };
 
   if (sos?.active) {
@@ -36,17 +36,12 @@ export default function SosPage() {
           <AlertIcon size={38} />
         </div>
         <div className="mt-6 font-mono text-[10px] uppercase tracking-[0.4em] text-st-emergency">SOS is live</div>
-        <h1 className="font-display mt-3 text-4xl text-st-emergency">{sos.who} needs help</h1>
+        <h1 className="font-display mt-3 text-3xl leading-tight text-st-emergency sm:text-4xl">{sos.who} needs help</h1>
         {sos.message && <p className="mt-3 text-lg text-paper">“{sos.message}”</p>}
         <p className="mt-4 font-mono text-[11px] text-dim">
           raised {timeSince(sos.since) === "just now" ? "just now" : `${timeSince(sos.since)} ago`} · every family phone is ringing · all wall panels are showing this
         </p>
-        <button
-          onClick={() => void standDown()}
-          className="mt-10 w-full rounded-2xl border border-st-available/50 bg-st-available/15 px-6 py-5 text-lg font-semibold text-st-available transition-all active:scale-[0.98]"
-        >
-          I'm OK now — stand the house down
-        </button>
+        <HoldButton big label="Hold — I'm OK, stand the house down" color="#2fbf71" durationMs={1600} onComplete={() => void standDown()} />
         <p className="mt-3 font-mono text-[10px] text-dim">Only press this when the person is actually safe.</p>
       </div>
     );
@@ -57,7 +52,8 @@ export default function SosPage() {
       <div className="text-center">
         <img src="/nsm-white.png" alt="Nathaniel School of Music" className="mx-auto h-6 w-auto opacity-80" />
         <div className="mt-3 font-mono text-[10px] uppercase tracking-[0.4em] text-st-emergency">Family SOS</div>
-        <h1 className="font-display mt-2 text-3xl">Need help? Hold the button.</h1>
+        <h1 className="font-display mt-2 text-3xl leading-tight">Need help?</h1>
+        <p className="mt-1 font-display text-2xl text-paper/80">Hold the button.</p>
         <p className="mt-2 text-sm text-dim">
           Every phone in the family rings through silent mode, all room signs flash, and every wall screen shows who needs help — even mid-recording.
         </p>
