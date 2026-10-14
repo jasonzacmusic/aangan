@@ -1,0 +1,324 @@
+<title>Aangan, Explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+  /* Layout: one reading column on dark mahogany, the colour of the studio door itself.
+     The six studio colours are the only bright things on the page, because they are the product. */
+  :root {
+    --wood: #1b1210;
+    --panel: #251915;
+    --panel-2: #2e201b;
+    --line: rgba(242, 226, 210, 0.13);
+    --fg: #f3eae0;
+    --dim: #b9a796;
+    --faint: #8a7869;
+    --onair: #d4333b;
+    --live: #4fb27f;
+    --warn: #d99a3a;
+    --off: #e0545b;
+    --display: "Fraunces", Georgia, "Times New Roman", serif;
+    --body: "IBM Plex Sans", -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--wood);
+    color: var(--fg);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 72px; }
+  a { color: var(--fg); text-decoration-color: var(--onair); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--onair); outline-offset: 3px; border-radius: 4px; }
+
+  header { display: grid; gap: 18px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+  .logo { height: 40px; width: auto; opacity: .92; }
+  h1 { font-family: var(--display); font-weight: 600; font-size: clamp(2.2rem, 7vw, 3.4rem); line-height: 1.02; letter-spacing: -.015em; margin: 0; text-wrap: balance; }
+  .lede { color: var(--dim); font-size: 1.08rem; max-width: 60ch; margin: 0; }
+  .stamp { font-family: var(--mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+
+  /* The ON AIR bar: the one deliberate flourish, echoing the strip above the door. */
+  .bar { height: 6px; border-radius: 3px; background: var(--onair); box-shadow: 0 0 22px rgba(212, 51, 59, .55); margin: 6px 0 2px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .bar { animation: breathe 3.6s ease-in-out infinite; }
+    @keyframes breathe { 0%, 100% { opacity: 1 } 50% { opacity: .55 } }
+  }
+
+  section { padding-top: 44px; }
+  h2 { font-family: var(--display); font-weight: 600; font-size: 1.7rem; line-height: 1.15; margin: 0 0 6px; text-wrap: balance; }
+  .kicker { font-family: var(--mono); font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--onair); margin-bottom: 8px; }
+  p { margin: 0 0 14px; max-width: 64ch; }
+  .muted { color: var(--dim); }
+
+  /* Status board */
+  .status { display: grid; gap: 10px; margin-top: 18px; }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; align-items: start;
+         padding: 16px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+  .row h3 { font-size: 1.02rem; font-weight: 600; margin: 0; }
+  .row p { grid-column: 1 / -1; color: var(--dim); font-size: .94rem; margin: 0; max-width: none; }
+  .pill { font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; white-space: nowrap; border: 1px solid; }
+  .pill.live { color: var(--live); border-color: rgba(79, 178, 127, .45); background: rgba(79, 178, 127, .1); }
+  .pill.off  { color: var(--off);  border-color: rgba(224, 84, 91, .45); background: rgba(224, 84, 91, .1); }
+  .pill.sim  { color: var(--warn); border-color: rgba(217, 154, 58, .45); background: rgba(217, 154, 58, .1); }
+
+  /* The six states */
+  .states { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+  @media (max-width: 620px) { .states { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .state { border-radius: 12px; padding: 16px 14px 14px; color: #fff; min-height: 118px; display: grid; align-content: space-between; gap: 10px; }
+  .state b { font-family: var(--display); font-weight: 600; font-size: 1.25rem; line-height: 1.1; letter-spacing: .01em; }
+  .state span { font-size: .84rem; opacity: .88; line-height: 1.35; }
+  .state small { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; opacity: .78; }
+  .s-red { background: #A5121A; } .s-amber { background: #A96410; } .s-green { background: #1B5B3C; } .s-violet { background: #5B21B6; }
+  .rules { margin-top: 14px; display: grid; gap: 8px; }
+  .rule { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 12px; align-items: baseline; font-size: .95rem; }
+  .rule .fx { font-family: var(--mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--onair); }
+  @media (max-width: 480px) { .rule { grid-template-columns: 1fr; gap: 2px; } }
+
+  /* Diagram */
+  .diagram { margin-top: 20px; display: grid; gap: 14px; }
+  .lane { display: grid; grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr) 34px minmax(0, 1fr); align-items: stretch; }
+  .lane.two { grid-template-columns: minmax(0, 1fr) 34px minmax(0, 2.15fr); }
+  .node { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; min-width: 0; }
+  .node.hot { border-color: rgba(212, 51, 59, .5); background: var(--panel-2); }
+  .node .t { font-weight: 600; font-size: .96rem; margin-bottom: 4px; }
+  .node .d { color: var(--dim); font-size: .84rem; line-height: 1.45; }
+  .node code { font-family: var(--mono); font-size: .76rem; color: var(--fg); overflow-wrap: anywhere; }
+  .arrow { display: grid; place-items: center; color: var(--faint); font-size: 1.2rem; }
+  .arrow::before { content: "→"; }
+  .lane-label { font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); margin-bottom: 6px; }
+  @media (max-width: 640px) {
+    .lane, .lane.two { grid-template-columns: 1fr; }
+    .arrow { height: 26px; }
+    .arrow::before { content: "↓"; }
+  }
+
+  /* Tables */
+  .tablewrap { overflow-x: auto; margin-top: 16px; border: 1px solid var(--line); border-radius: 12px; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: .9rem; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--mono); font-weight: 500; font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); background: var(--panel); }
+  tr:last-child td { border-bottom: 0; }
+  td.mono { font-family: var(--mono); font-size: .78rem; font-variant-numeric: tabular-nums; color: var(--dim); white-space: nowrap; }
+
+  /* Pi callout */
+  .verdict { margin-top: 18px; padding: 20px 20px 6px; border-left: 3px solid var(--onair); background: var(--panel); border-radius: 0 12px 12px 0; }
+  .verdict p:first-child { font-family: var(--display); font-size: 1.25rem; line-height: 1.3; }
+
+  /* How-to and next steps */
+  ol.steps { padding-left: 0; list-style: none; counter-reset: s; display: grid; gap: 12px; margin: 18px 0 0; }
+  ol.steps li { counter-increment: s; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; }
+  ol.steps li::before { content: counter(s); font-family: var(--mono); font-size: .8rem; color: var(--onair); border: 1px solid rgba(212, 51, 59, .45);
+                        border-radius: 50%; width: 28px; height: 28px; display: grid; place-items: center; }
+  ol.steps b { font-weight: 600; }
+  ol.steps span { color: var(--dim); }
+  .who { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin-left: 6px; }
+
+  /* WhatsApp share */
+  .share { margin-top: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .share pre { margin: 0; padding: 18px; white-space: pre-wrap; font-family: var(--body); font-size: .92rem; line-height: 1.55; color: var(--fg); }
+  .share .bar2 { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 12px 18px; border-top: 1px solid var(--line); }
+  button { font-family: var(--body); font-weight: 600; font-size: .92rem; color: #fff; background: #1f7a4d; border: 0; border-radius: 999px; padding: 10px 18px; cursor: pointer; }
+  button:active { transform: scale(.98); }
+  #copied { font-family: var(--mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--live); }
+
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--faint); font-size: .84rem; display: grid; gap: 4px; }
+</style>
+
+<div class="wrap">
+
+<header>
+  <img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAADDCAYAAABeWG91AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2hpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpGNzdGMTE3NDA3MjA2ODExODIyQUMwRjM0QzFBMkU3MyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDo1NkY0RDAwNDQyQjMxMUUyOTk4Q0RGNzFENDA0RjBDQyIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo1NkY0RDAwMzQyQjMxMUUyOTk4Q0RGNzFENDA0RjBDQyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M2IChNYWNpbnRvc2gpIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6Rjc3RjExNzQwNzIwNjgxMTgyMkFDMEYzNEMxQTJFNzMiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6Rjc3RjExNzQwNzIwNjgxMTgyMkFDMEYzNEMxQTJFNzMiLz4gPC9yZGY6RGVzY3Jp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" alt="Nathaniel School of Music">
+  <div class="bar" aria-hidden="true"></div>
+  <h1>Aangan, explained</h1>
+  <p class="lede">What the house system is, how the ESP32 boards and the app fit together, where the Raspberry Pi does and does not come in, and what is actually working today.</p>
+  <div class="stamp">Checked against the live system · 14 Oct 2026 · last code change 5 Sep 2026</div>
+</header>
+
+<section id="live">
+  <div class="kicker">Short answer</div>
+  <h2>Is Aangan live?</h2>
+  <p>The website and the cloud service are live. The door light and the 7&Prime; screen are switched off or unplugged, and have been for about six weeks. The room sensors are not yet feeding the app.</p>
+
+  <div class="status">
+    <div class="row">
+      <h3>The Aangan app</h3><span class="pill live">Live</span>
+      <p>Opens at aangan.nathanielschool.com on any phone or laptop. Every page answered normally today.</p>
+    </div>
+    <div class="row">
+      <h3>The door service in the cloud</h3><span class="pill live">Live</span>
+      <p>The piece the app writes to and the door devices read from. It holds the studio state in one place, so the light and the screen can never show different things.</p>
+    </div>
+    <div class="row">
+      <h3>The LED strip above the studio door</h3><span class="pill off">Offline</span>
+      <p>Last checked in on 1 Sep 2026. Nothing is broken in the cloud; the strip simply is not powered or not on Wi-Fi.</p>
+    </div>
+    <div class="row">
+      <h3>The 7&Prime; touchscreen at the door</h3><span class="pill off">Offline</span>
+      <p>Last checked in on 25 Aug 2026. Same reason: it needs 5V power and the house Wi-Fi, nothing more.</p>
+    </div>
+    <div class="row">
+      <h3>Room sensors shown in the app</h3><span class="pill sim">Simulated</span>
+      <p>The decibel, door and leak readings on the app's home screen are demo data (the app labels itself MOCK). The six room boards exist and run, but the app does not read them yet. Only the studio door is wired to the real cloud path.</p>
+    </div>
+  </div>
+</section>
+
+<section id="states">
+  <div class="kicker">The idea</div>
+  <h2>One dial runs the house</h2>
+  <p>Aangan is built around six studio states. Whoever is running the studio turns a dial in the app, and the door light and the screen outside change together. Anyone in the hall knows whether to walk in without knocking.</p>
+
+  <div class="states">
+    <div class="state s-green"><small>Available</small><b>COME IN</b><span>Dim green. The studio is free.</span></div>
+    <div class="state s-amber"><small>Class</small><b>CLASS</b><span>Amber. A lesson is running.</span></div>
+    <div class="state s-amber"><small>Meeting</small><b>MEETING</b><span>Amber. Please wait.</span></div>
+    <div class="state s-red"><small>Audio rec</small><b>ON AIR</b><span>Solid red. Recording, do not enter.</span></div>
+    <div class="state s-red"><small>Video rec</small><b>FILMING</b><span>Solid red. A shoot is on.</span></div>
+    <div class="state s-violet"><small>Emergency</small><b>EMERGENCY</b><span>Violet, flashing. Do not enter.</span></div>
+  </div>
+
+  <div class="rules">
+    <div class="rule"><span class="fx">Fast red flash</span><span>A studio door opens while a take is running. Someone is about to walk into shot.</span></div>
+    <div class="rule"><span class="fx">Slow red pulse</span><span>The room gets too loud for a take, measured by the sound meter inside the studio.</span></div>
+  </div>
+  <p class="muted" style="margin-top:14px">These two rules depend on the studio sensor board (board 1) and have not yet been confirmed on real hardware. The six states themselves were tested end to end on 22 Aug.</p>
+</section>
+
+<section id="how">
+  <div class="kicker">How it is put together</div>
+  <h2>Small Wi-Fi boards, one shared state</h2>
+  <p>Every device in Aangan is an ESP32: a small, cheap computer board with Wi-Fi built in, about the size of a matchbox. Each runs one job and is powered from an ordinary USB phone charger. Nothing at the door is wired to anything else.</p>
+
+  <div class="diagram">
+    <div>
+      <div class="lane-label">Setting the studio state</div>
+      <div class="lane">
+        <div class="node"><div class="t">You, in the app</div><div class="d">Turn the dial on a phone, laptop or iPad. Works from anywhere, even on mobile data.</div></div>
+        <div class="arrow" aria-hidden="true"></div>
+        <div class="node hot"><div class="t">The door service</div><div class="d">Holds the one true state. <code>aangan.nathanielschool.com/api/door</code></div></div>
+        <div class="arrow" aria-hidden="true"></div>
+        <div class="node"><div class="t">Light + screen</div><div class="d">Both ask the service for the state every few seconds and change to match.</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="lane-label">Door open, too loud</div>
+      <div class="lane two">
+        <div class="node"><div class="t">Studio board (board 1)</div><div class="d">Door switches on both studio doors, the sound meter, the sink leak probe.</div></div>
+        <div class="arrow" aria-hidden="true"></div>
+        <div class="node"><div class="t">Straight to the door, chip to chip</div><div class="d">Uses ESP-NOW, a direct radio link between ESP32s that skips the router. That is why a door opening can flash the light instantly, even if the Wi-Fi is down.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="muted" style="margin-top:18px">Why the devices ask the cloud instead of the app talking to them directly: the app is a secure (https) website, and browsers will not let a secure page talk to a plain device on the home network. Turning the arrow round, so the devices reach out, is what lets the dial work from anywhere.</p>
+</section>
+
+<section id="pi">
+  <div class="kicker">ESP32 or Raspberry Pi?</div>
+  <h2>Where the Pi fits</h2>
+  <div class="verdict">
+    <p>Aangan runs entirely on ESP32 boards. There is no Raspberry Pi in the house system, and that was a deliberate choice.</p>
+    <p class="muted">Jason decided the Pi stays reserved for music work. The original plan had a Pi acting as a hub for the whole house; it was never bought for that, and the system was redesigned so nothing depends on it.</p>
+  </div>
+  <p style="margin-top:16px">The Pi work you may see in the project is separate. On 1 Sep a one-time setup script was prepared to turn a Pi into a music workstation (remote access, the coding tools, a shared folder for samples), and there is a plan for a piano Pi with a sound card that has not been bought. The Pi has never been plugged in, so none of that has run yet. Both Pis are parked until the music side needs them.</p>
+</section>
+
+<section id="hardware">
+  <div class="kicker">What is in the building</div>
+  <h2>The boards</h2>
+  <p>Grouped by room, so every sensor's wire stays inside that room. Wi-Fi joins the rooms together.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Board</th><th>Where</th><th>What it watches</th><th>Board ID</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Studio</td><td>Both studio doors, sound level, sink leak, presence radar</td><td class="mono">8c:94:df:69:20:20</td></tr>
+        <tr><td>2</td><td>Music room</td><td>Doors, climate, leaks</td><td class="mono">00:70:07:a2:73:98</td></tr>
+        <tr><td>3</td><td>Bathrooms A + geyser</td><td>Floor leaks, geyser area</td><td class="mono">00:70:07:a2:6f:04</td></tr>
+        <tr><td>4</td><td>Bathrooms B + washing machine</td><td>Floor leaks, machine finished</td><td class="mono">00:70:07:a2:90:dc</td></tr>
+        <tr><td>5</td><td>Kitchen</td><td>Gas trend, flame, cylinder weight</td><td class="mono">88:f1:55:30:7f:84</td></tr>
+        <tr><td>6</td><td>Hall / entrance</td><td>Main door, motion, doorbell</td><td class="mono">8c:94:df:69:1e:5c</td></tr>
+        <tr><td>Door light</td><td>Above the studio door</td><td>Drives the LED strip</td><td class="mono">68:09:47:9d:b7:c4</td></tr>
+        <tr><td>Door screen</td><td>Beside the studio door</td><td>Waveshare 7&Prime; touchscreen, its own built-in board</td><td class="mono">3c:dc:75:f7:66:74</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="muted" style="margin-top:14px">All six room boards are programmed. Most of their sensors are not physically wired yet. The gas sensors in the kitchen are trend sensors only; the certified Hikvision LPG and smoke alarms are the real safety devices.</p>
+</section>
+
+<section id="use">
+  <div class="kicker">For the team</div>
+  <h2>How to use it</h2>
+  <ol class="steps">
+    <li><div><b>Open Aangan.</b> <a href="https://aangan.nathanielschool.com/">aangan.nathanielschool.com</a> <span>Turn the dial on the Command screen. The light and the screen follow within a few seconds.</span></div></li>
+    <li><div><b>Find the door page.</b> <span>In Aangan, open More, then Studio door. You can set the state and type a short message for the door, such as "Back at 4".</span></div></li>
+    <li><div><b>Check both devices are on.</b> <span>The small badge at the top of Aangan shows two dots, strip and screen. Green means that device has checked in. Grey or red means it is off or unplugged.</span></div></li>
+    <li><div><b>Put the sign on an iPad.</b> <span>Open <a href="https://aangan.nathanielschool.com/sign.html">the door sign</a> in Safari, tap Share, then Add to Home Screen. Set Auto-Lock to Never so it stays on.</span></div></li>
+    <li><div><b>Send it to a new teammate.</b> <span><a href="https://aangan.nathanielschool.com/team.html">The team page</a> has both links as QR codes.</span></div></li>
+  </ol>
+  <p class="muted" style="margin-top:16px">Anyone with the link can change the door. There is no password, so keep the links inside the team.</p>
+</section>
+
+<section id="next">
+  <div class="kicker">What is left</div>
+  <h2>Getting from here to finished</h2>
+  <ol class="steps">
+    <li><div><b>Plug the door light and the screen back in.</b><span class="who">anyone · 5 min</span><br><span>Each needs a 5V USB charger and the house Wi-Fi, nothing else. Then check the two dots in Aangan turn green.</span></div></li>
+    <li><div><b>Fit an always-on socket above the studio door.</b><span class="who">electrician · 30 min</span><br><span>Replace the tube light on the G1 hall side with a 5A socket on an unswitched feed, so nobody can switch the recording light off by accident.</span></div></li>
+    <li><div><b>Make the wooden bezel.</b><span class="who">carpenter</span><br><span>A frame that sets the screen into the wood and hides the light strip in a routed channel.</span></div></li>
+    <li><div><b>Load the latest program onto the studio board.</b><span class="who">needs the Mac · 5 min</span><br><span>Board 1 must be re-programmed once so its door and noise signals reach the door light. Until then, the flash and pulse rules cannot work.</span></div></li>
+    <li><div><b>Wire the room sensors.</b><span class="who">team + soldering help</span><br><span>Most sensors are push-fit. The two climate sensors arrived with loose pins and need soldering first.</span></div></li>
+    <li><div><b>Connect the real room readings to the app.</b><span class="who">development</span><br><span>This is the largest remaining job. Until it is done, the app's room readings and the "ready to record" check run on demo data.</span></div></li>
+    <li><div><b>Phone alerts with the app closed.</b><span class="who">development</span><br><span>So a leak at 3 a.m. wakes someone. Designed, not built. This is the main safety gap.</span></div></li>
+  </ol>
+</section>
+
+<section id="share">
+  <div class="kicker">Paste into the team group</div>
+  <h2>WhatsApp version</h2>
+  <div class="share">
+    <pre id="wa">*Aangan, where it stands (14 Oct)*
+
+Aangan is our studio and house system. One dial in the app sets the studio state (Come in, Class, Meeting, On Air, Filming, Emergency), and the light above the studio door and the screen beside it change together.
+
+*Live now:* the app at aangan.nathanielschool.com and the cloud service behind it.
+*Switched off:* the door light and the 7" screen. They have not been on since early September. They only need a 5V USB charger and Wi-Fi.
+*Demo data:* the room readings on the app's home screen are simulated for now.
+
+It runs on small ESP32 Wi-Fi boards, one per room. No Raspberry Pi is used for the house. The Pi is kept for music work.
+
+To use it: open Aangan and turn the dial, or go to More, then Studio door.</pre>
+    <div class="bar2">
+      <span id="copied" hidden>Copied</span>
+      <button id="copy" type="button">Copy for WhatsApp</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>Nathaniel School of Music · Aangan</span>
+  <span>Status read directly from the live service on 14 Oct 2026. Project files: github.com/jasonzacmusic/aangan</span>
+</footer>
+
+</div>
+
+<script>
+  (function () {
+    var btn = document.getElementById("copy");
+    var note = document.getElementById("copied");
+    var text = document.getElementById("wa");
+    btn.addEventListener("click", function () {
+      var done = function () { note.hidden = false; setTimeout(function () { note.hidden = true; }, 1800); };
+      var fallback = function () {
+        var r = document.createRange(); r.selectNodeContents(text);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      };
+      try {
+        navigator.clipboard.writeText(text.innerText).then(done, fallback);
+      } catch (e) { fallback(); }
+    });
+  })();
+</script>
