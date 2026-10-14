@@ -90,6 +90,30 @@ step "Raspberry Pi Connect (browser access, no VPN needed)" bash -c '
 step "Enable SSH" bash -c '
   sudo systemctl enable --now ssh'
 
+# Screen sharing needs a desktop to share. With no monitor plugged in, how the
+# Pi makes one depends on which desktop it runs. raspi-config's headless
+# resolution works for X11 and wayfire; labwc (the current default) ignores it,
+# and there the dependable fix is a ~Rs 300 HDMI dummy plug in the HDMI port.
+c_head "Screen with no monitor attached"
+SESSION=$(sed -n 's/^user-session=//p' /etc/lightdm/lightdm.conf 2>/dev/null | tail -1)
+echo "   desktop session: ${SESSION:-none (Lite install)}"
+case "$SESSION" in
+  *wayfire*|*-x)
+    if sudo raspi-config nonint do_vnc_resolution 1920x1080 >>"$LOG" 2>&1; then
+      c_ok "   headless screen set to 1920x1080"; RESULTS+=("OK   Headless screen 1920x1080")
+    else
+      c_bad "   could not set it (see $LOG)"; RESULTS+=("FAIL Headless screen")
+    fi ;;
+  "")
+    echo "   No desktop — browser access is shell only. Fine for coding; no screen to share."
+    RESULTS+=("NOTE No desktop: Raspberry Pi Connect gives a shell, not a screen") ;;
+  *)
+    echo "   This desktop ($SESSION) ignores the headless-resolution setting."
+    echo "   Fit an HDMI dummy plug in HDMI port 0 (the one nearest the USB-C power)."
+    echo "   The Pi then always has a full-size screen to share."
+    RESULTS+=("NOTE Screen sharing with no monitor: fit the HDMI dummy plug") ;;
+esac
+
 # --------------------------------------------------------------------------
 # Node is not needed by Claude Code (the native installer is self-contained)
 # but plenty of other tooling wants it, and the repo is a Node project.
@@ -172,6 +196,13 @@ EOF
   sudo systemctl restart smbd'
 
 # --------------------------------------------------------------------------
+# The phone trackpad/keyboard, and the composition tools. Each is its own
+# script and can also be run on its own later.
+HERE=$(cd "$(dirname "$0")" && pwd)
+step "Pi Pad (phone as trackpad and keyboard)" bash "$HERE/../remote/install.sh"
+step "Music: REAPER, Pianoteq plugin, audio plumbing" bash "$HERE/../music/setup_music.sh"
+
+# --------------------------------------------------------------------------
 c_head "Storage attached right now"
 lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT 2>/dev/null | sed 's/^/   /'
 echo
@@ -196,6 +227,16 @@ hostname -I 2>/dev/null | tr ' ' '\n' | grep -v '^$' | sed 's/^/     /'
 echo "   temp     : $(vcgencmd measure_temp 2>/dev/null || echo n/a)"
 echo
 echo "   From the Mac:  ssh $USER_NAME@$(hostname).local"
+echo
+echo "   Pi Pad — open on the iPhone, then Share → Add to Home Screen:"
+PIN_FILE="$HOME/.config/pipad/pin"
+if [ -f "$PIN_FILE" ]; then
+  PAD_URL="http://$(hostname).local:8765/?pin=$(tr -d '[:space:]' < "$PIN_FILE")"
+  echo "     $PAD_URL"
+  command -v qrencode >/dev/null && qrencode -t ansiutf8 "$PAD_URL" | sed 's/^/     /'
+else
+  echo "     (not installed — see the summary above)"
+fi
 echo
 echo "   TWO THINGS A PERSON MUST DO (they need a login, so a script cannot):"
 echo "     1. rpi-connect signin     → then open the link it prints, sign in once."

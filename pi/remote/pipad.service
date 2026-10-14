@@ -1,0 +1,20 @@
+[Unit]
+Description=Pi Pad - phone trackpad and keyboard for this Pi
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+ExecStart=/usr/bin/python3 /opt/pipad/pipad.py --port __PORT__ --web /opt/pipad/web --pin-file __HOME__/.config/pipad/pin
+Restart=on-failure
+RestartSec=2
+# It needs the network and /dev/uinput, and nothing else.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=__HOME__/.config/pipad
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -31,6 +31,23 @@ A full log lands in `~/bootstrap-<timestamp>.log`.
 | **Realtime audio limits** | `@audio rtprio 95`, `memlock unlimited`, performance governor. Harmless now; means the audio setup later is just "fit board, set overlay, reboot". |
 | **Samba share** | `/srv/samples`, visible from the Mac in Finder as `samples`, so sample libraries can be dragged across. |
 
+## It also runs, as their own steps
+
+- **`pi/remote/install.sh`** — Pi Pad, the phone as trackpad and keyboard.
+- **`pi/music/setup_music.sh`** — REAPER, Pianoteq as a plugin, audio plumbing.
+
+Each can be run on its own later too.
+
+## Screen sharing with no monitor attached
+
+Raspberry Pi Connect shares the Pi's desktop — but with no monitor plugged in,
+the Pi has to invent one. How depends on the desktop: `raspi-config`'s headless
+resolution works under X11 and wayfire, and the script sets 1920×1080 there.
+**labwc**, the current default, ignores that setting (verified by reading
+raspi-config's own source on the bookworm and trixie branches). On labwc the
+dependable fix is a **~₹300 HDMI dummy plug** in HDMI port 0. The script detects
+which desktop is running and says which applies.
+
 ## What it deliberately does not do
 
 - **It never formats, partitions or erases a drive.** It lists what is attached
