@@ -1,0 +1,137 @@
+# AANGAN · DOOR LIGHT SHOWCASE — standalone, no Wi-Fi, no secrets
+#
+# Bench showcase for the ledESP light board (ESP32-D0WD-V3, MAC 68:09:47:9d:b7:c4).
+# Flashes over USB with NO secrets.yaml required: there is no Wi-Fi, no API,
+# no OTA — only the strip and the serial log. It cycles through EVERY
+# notification and announcement the door light knows, so the whole vocabulary
+# can be seen on the real strip in one place.
+#
+# It is the light half of the "holy matrimony": the same colour + effect for
+# each state that the 7" display shows, so when both boards run the production
+# firmware (polling the same /api/door) they cannot disagree.
+#
+# WIRING (same as production door-studio.yaml):
+#   GPIO4   WS2812 DIN  (5 V + GND from a PSU, grounds joined)
+#   GPIO2   onboard LED
+#
+# POWER SAFETY: the strip is a long reel that will be cut to size later. We
+# drive only STRIP_LEDS LEDs and cap brightness at STRIP_BRIGHTNESS so a bench
+# run from USB cannot brown out. Raise either only after the strip has its own
+# 5 V supply.
+
+substitutions:
+  strip_leds: "30"
+  strip_brightness: "35%"
+
+esphome:
+  name: door-showcase-light
+  friendly_name: Door Light Showcase
+  includes:
+    - aangan_door_cmd.h
+  on_boot:
+    priority: -100
+    then:
+      - delay: 1s
+      - script.execute: show
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+  baud_rate: 115200
+  level: INFO
+
+# No wifi, no api, no ota — this is a bench showcase. Flash over USB only.
+
+output:
+  - platform: ledc
+    pin: GPIO2
+    id: onboard_pwm
+
+light:
+  - platform: monochromatic
+    name: "Onboard LED"
+    id: onboard
+    output: onboard_pwm
+    restore_mode: ALWAYS_OFF
+  - platform: esp32_rmt_led_strip
+    name: "Door strip"
+    id: strip
+    pin: GPIO4
+    num_leds: ${strip_leds}
+    rgb_order: GRB
+    chipset: WS2812
+    max_refresh_rate: 33ms
+    restore_mode: ALWAYS_OFF
+    effects:
+      - pulse:
+          name: slow_pulse
+          transition_length: 900ms
+          update_interval: 1800ms
+          min_brightness: 25%
+          max_brightness: 100%
+      - pulse:
+          name: fast_flash
+          transition_length: 100ms
+          update_interval: 220ms
+          min_brightness: 0%
+          max_brightness: 100%
+
+globals:
+  - id: g_step
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+# The full Aangan door vocabulary. Each entry is one notification. The colour
+# and effect here are EXACTLY what the production firmware and the 7" display
+# use for the same state — that is the marriage.
+script:
+  - id: show
+    mode: restart
+    then:
+      - lambda: |-
+          int i = id(g_step) % 12;
+          float r=0, g=0, b=0, br=0;
+          const char *fx = "None";
+          const char *name = "?";
+          switch (i) {
+            case 0:  r=47;  g=191; b=113; br=0.22f; name="available";  break;
+            case 1:  r=245; g=166; b=35;  br=0.85f; name="class";     break;
+            case 2:  r=245; g=166; b=35;  br=0.85f; name="meeting";    break;
+            case 3:  r=217; g=48;  b=54;  br=1.0f;  name="audio_rec";  break;
+            case 4:  r=217; g=48;  b=54;  br=1.0f;  name="video_rec";  break;
+            case 5:  r=217; g=48;  b=54;  br=1.0f;  fx="fast_flash"; name="door_open"; break;
+            case 6:  r=217; g=48;  b=54;  br=1.0f;  fx="slow_pulse"; name="too_loud";  break;
+            case 7:  r=124; g=58;  b=237; br=1.0f;  fx="fast_flash"; name="emergency"; break;
+            case 8:  r=124; g=58;  b=237; br=1.0f;  fx="fast_flash"; name="sos";       break;
+            case 9:  r=45;  g=114; b=230; br=0.9f;  name="delivery";   break;
+            case 10: r=34;  g=211; b=238; br=0.8f;  fx="slow_pulse"; name="preflight";  break;
+            case 11: r=90;  g=90;  b=96;  br=0.5f;  fx="slow_pulse"; name="offline";    break;
+          }
+          auto call = id(strip).turn_on();
+          call.set_rgb(r/255.0f, g/255.0f, b/255.0f);
+          call.set_brightness(br);
+          call.set_effect(fx);
+          call.perform();
+          auto ob = id(onboard).turn_on();
+          ob.set_brightness(br);
+          ob.perform();
+          ESP_LOGI("showcase", "[%d/12] %s", i+1, name);
+
+interval:
+  - interval: 50ms
+    then:
+      - lambda: |-
+          static char buf[40];
+          static int n = 0;
+          uint8_t c;
+          while (uart_read_bytes(UART_NUM_0, &c, 1, 0) > 0) {
+            int i = aangan_eat_line(c, buf, &n, 40);
+            if (i >= 0) {
+              id(g_step) = i;
+              id(show).execute();
+            }
+          }

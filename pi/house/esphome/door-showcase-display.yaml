@@ -1,0 +1,186 @@
+# AANGAN · DOOR DISPLAY SHOWCASE — standalone, no Wi-Fi, no secrets
+# Bench showcase for the Waveshare ESP32-S3-Touch-LCD-7 (the door display board).
+# Pin map copied verbatim from door-display.yaml (Waveshare's own numbers).
+# Same 12 words and colours as the light board. Follows SET from USB.
+esphome:
+  name: door-showcase-display
+  friendly_name: Door Display Showcase
+  includes:
+    - aangan_door_cmd.h
+  on_boot:
+    priority: -100
+    then:
+      - delay: 1s
+      - lambda: 'id(door_screen).update();'
+  platformio_options:
+    board_upload.maximum_ram_size: 524288
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 8MB
+  cpu_frequency: 240MHz
+  framework:
+    type: esp-idf
+    advanced:
+      enable_idf_experimental_features: true
+    sdkconfig_options:
+      CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
+      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
+      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
+      CONFIG_SPIRAM_RODATA: "y"
+      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "30"
+psram:
+  mode: octal
+  speed: 80MHz
+logger:
+  level: INFO
+  hardware_uart: USB_SERIAL_JTAG
+i2c:
+  sda: GPIO8
+  scl: GPIO9
+  scan: true
+  id: bus_a
+ch422g:
+  - id: ch422g_hub
+output:
+  - platform: gpio
+    id: backlight_out
+    pin:
+      ch422g: ch422g_hub
+      number: 2
+      mode:
+        output: true
+light:
+  - platform: binary
+    name: "Screen backlight"
+    id: backlight
+    output: backlight_out
+    restore_mode: ALWAYS_ON
+globals:
+  - id: g_step
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: g_phase
+    type: int
+    restore_value: no
+    initial_value: '0'
+font:
+  - file: "gfonts://Fraunces@700"
+    id: font_word
+    size: 130
+    glyphs: "ABCDEFGHIJKLMNOPQRSTUVWXYZ -—"
+  - file: "gfonts://Inter@500"
+    id: font_sub
+    size: 30
+  - file: "gfonts://Inter@500"
+    id: font_small
+    size: 22
+color:
+  - id: c_white
+    red: 100%
+    green: 100%
+    blue: 100%
+  - id: c_dim
+    red: 88%
+    green: 88%
+    blue: 88%
+touchscreen:
+  - platform: gt911
+    id: my_touch
+    interrupt_pin: GPIO4
+    reset_pin:
+      ch422g: ch422g_hub
+      number: 1
+      mode:
+        output: true
+display:
+  - platform: mipi_rgb
+    model: ESP32-S3-TOUCH-LCD-7-800X480
+    id: door_screen
+    update_interval: never
+    auto_clear_enabled: false
+    color_order: RGB
+    pclk_frequency: 16MHz
+    pclk_inverted: true
+    dimensions:
+      width: 800
+      height: 480
+    de_pin:
+      number: 5
+    hsync_pin:
+      number: 46
+      ignore_strapping_warning: true
+    vsync_pin:
+      number: 3
+      ignore_strapping_warning: true
+    pclk_pin: 7
+    reset_pin:
+      ch422g: ch422g_hub
+      number: 3
+    hsync_back_porch: 8
+    hsync_front_porch: 8
+    hsync_pulse_width: 4
+    vsync_back_porch: 16
+    vsync_front_porch: 16
+    vsync_pulse_width: 4
+    data_pins:
+      red: [1, 2, 42, 41, 40]
+      green: [39, 0, 45, 48, 47, 21]
+      blue: [14, 38, 18, 17, 10]
+    lambda: |-
+      // Same 12 words as the light showcase, same colours. The strip of
+      // squares at the bottom is the light, drawn on the screen, so they
+      // cannot disagree even on the bench.
+      int i = id(g_step) % 12;
+      int r = 47, g = 191, b = 113;
+      const char *word = "COME IN";
+      const char *sub  = "The studio is free";
+      int fx = 0; // 0 still, 1 fast flash, 2 slow pulse
+      // Exact same RGB and step order as door-showcase-light.yaml.
+      switch (i) {
+        case 0:  r=47;  g=191; b=113; word="COME IN";   sub="The studio is free"; break;
+        case 1:  r=245; g=166; b=35;  word="CLASS";     sub="Lesson in progress"; break;
+        case 2:  r=245; g=166; b=35;  word="MEETING";   sub="Please wait"; break;
+        case 3:  r=217; g=48;  b=54;  word="ON AIR";    sub="Recording - please do not enter"; break;
+        case 4:  r=217; g=48;  b=54;  word="FILMING";   sub="Recording - please do not enter"; break;
+        case 5:  r=217; g=48;  b=54;  word="DOOR OPEN"; sub="Please close it"; fx=1; break;
+        case 6:  r=217; g=48;  b=54;  word="TOO LOUD";  sub="Close the door"; fx=2; break;
+        case 7:  r=124; g=58;  b=237; word="EMERGENCY"; sub="Do not enter"; fx=1; break;
+        case 8:  r=124; g=58;  b=237; word="SOS";       sub="A family member needs help"; fx=1; break;
+        case 9:  r=45;  g=114; b=230; word="DELIVERY";  sub="Courier OTP at the door"; break;
+        case 10: r=34;  g=211; b=238; word="PREP";      sub="Silencing the room"; fx=2; break;
+        case 11: r=90;  g=90;  b=96;  word="OFFLINE";   sub="No link to the house"; fx=2; break;
+      }
+      int ph = id(g_phase);
+      if (fx == 1 && (ph % 2) == 1) { r = r / 8; g = g / 8; b = b / 8; }
+      if (fx == 2 && (ph % 4) < 2)  { r = r / 3; g = g / 3; b = b / 3; }
+      it.filled_rectangle(0, 0, 800, 480, Color(r, g, b));
+      it.printf(400, 200, id(font_word), c_white, TextAlign::CENTER, "%s", word);
+      it.printf(400, 300, id(font_sub), c_dim, TextAlign::CENTER, "%s", sub);
+      for (int k = 0; k < 16; k++) {
+        int kx = 48 + k * 46;
+        int kr = r, kg = g, kb = b;
+        if (fx == 1 && ((ph + k) % 2) == 1) { kr = kr / 8; kg = kg / 8; kb = kb / 8; }
+        it.filled_rectangle(kx, 424, 22, 22, Color(kr, kg, kb));
+      }
+      it.printf(780, 22, id(font_small), c_dim, TextAlign::TOP_RIGHT, "%d / 12", i + 1);
+interval:
+  - interval: 250ms
+    then:
+      - lambda: |-
+          int i = id(g_step) % 12;
+          bool alert = (i == 5 || i == 6 || i == 7 || i == 8 || i == 10 || i == 11);
+          if (alert) id(g_phase)++;
+          if (alert) id(door_screen).update();
+  - interval: 50ms
+    then:
+      - lambda: |-
+          static char buf[40];
+          static int n = 0;
+          int i = aangan_poll_usb(buf, &n, 40);
+          if (i >= 0) {
+            id(g_step) = i;
+            id(door_screen).update();
+            ESP_LOGI("showcase", "app [%d/12]", i + 1);
+          }
